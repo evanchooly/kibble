@@ -1,9 +1,12 @@
 package com.antwerkz.kotlin.model
 
+import com.antwerkz.kotlin.model.Mutability.VAR
+import com.antwerkz.kotlin.model.Mutability.valueOf
 import com.antwerkz.kotlin.model.Visibility.INTERNAL
 import com.antwerkz.kotlin.model.Visibility.PRIVATE
 import com.antwerkz.kotlin.model.Visibility.PROTECTED
 import com.antwerkz.kotlin.model.Visibility.PUBLIC
+import com.antwerkz.kotlin.model.Visibility.valueOf
 
 class KotlinClass() : Modifiable, Visible {
     lateinit var name: String
@@ -15,25 +18,17 @@ class KotlinClass() : Modifiable, Visible {
 interface Modifiable {
     fun addModifier(modifier: String) {
         when (modifier) {
-            "public" -> {
+            "public", "protected", "private", "internal" -> {
                 this as Visible
-                visibility = PUBLIC
-            }
-            "protected" -> {
-                this as Visible
-                visibility = PROTECTED
-            }
-            "private" -> {
-                this as Visible
-                visibility = PRIVATE
-            }
-            "internal" -> {
-                this as Visible
-                visibility = INTERNAL
+                visibility = Visibility.valueOf(modifier.toUpperCase())
             }
             "override" -> {
                 this as Overridable
                 isOverride = true
+            }
+            "var", "val" -> {
+                this as Mutable
+                mutability = Mutability.valueOf(modifier.toUpperCase())
             }
             else -> {
                 throw IllegalStateException("Unknown modifier: $modifier")
@@ -47,6 +42,14 @@ enum class Visibility {
     PROTECTED,
     PRIVATE,
     INTERNAL
+}
+
+enum class Mutability {
+    VAL, VAR
+}
+
+interface Mutable {
+    var mutability: Mutability
 }
 
 interface Visible {

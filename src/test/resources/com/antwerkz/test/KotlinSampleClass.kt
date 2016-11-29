@@ -1,4 +1,4 @@
-package com.antwerkz.ktest
+package ktest
 
 import java.util.ArrayList
 import java.util.HashMap

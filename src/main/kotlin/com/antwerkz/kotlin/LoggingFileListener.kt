@@ -114,939 +114,988 @@ import com.antwerkz.kotlin.KotlinParser.WhenEntryContext
 import com.antwerkz.kotlin.KotlinParser.WhileLoopContext
 import com.antwerkz.kotlin.model.KotlinClass
 import com.antwerkz.kotlin.model.KotlinFile
-import com.antwerkz.kotlin.model.Parameter
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.TerminalNode
-import java.util.Stack
 
-open class LoggingFileListener(): KotlinParserBaseListener() {
+open class LoggingFileListener(var log: Boolean = false): KotlinParserBaseListener() {
     companion object {
         private val INDENT = "  "
+        private val PREFIX = "--->"
     }
 
     var level = 0
     val file = KotlinFile()
     var currentClass: KotlinClass? = null
-    var context = Stack<Any>()
-    var terminals = mutableListOf<String>()
-    var parameters = mutableListOf<Parameter>()
+    var context = mutableListOf<Any>()
 
-
-    fun enter(name: String) {
-        (0..level).forEach { print(INDENT) }
-        println("-> $name")
-        level += 1
+    fun logEntry(name: String) {
+        if (log) {
+            (0..level).forEach { print(INDENT) }
+            println("-> $name")
+            level += 1
+        }
     }
 
-    fun exit(name: String) {
-        level -= 1
-        (0..level).forEach { print(INDENT) }
-        println("<- $name")
+    protected fun markEntry(name: String) {
+        context.add(PREFIX + name)
+    }
+
+    protected fun markExit(name: String): List<Any> {
+        return context.popUntil(PREFIX + name)
+    }
+
+    fun logExit(name: String) {
+        if (log) {
+            level -= 1
+            (0..level).forEach { print(INDENT) }
+            println("<- $name")
+        }
     }
 
     override fun enterKotlinFile(ctx: KotlinFileContext) {
-        enter("KotlinFile")
+        logEntry("KotlinFile")
     }
 
     override fun exitKotlinFile(ctx: KotlinFileContext) {
-        exit("KotlinFile")
+        logExit("KotlinFile")
     }
 
     override fun enterPreamble(ctx: PreambleContext) {
-        enter("Preamble")
+        logEntry("Preamble")
     }
 
     override fun exitPreamble(ctx: PreambleContext) {
-        exit("Preamble")
+        logExit("Preamble")
     }
 
     override fun enterPackageHeader(ctx: PackageHeaderContext) {
-        enter("PackageHeader")
+        logEntry("PackageHeader")
     }
 
     override fun exitPackageHeader(ctx: PackageHeaderContext) {
-        exit("PackageHeader")
+        logExit("PackageHeader")
     }
 
     override fun enterImportHeader(ctx: ImportHeaderContext) {
-        enter("ImportHeader")
+        logEntry("ImportHeader")
     }
 
     override fun exitImportHeader(ctx: ImportHeaderContext) {
-        exit("ImportHeader")
+        logExit("ImportHeader")
     }
 
     override fun enterToplevelObject(ctx: ToplevelObjectContext) {
-        enter("ToplevelObject")
+        logEntry("ToplevelObject")
     }
 
     override fun exitToplevelObject(ctx: ToplevelObjectContext) {
-        exit("ToplevelObject")
+        logExit("ToplevelObject")
     }
 
     override fun enterMemberDeclaration(ctx: MemberDeclarationContext) {
-        enter("MemberDeclaration")
+        logEntry("MemberDeclaration")
     }
 
     override fun exitMemberDeclaration(ctx: MemberDeclarationContext) {
-        exit("MemberDeclaration")
+        logExit("MemberDeclaration")
     }
 
     override fun enterOptionalProjection(ctx: OptionalProjectionContext) {
-        enter("OptionalProjection")
+        logEntry("OptionalProjection")
     }
 
     override fun exitOptionalProjection(ctx: OptionalProjectionContext) {
-        exit("OptionalProjection")
+        logExit("OptionalProjection")
     }
 
     override fun enterTypeParameters(ctx: TypeParametersContext) {
-        enter("TypeParameters")
+        logEntry("TypeParameters")
     }
 
     override fun exitTypeParameters(ctx: TypeParametersContext) {
-        exit("TypeParameters")
+        logExit("TypeParameters")
     }
 
     override fun enterTypeParameter(ctx: TypeParameterContext) {
-        enter("TypeParameter")
+        logEntry("TypeParameter")
     }
 
     override fun exitTypeParameter(ctx: TypeParameterContext) {
-        exit("TypeParameter")
+        logExit("TypeParameter")
     }
 
     override fun enterTypeArguments(ctx: TypeArgumentsContext) {
-        enter("TypeArguments")
+        logEntry("TypeArguments")
     }
 
     override fun exitTypeArguments(ctx: TypeArgumentsContext) {
-        exit("TypeArguments")
+        logExit("TypeArguments")
     }
 
     override fun enterTypeConstraints(ctx: TypeConstraintsContext) {
-        enter("TypeConstraints")
+        logEntry("TypeConstraints")
     }
 
     override fun exitTypeConstraints(ctx: TypeConstraintsContext) {
-        exit("TypeConstraints")
+        logExit("TypeConstraints")
     }
 
     override fun enterTypeConstraint(ctx: TypeConstraintContext) {
-        enter("TypeConstraint")
+        logEntry("TypeConstraint")
     }
 
     override fun exitTypeConstraint(ctx: TypeConstraintContext) {
-        exit("TypeConstraint")
+        logExit("TypeConstraint")
     }
 
     override fun enterType(ctx: TypeContext) {
-        enter("Type")
+        logEntry("Type")
     }
 
     override fun exitType(ctx: TypeContext) {
-        exit("Type")
+        logExit("Type")
     }
 
     override fun enterTypeDescriptor(ctx: TypeDescriptorContext) {
-        enter("TypeDescriptor")
+        logEntry("TypeDescriptor")
     }
 
     override fun exitTypeDescriptor(ctx: TypeDescriptorContext) {
-        exit("TypeDescriptor")
+        logExit("TypeDescriptor")
     }
 
     override fun enterUserType(ctx: UserTypeContext) {
-        enter("UserType")
+        logEntry("UserType")
     }
 
     override fun exitUserType(ctx: UserTypeContext) {
-        exit("UserType")
+        logExit("UserType")
     }
 
     override fun enterSimpleUserType_typeParam(ctx: SimpleUserType_typeParamContext) {
-        enter("SimpleUserType_typeParam")
+        logEntry("SimpleUserType_typeParam")
     }
 
     override fun exitSimpleUserType_typeParam(ctx: SimpleUserType_typeParamContext) {
-        exit("SimpleUserType_typeParam")
+        logExit("SimpleUserType_typeParam")
     }
 
     override fun enterSimpleUserType(ctx: SimpleUserTypeContext) {
-        enter("SimpleUserType")
+        logEntry("SimpleUserType")
     }
 
     override fun exitSimpleUserType(ctx: SimpleUserTypeContext) {
-        exit("SimpleUserType")
+        logExit("SimpleUserType")
     }
 
     override fun enterVariableDeclarationEntry(ctx: VariableDeclarationEntryContext) {
-        enter("VariableDeclarationEntry")
+        logEntry("VariableDeclarationEntry")
     }
 
     override fun exitVariableDeclarationEntry(ctx: VariableDeclarationEntryContext) {
-        exit("VariableDeclarationEntry")
+        logExit("VariableDeclarationEntry")
     }
 
     override fun enterFunctionType_paramOrType(ctx: FunctionType_paramOrTypeContext) {
-        enter("FunctionType_paramOrType")
+        logEntry("FunctionType_paramOrType")
     }
 
     override fun exitFunctionType_paramOrType(ctx: FunctionType_paramOrTypeContext) {
-        exit("FunctionType_paramOrType")
+        logExit("FunctionType_paramOrType")
     }
 
     override fun enterExtensionFunctionTypeNoReceiver(ctx: ExtensionFunctionTypeNoReceiverContext) {
-        enter("ExtensionFunctionTypeNoReceiver")
+        logEntry("ExtensionFunctionTypeNoReceiver")
     }
 
     override fun exitExtensionFunctionTypeNoReceiver(ctx: ExtensionFunctionTypeNoReceiverContext) {
-        exit("ExtensionFunctionTypeNoReceiver")
+        logExit("ExtensionFunctionTypeNoReceiver")
     }
 
     override fun enterFunctionTypeNoReceiver(ctx: FunctionTypeNoReceiverContext) {
-        enter("FunctionTypeNoReceiver")
+        logEntry("FunctionTypeNoReceiver")
     }
 
     override fun exitFunctionTypeNoReceiver(ctx: FunctionTypeNoReceiverContext) {
-        exit("FunctionTypeNoReceiver")
+        logExit("FunctionTypeNoReceiver")
     }
 
     override fun enterMultipleVariableDeclarations(ctx: MultipleVariableDeclarationsContext) {
-        enter("MultipleVariableDeclarations")
+        logEntry("MultipleVariableDeclarations")
     }
 
     override fun exitMultipleVariableDeclarations(ctx: MultipleVariableDeclarationsContext) {
-        exit("MultipleVariableDeclarations")
+        logExit("MultipleVariableDeclarations")
     }
 
     override fun enterPropertyDeclaration(ctx: PropertyDeclarationContext) {
-        enter("PropertyDeclaration")
+        logEntry("PropertyDeclaration")
     }
 
     override fun exitPropertyDeclaration(ctx: PropertyDeclarationContext) {
-        exit("PropertyDeclaration")
+        logExit("PropertyDeclaration")
     }
 
     override fun enterGetter(ctx: GetterContext) {
-        enter("Getter")
+        logEntry("Getter")
     }
 
     override fun exitGetter(ctx: GetterContext) {
-        exit("Getter")
+        logExit("Getter")
     }
 
     override fun enterSetter(ctx: SetterContext) {
-        enter("Setter")
+        logEntry("Setter")
     }
 
     override fun exitSetter(ctx: SetterContext) {
-        exit("Setter")
+        logExit("Setter")
     }
 
     override fun enterModifiers(ctx: ModifiersContext) {
-        enter("Modifiers")
+        logEntry("Modifiers")
     }
 
     override fun exitModifiers(ctx: ModifiersContext) {
-        exit("Modifiers")
+        logExit("Modifiers")
     }
 
     override fun enterModifier(ctx: ModifierContext) {
-        enter("Modifier")
+        logEntry("Modifier")
     }
 
     override fun exitModifier(ctx: ModifierContext) {
-        exit("Modifier")
+        logExit("Modifier")
     }
 
     override fun enterModifierKeyword(ctx: ModifierKeywordContext) {
-        enter("ModifierKeyword")
+        logEntry("ModifierKeyword")
     }
 
     override fun exitModifierKeyword(ctx: ModifierKeywordContext) {
-        exit("ModifierKeyword")
+        logExit("ModifierKeyword")
     }
 
     override fun enterHierarchyModifier(ctx: HierarchyModifierContext) {
-        enter("HierarchyModifier")
+        logEntry("HierarchyModifier")
     }
 
     override fun exitHierarchyModifier(ctx: HierarchyModifierContext) {
-        exit("HierarchyModifier")
+        logExit("HierarchyModifier")
     }
 
     override fun enterClassModifier(ctx: ClassModifierContext) {
-        enter("ClassModifier")
+        logEntry("ClassModifier")
     }
 
     override fun exitClassModifier(ctx: ClassModifierContext) {
-        exit("ClassModifier")
+        logExit("ClassModifier")
     }
 
     override fun enterAccessModifier(ctx: AccessModifierContext) {
-        enter("AccessModifier")
+        logEntry("AccessModifier")
     }
 
     override fun exitAccessModifier(ctx: AccessModifierContext) {
-        exit("AccessModifier")
+        logExit("AccessModifier")
     }
 
     override fun enterVarianceAnnotation(ctx: VarianceAnnotationContext) {
-        enter("VarianceAnnotation")
+        logEntry("VarianceAnnotation")
     }
 
     override fun exitVarianceAnnotation(ctx: VarianceAnnotationContext) {
-        exit("VarianceAnnotation")
+        logExit("VarianceAnnotation")
     }
 
     override fun enterAnnotations(ctx: AnnotationsContext) {
-        enter("Annotations")
+        logEntry("Annotations")
     }
 
     override fun exitAnnotations(ctx: AnnotationsContext) {
-        exit("Annotations")
+        logExit("Annotations")
     }
 
     override fun enterAnnotation(ctx: AnnotationContext) {
-        enter("Annotation")
+        logEntry("Annotation")
     }
 
     override fun exitAnnotation(ctx: AnnotationContext) {
-        exit("Annotation")
+        logExit("Annotation")
     }
 
     override fun enterAnnotationUseSiteTarget(ctx: AnnotationUseSiteTargetContext) {
-        enter("AnnotationUseSiteTarget")
+        logEntry("AnnotationUseSiteTarget")
     }
 
     override fun exitAnnotationUseSiteTarget(ctx: AnnotationUseSiteTargetContext) {
-        exit("AnnotationUseSiteTarget")
+        logExit("AnnotationUseSiteTarget")
     }
 
     override fun enterValueArgument(ctx: ValueArgumentContext) {
-        enter("ValueArgument")
+        logEntry("ValueArgument")
     }
 
     override fun exitValueArgument(ctx: ValueArgumentContext) {
-        exit("ValueArgument")
+        logExit("ValueArgument")
     }
 
     override fun enterValueArguments(ctx: ValueArgumentsContext) {
-        enter("ValueArguments")
+        logEntry("ValueArguments")
     }
 
     override fun exitValueArguments(ctx: ValueArgumentsContext) {
-        exit("ValueArguments")
+        logExit("ValueArguments")
     }
 
     override fun enterUnescapedAnnotation(ctx: UnescapedAnnotationContext) {
-        enter("UnescapedAnnotation")
+        logEntry("UnescapedAnnotation")
     }
 
     override fun exitUnescapedAnnotation(ctx: UnescapedAnnotationContext) {
-        exit("UnescapedAnnotation")
+        logExit("UnescapedAnnotation")
     }
 
     override fun enterJump(ctx: JumpContext) {
-        enter("Jump")
+        logEntry("Jump")
     }
 
     override fun exitJump(ctx: JumpContext) {
-        exit("Jump")
+        logExit("Jump")
     }
 
     override fun enterLabelReference(ctx: LabelReferenceContext) {
-        enter("LabelReference")
+        logEntry("LabelReference")
     }
 
     override fun exitLabelReference(ctx: LabelReferenceContext) {
-        exit("LabelReference")
+        logExit("LabelReference")
     }
 
     override fun enterLabelDefinition(ctx: LabelDefinitionContext) {
-        enter("LabelDefinition")
+        logEntry("LabelDefinition")
     }
 
     override fun exitLabelDefinition(ctx: LabelDefinitionContext) {
-        exit("LabelDefinition")
+        logExit("LabelDefinition")
     }
 
     override fun enterParameter(ctx: ParameterContext) {
-        enter("Parameter")
+        logEntry("Parameter")
     }
 
     override fun exitParameter(ctx: ParameterContext) {
-        exit("Parameter")
+        logExit("Parameter")
     }
 
     override fun enterFunctionParameter(ctx: FunctionParameterContext) {
-        enter("FunctionParameter")
+        logEntry("FunctionParameter")
     }
 
     override fun exitFunctionParameter(ctx: FunctionParameterContext) {
-        exit("FunctionParameter")
+        logExit("FunctionParameter")
     }
 
     override fun enterPrimaryConstructor(ctx: PrimaryConstructorContext) {
-        enter("PrimaryConstructor")
+        logEntry("PrimaryConstructor")
     }
 
     override fun exitPrimaryConstructor(ctx: PrimaryConstructorContext) {
-        exit("PrimaryConstructor")
+        logExit("PrimaryConstructor")
     }
 
     override fun enterSecondaryConstructor(ctx: SecondaryConstructorContext) {
-        enter("SecondaryConstructor")
+        logEntry("SecondaryConstructor")
     }
 
     override fun exitSecondaryConstructor(ctx: SecondaryConstructorContext) {
-        exit("SecondaryConstructor")
+        logExit("SecondaryConstructor")
     }
 
     override fun enterConstructorDelegationCall(ctx: ConstructorDelegationCallContext) {
-        enter("ConstructorDelegationCall")
+        logEntry("ConstructorDelegationCall")
     }
 
     override fun exitConstructorDelegationCall(ctx: ConstructorDelegationCallContext) {
-        exit("ConstructorDelegationCall")
+        logExit("ConstructorDelegationCall")
     }
 
     override fun enterCallSuffix(ctx: CallSuffixContext) {
-        enter("CallSuffix")
+        logEntry("CallSuffix")
     }
 
     override fun exitCallSuffix(ctx: CallSuffixContext) {
-        exit("CallSuffix")
+        logExit("CallSuffix")
     }
 
     override fun enterConstructorInvocation(ctx: ConstructorInvocationContext) {
-        enter("ConstructorInvocation")
+        logEntry("ConstructorInvocation")
     }
 
     override fun exitConstructorInvocation(ctx: ConstructorInvocationContext) {
-        exit("ConstructorInvocation")
+        logExit("ConstructorInvocation")
     }
 
     override fun enterExplicitDelegation(ctx: ExplicitDelegationContext) {
-        enter("ExplicitDelegation")
+        logEntry("ExplicitDelegation")
     }
 
     override fun exitExplicitDelegation(ctx: ExplicitDelegationContext) {
-        exit("ExplicitDelegation")
+        logExit("ExplicitDelegation")
     }
 
     override fun enterDelegationSpecifier(ctx: DelegationSpecifierContext) {
-        enter("DelegationSpecifier")
+        logEntry("DelegationSpecifier")
     }
 
     override fun exitDelegationSpecifier(ctx: DelegationSpecifierContext) {
-        exit("DelegationSpecifier")
+        logExit("DelegationSpecifier")
     }
 
     override fun enterClassDeclaration(ctx: ClassDeclarationContext) {
-        enter("ClassDeclaration")
+        logEntry("ClassDeclaration")
     }
 
     override fun exitClassDeclaration(ctx: ClassDeclarationContext) {
-        exit("ClassDeclaration")
+        logExit("ClassDeclaration")
     }
 
     override fun enterSupertypesSpecifiers(ctx: SupertypesSpecifiersContext) {
-        enter("SupertypesSpecifiers")
+        logEntry("SupertypesSpecifiers")
     }
 
     override fun exitSupertypesSpecifiers(ctx: SupertypesSpecifiersContext) {
-        exit("SupertypesSpecifiers")
+        logExit("SupertypesSpecifiers")
     }
 
     override fun enterObjectDeclaration(ctx: ObjectDeclarationContext) {
-        enter("ObjectDeclaration")
+        logEntry("ObjectDeclaration")
     }
 
     override fun exitObjectDeclaration(ctx: ObjectDeclarationContext) {
-        exit("ObjectDeclaration")
+        logExit("ObjectDeclaration")
     }
 
     override fun enterCompanionObject(ctx: CompanionObjectContext) {
-        enter("CompanionObject")
+        logEntry("CompanionObject")
     }
 
     override fun exitCompanionObject(ctx: CompanionObjectContext) {
-        exit("CompanionObject")
+        logExit("CompanionObject")
     }
 
     override fun enterClassBody(ctx: ClassBodyContext) {
-        enter("ClassBody")
+        logEntry("ClassBody")
     }
 
     override fun exitClassBody(ctx: ClassBodyContext) {
-        exit("ClassBody")
+        logExit("ClassBody")
     }
 
     override fun enterMembers(ctx: MembersContext) {
-        enter("Members")
+        logEntry("Members")
     }
 
     override fun exitMembers(ctx: MembersContext) {
-        exit("Members")
+        logExit("Members")
     }
 
     override fun enterValueParameters(ctx: ValueParametersContext) {
-        enter("ValueParameters")
+        logEntry("ValueParameters")
     }
 
     override fun exitValueParameters(ctx: ValueParametersContext) {
-        exit("ValueParameters")
+        logExit("ValueParameters")
     }
 
     override fun enterFunctionDeclaration(ctx: FunctionDeclarationContext) {
-        enter("FunctionDeclaration")
+        logEntry("FunctionDeclaration")
     }
 
     override fun exitFunctionDeclaration(ctx: FunctionDeclarationContext) {
-        exit("FunctionDeclaration")
+        logExit("FunctionDeclaration")
     }
 
     override fun enterStatements(ctx: StatementsContext) {
-        enter("Statements")
+        logEntry("Statements")
     }
 
     override fun exitStatements(ctx: StatementsContext) {
-        exit("Statements")
+        logExit("Statements")
     }
 
     override fun enterFunctionBody(ctx: FunctionBodyContext) {
-        enter("FunctionBody")
+        logEntry("FunctionBody")
     }
 
     override fun exitFunctionBody(ctx: FunctionBodyContext) {
-        exit("FunctionBody")
+        logExit("FunctionBody")
     }
 
     override fun enterBlock(ctx: BlockContext) {
-        enter("Block")
+        logEntry("Block")
     }
 
     override fun exitBlock(ctx: BlockContext) {
-        exit("Block")
+        logExit("Block")
     }
 
     override fun enterAnonymousInitializer(ctx: AnonymousInitializerContext) {
-        enter("AnonymousInitializer")
+        logEntry("AnonymousInitializer")
     }
 
     override fun exitAnonymousInitializer(ctx: AnonymousInitializerContext) {
-        exit("AnonymousInitializer")
+        logExit("AnonymousInitializer")
     }
 
     override fun enterEnumClassBody(ctx: EnumClassBodyContext) {
-        enter("EnumClassBody")
+        logEntry("EnumClassBody")
     }
 
     override fun exitEnumClassBody(ctx: EnumClassBodyContext) {
-        exit("EnumClassBody")
+        logExit("EnumClassBody")
     }
 
     override fun enterEnumEntries(ctx: EnumEntriesContext) {
-        enter("EnumEntries")
+        logEntry("EnumEntries")
     }
 
     override fun exitEnumEntries(ctx: EnumEntriesContext) {
-        exit("EnumEntries")
+        logExit("EnumEntries")
     }
 
     override fun enterEnumEntry(ctx: EnumEntryContext) {
-        enter("EnumEntry")
+        logEntry("EnumEntry")
     }
 
     override fun exitEnumEntry(ctx: EnumEntryContext) {
-        exit("EnumEntry")
+        logExit("EnumEntry")
     }
 
     override fun enterIfExpression(ctx: IfExpressionContext) {
-        enter("IfExpression")
+        logEntry("IfExpression")
     }
 
     override fun exitIfExpression(ctx: IfExpressionContext) {
-        exit("IfExpression")
+        logExit("IfExpression")
     }
 
     override fun enterTryExpression(ctx: TryExpressionContext) {
-        enter("TryExpression")
+        logEntry("TryExpression")
     }
 
     override fun exitTryExpression(ctx: TryExpressionContext) {
-        exit("TryExpression")
+        logExit("TryExpression")
     }
 
     override fun enterCatchBlock(ctx: CatchBlockContext) {
-        enter("CatchBlock")
+        logEntry("CatchBlock")
     }
 
     override fun exitCatchBlock(ctx: CatchBlockContext) {
-        exit("CatchBlock")
+        logExit("CatchBlock")
     }
 
     override fun enterFinallyBlock(ctx: FinallyBlockContext) {
-        enter("FinallyBlock")
+        logEntry("FinallyBlock")
     }
 
     override fun exitFinallyBlock(ctx: FinallyBlockContext) {
-        exit("FinallyBlock")
+        logExit("FinallyBlock")
     }
 
     override fun enterLoop(ctx: LoopContext) {
-        enter("Loop")
+        logEntry("Loop")
     }
 
     override fun exitLoop(ctx: LoopContext) {
-        exit("Loop")
+        logExit("Loop")
     }
 
     override fun enterForLoop(ctx: ForLoopContext) {
-        enter("ForLoop")
+        logEntry("ForLoop")
     }
 
     override fun exitForLoop(ctx: ForLoopContext) {
-        exit("ForLoop")
+        logExit("ForLoop")
     }
 
     override fun enterWhileLoop(ctx: WhileLoopContext) {
-        enter("WhileLoop")
+        logEntry("WhileLoop")
     }
 
     override fun exitWhileLoop(ctx: WhileLoopContext) {
-        exit("WhileLoop")
+        logExit("WhileLoop")
     }
 
     override fun enterDoWhileLoop(ctx: DoWhileLoopContext) {
-        enter("DoWhileLoop")
+        logEntry("DoWhileLoop")
     }
 
     override fun exitDoWhileLoop(ctx: DoWhileLoopContext) {
-        exit("DoWhileLoop")
+        logExit("DoWhileLoop")
     }
 
     override fun enterExpression(ctx: ExpressionContext) {
-        enter("Expression")
+        logEntry("Expression")
     }
 
     override fun exitExpression(ctx: ExpressionContext) {
-        exit("Expression")
+        logExit("Expression")
     }
 
     override fun enterDisjunction(ctx: DisjunctionContext) {
-        enter("Disjunction")
+        logEntry("Disjunction")
     }
 
     override fun exitDisjunction(ctx: DisjunctionContext) {
-        exit("Disjunction")
+        logExit("Disjunction")
     }
 
     override fun enterConjunction(ctx: ConjunctionContext) {
-        enter("Conjunction")
+        logEntry("Conjunction")
     }
 
     override fun exitConjunction(ctx: ConjunctionContext) {
-        exit("Conjunction")
+        logExit("Conjunction")
     }
 
     override fun enterEqualityComparison(ctx: EqualityComparisonContext) {
-        enter("EqualityComparison")
+        logEntry("EqualityComparison")
     }
 
     override fun exitEqualityComparison(ctx: EqualityComparisonContext) {
-        exit("EqualityComparison")
+        logExit("EqualityComparison")
     }
 
     override fun enterComparison(ctx: ComparisonContext) {
-        enter("Comparison")
+        logEntry("Comparison")
     }
 
     override fun exitComparison(ctx: ComparisonContext) {
-        exit("Comparison")
+        logExit("Comparison")
     }
 
     override fun enterNamedInfix(ctx: NamedInfixContext) {
-        enter("NamedInfix")
+        logEntry("NamedInfix")
     }
 
     override fun exitNamedInfix(ctx: NamedInfixContext) {
-        exit("NamedInfix")
+        logExit("NamedInfix")
     }
 
     override fun enterElvisExpression(ctx: ElvisExpressionContext) {
-        enter("ElvisExpression")
+        logEntry("ElvisExpression")
     }
 
     override fun exitElvisExpression(ctx: ElvisExpressionContext) {
-        exit("ElvisExpression")
+        logExit("ElvisExpression")
     }
 
     override fun enterInfixFunctionCall(ctx: InfixFunctionCallContext) {
-        enter("InfixFunctionCall")
+        logEntry("InfixFunctionCall")
     }
 
     override fun exitInfixFunctionCall(ctx: InfixFunctionCallContext) {
-        exit("InfixFunctionCall")
+        logExit("InfixFunctionCall")
     }
 
     override fun enterRangeExpression(ctx: RangeExpressionContext) {
-        enter("RangeExpression")
+        logEntry("RangeExpression")
     }
 
     override fun exitRangeExpression(ctx: RangeExpressionContext) {
-        exit("RangeExpression")
+        logExit("RangeExpression")
     }
 
     override fun enterAdditiveExpression(ctx: AdditiveExpressionContext) {
-        enter("AdditiveExpression")
+        logEntry("AdditiveExpression")
     }
 
     override fun exitAdditiveExpression(ctx: AdditiveExpressionContext) {
-        exit("AdditiveExpression")
+        logExit("AdditiveExpression")
     }
 
     override fun enterMultiplicativeExpression(ctx: MultiplicativeExpressionContext) {
-        enter("MultiplicativeExpression")
+        logEntry("MultiplicativeExpression")
     }
 
     override fun exitMultiplicativeExpression(ctx: MultiplicativeExpressionContext) {
-        exit("MultiplicativeExpression")
+        logExit("MultiplicativeExpression")
     }
 
     override fun enterTypeRHS(ctx: TypeRHSContext) {
-        enter("TypeRHS")
+        logEntry("TypeRHS")
     }
 
     override fun exitTypeRHS(ctx: TypeRHSContext) {
-        exit("TypeRHS")
+        logExit("TypeRHS")
     }
 
     override fun enterPrefixUnaryExpression(ctx: PrefixUnaryExpressionContext) {
-        enter("PrefixUnaryExpression")
+        logEntry("PrefixUnaryExpression")
     }
 
     override fun exitPrefixUnaryExpression(ctx: PrefixUnaryExpressionContext) {
-        exit("PrefixUnaryExpression")
+        logExit("PrefixUnaryExpression")
     }
 
     override fun enterPostfixUnaryExpression(ctx: PostfixUnaryExpressionContext) {
-        enter("PostfixUnaryExpression")
+        logEntry("PostfixUnaryExpression")
     }
 
     override fun exitPostfixUnaryExpression(ctx: PostfixUnaryExpressionContext) {
-        exit("PostfixUnaryExpression")
+        logExit("PostfixUnaryExpression")
     }
 
     override fun enterCallableReference(ctx: CallableReferenceContext) {
-        enter("CallableReference")
+        logEntry("CallableReference")
     }
 
     override fun exitCallableReference(ctx: CallableReferenceContext) {
-        exit("CallableReference")
+        logExit("CallableReference")
     }
 
     override fun enterIdentifier(ctx: IdentifierContext) {
-        enter("Identifier")
+//        enter("Identifier")
     }
 
     override fun exitIdentifier(ctx: IdentifierContext) {
-        exit("Identifier")
+//        exit("Identifier")
     }
 
     override fun enterStringLiteral(ctx: StringLiteralContext) {
-        enter("StringLiteral")
+        logEntry("StringLiteral")
     }
 
     override fun exitStringLiteral(ctx: StringLiteralContext) {
-        exit("StringLiteral")
+        logExit("StringLiteral")
     }
 
     override fun enterAtomicExpression(ctx: AtomicExpressionContext) {
-        enter("AtomicExpression")
+        logEntry("AtomicExpression")
     }
 
     override fun exitAtomicExpression(ctx: AtomicExpressionContext) {
-        exit("AtomicExpression")
+        logExit("AtomicExpression")
     }
 
     override fun enterLiteralConstant(ctx: LiteralConstantContext) {
-        enter("LiteralConstant")
+        logEntry("LiteralConstant")
     }
 
     override fun exitLiteralConstant(ctx: LiteralConstantContext) {
-        exit("LiteralConstant")
+        logExit("LiteralConstant")
     }
 
     override fun enterDeclaration(ctx: DeclarationContext) {
-        enter("Declaration")
+        logEntry("Declaration")
     }
 
     override fun exitDeclaration(ctx: DeclarationContext) {
-        exit("Declaration")
+        logExit("Declaration")
     }
 
     override fun enterStatement(ctx: StatementContext) {
-        enter("Statement")
+        logEntry("Statement")
     }
 
     override fun exitStatement(ctx: StatementContext) {
-        exit("Statement")
+        logExit("Statement")
     }
 
     override fun enterMultiplicativeOperation(ctx: MultiplicativeOperationContext) {
-        enter("MultiplicativeOperation")
+        logEntry("MultiplicativeOperation")
     }
 
     override fun exitMultiplicativeOperation(ctx: MultiplicativeOperationContext) {
-        exit("MultiplicativeOperation")
+        logExit("MultiplicativeOperation")
     }
 
     override fun enterAdditiveOperation(ctx: AdditiveOperationContext) {
-        enter("AdditiveOperation")
+        logEntry("AdditiveOperation")
     }
 
     override fun exitAdditiveOperation(ctx: AdditiveOperationContext) {
-        exit("AdditiveOperation")
+        logExit("AdditiveOperation")
     }
 
     override fun enterInOperation(ctx: InOperationContext) {
-        enter("InOperation")
+        logEntry("InOperation")
     }
 
     override fun exitInOperation(ctx: InOperationContext) {
-        exit("InOperation")
+        logExit("InOperation")
     }
 
     override fun enterTypeOperation(ctx: TypeOperationContext) {
-        enter("TypeOperation")
+        logEntry("TypeOperation")
     }
 
     override fun exitTypeOperation(ctx: TypeOperationContext) {
-        exit("TypeOperation")
+        logExit("TypeOperation")
     }
 
     override fun enterIsOperation(ctx: IsOperationContext) {
-        enter("IsOperation")
+        logEntry("IsOperation")
     }
 
     override fun exitIsOperation(ctx: IsOperationContext) {
-        exit("IsOperation")
+        logExit("IsOperation")
     }
 
     override fun enterComparisonOperation(ctx: ComparisonOperationContext) {
-        enter("ComparisonOperation")
+        logEntry("ComparisonOperation")
     }
 
     override fun exitComparisonOperation(ctx: ComparisonOperationContext) {
-        exit("ComparisonOperation")
+        logExit("ComparisonOperation")
     }
 
     override fun enterEqualityOperation(ctx: EqualityOperationContext) {
-        enter("EqualityOperation")
+        logEntry("EqualityOperation")
     }
 
     override fun exitEqualityOperation(ctx: EqualityOperationContext) {
-        exit("EqualityOperation")
+        logExit("EqualityOperation")
     }
 
     override fun enterAssignmentOperator(ctx: AssignmentOperatorContext) {
-        enter("AssignmentOperator")
+        logEntry("AssignmentOperator")
     }
 
     override fun exitAssignmentOperator(ctx: AssignmentOperatorContext) {
-        exit("AssignmentOperator")
+        logExit("AssignmentOperator")
     }
 
     override fun enterPrefixUnaryOperation(ctx: PrefixUnaryOperationContext) {
-        enter("PrefixUnaryOperation")
+        logEntry("PrefixUnaryOperation")
     }
 
     override fun exitPrefixUnaryOperation(ctx: PrefixUnaryOperationContext) {
-        exit("PrefixUnaryOperation")
+        logExit("PrefixUnaryOperation")
     }
 
     override fun enterPostfixUnaryOperation(ctx: PostfixUnaryOperationContext) {
-        enter("PostfixUnaryOperation")
+        logEntry("PostfixUnaryOperation")
     }
 
     override fun exitPostfixUnaryOperation(ctx: PostfixUnaryOperationContext) {
-        exit("PostfixUnaryOperation")
+        logExit("PostfixUnaryOperation")
     }
 
     override fun enterAnnotatedLambda(ctx: AnnotatedLambdaContext) {
-        enter("AnnotatedLambda")
+        logEntry("AnnotatedLambda")
     }
 
     override fun exitAnnotatedLambda(ctx: AnnotatedLambdaContext) {
-        exit("AnnotatedLambda")
+        logExit("AnnotatedLambda")
     }
 
     override fun enterMemberAccessOperation(ctx: MemberAccessOperationContext) {
-        enter("MemberAccessOperation")
+        logEntry("MemberAccessOperation")
     }
 
     override fun exitMemberAccessOperation(ctx: MemberAccessOperationContext) {
-        exit("MemberAccessOperation")
+        logExit("MemberAccessOperation")
     }
 
     override fun enterFunctionLiteral(ctx: FunctionLiteralContext) {
-        enter("FunctionLiteral")
+        logEntry("FunctionLiteral")
     }
 
     override fun exitFunctionLiteral(ctx: FunctionLiteralContext) {
-        exit("FunctionLiteral")
+        logExit("FunctionLiteral")
     }
 
     override fun enterArrayAccess(ctx: ArrayAccessContext) {
-        enter("ArrayAccess")
+        logEntry("ArrayAccess")
     }
 
     override fun exitArrayAccess(ctx: ArrayAccessContext) {
-        exit("ArrayAccess")
+        logExit("ArrayAccess")
     }
 
     override fun enterObjectLiteral(ctx: ObjectLiteralContext) {
-        enter("ObjectLiteral")
+        logEntry("ObjectLiteral")
     }
 
     override fun exitObjectLiteral(ctx: ObjectLiteralContext) {
-        exit("ObjectLiteral")
+        logExit("ObjectLiteral")
     }
 
     override fun enterWhen(ctx: WhenContext) {
-        enter("When")
+        logEntry("When")
     }
 
     override fun exitWhen(ctx: WhenContext) {
-        exit("When")
+        logExit("When")
     }
 
     override fun enterWhenEntry(ctx: WhenEntryContext) {
-        enter("WhenEntry")
+        logEntry("WhenEntry")
     }
 
     override fun exitWhenEntry(ctx: WhenEntryContext) {
-        exit("WhenEntry")
+        logExit("WhenEntry")
     }
 
     override fun enterWhenCondition(ctx: WhenConditionContext) {
-        enter("WhenCondition")
+        logEntry("WhenCondition")
     }
 
     override fun exitWhenCondition(ctx: WhenConditionContext) {
-        exit("WhenCondition")
+        logExit("WhenCondition")
     }
 
     override fun visitTerminal(node: TerminalNode?) {
         val symbol = node?.symbol?.text ?: ""
-        (0..level).forEach { print(INDENT) }
-        println("=== $symbol")
+        if (log) {
+            (0..level).forEach { print(INDENT) }
+            println("=== $symbol")
+        }
     }
 
     override fun visitErrorNode(node: ErrorNode?) {
         super.visitErrorNode(node)
+    }
+
+    private fun <T> MutableList<T>.pop(count: Int = 1): List<T> {
+        val items = takeLast(count)
+        var i = count
+        while (i > 0) {
+            removeAt(size - i)
+            i--
+        }
+
+        return items
+    }
+
+    private fun MutableList<Any>.popUntil(value: String): List<Any> {
+        val result = mutableListOf<Any>()
+        while (!context.isEmpty() && value != last()) {
+            val last = removeLast()
+            if (last !is String || !last.startsWith(PREFIX)) {
+                result += last
+            }
+        }
+        removeLast()
+        result.reverse()
+        return result
+    }
+
+    private fun MutableList<Any>.removeLast(): Any {
+        return removeAt(size - 1)
+    }
+
+    private fun <T> MutableList<T>.popWhile(predicate: (T) -> Boolean): List<T> {
+        val items = takeLastWhile(predicate)
+        var i = items.size + 1
+        while (i > 0) {
+            removeAt(size - i)
+            i--
+        }
+
+        return items
     }
 }
