@@ -1,6 +1,6 @@
-package com.antwerkz.kotlin
+package com.antwerkz.kibble
 
-import com.antwerkz.kotlin.model.KotlinFile
+import com.antwerkz.kibble.model.KotlinFile
 import org.antlr.v4.runtime.ANTLRFileStream
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
@@ -9,9 +9,7 @@ class Kibble() {
     companion object {
         fun parse(vararg sources: String): List<KotlinFile> {
             return sources.map { source ->
-                val lexer = KotlinLexer(ANTLRFileStream(source))
-                val tokens = CommonTokenStream(lexer)
-                val parser = KotlinParser(tokens)
+                val parser = KotlinParser(CommonTokenStream(KotlinLexer(ANTLRFileStream(source))))
 
                 val listener = KotlinFileListener()
                 ParseTreeWalker.DEFAULT.walk(listener, parser.kotlinFile())

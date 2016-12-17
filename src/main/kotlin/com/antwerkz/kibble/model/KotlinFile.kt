@@ -1,4 +1,4 @@
-package com.antwerkz.kotlin.model
+package com.antwerkz.kibble.model
 
 class KotlinFile {
     var pkgName: String? = null

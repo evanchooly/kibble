@@ -1,8 +1,8 @@
-package com.antwerkz.kotlin
+package com.antwerkz.kibble
 
-import com.antwerkz.kotlin.model.Mutability.VAL
-import com.antwerkz.kotlin.model.Mutability.VAR
-import com.antwerkz.kotlin.model.Parameter
+import com.antwerkz.kibble.model.Mutability.VAL
+import com.antwerkz.kibble.model.Mutability.VAR
+import com.antwerkz.kibble.model.Parameter
 import org.testng.Assert
 import org.testng.annotations.Test
 

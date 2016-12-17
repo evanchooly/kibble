@@ -1,20 +1,20 @@
-package com.antwerkz.kotlin
+package com.antwerkz.kibble
 
-import com.antwerkz.kotlin.KotlinParser.AccessModifierContext
-import com.antwerkz.kotlin.KotlinParser.ClassDeclarationContext
-import com.antwerkz.kotlin.KotlinParser.FunctionDeclarationContext
-import com.antwerkz.kotlin.KotlinParser.FunctionParameterContext
-import com.antwerkz.kotlin.KotlinParser.ImportHeaderContext
-import com.antwerkz.kotlin.KotlinParser.MemberDeclarationContext
-import com.antwerkz.kotlin.KotlinParser.ModifiersContext
-import com.antwerkz.kotlin.KotlinParser.PackageHeaderContext
-import com.antwerkz.kotlin.KotlinParser.ParameterContext
-import com.antwerkz.kotlin.KotlinParser.PrimaryConstructorContext
-import com.antwerkz.kotlin.model.Import
-import com.antwerkz.kotlin.model.KotlinClass
-import com.antwerkz.kotlin.model.KotlinFunction
-import com.antwerkz.kotlin.model.Modifiable
-import com.antwerkz.kotlin.model.Parameter
+import com.antwerkz.kibble.KotlinParser.AccessModifierContext
+import com.antwerkz.kibble.KotlinParser.ClassDeclarationContext
+import com.antwerkz.kibble.KotlinParser.FunctionDeclarationContext
+import com.antwerkz.kibble.KotlinParser.FunctionParameterContext
+import com.antwerkz.kibble.KotlinParser.ImportHeaderContext
+import com.antwerkz.kibble.KotlinParser.MemberDeclarationContext
+import com.antwerkz.kibble.KotlinParser.ModifiersContext
+import com.antwerkz.kibble.KotlinParser.PackageHeaderContext
+import com.antwerkz.kibble.KotlinParser.ParameterContext
+import com.antwerkz.kibble.KotlinParser.PrimaryConstructorContext
+import com.antwerkz.kibble.model.Import
+import com.antwerkz.kibble.model.KotlinClass
+import com.antwerkz.kibble.model.KotlinFunction
+import com.antwerkz.kibble.model.Modifiable
+import com.antwerkz.kibble.model.Parameter
 import org.antlr.v4.runtime.tree.TerminalNode
 
 @Suppress("UNCHECKED_CAST")

@@ -5,7 +5,7 @@
 
 lexer grammar KotlinLexer;
 
-@lexer::header {package com.antwerkz.kotlin;}
+@lexer::header {package com.antwerkz.kibble;}
 
 MULTILINE_COMMENT
     : '/*' .*? '*/' -> channel(HIDDEN)

@@ -7,10 +7,10 @@
 parser grammar KotlinParser;
 
 @header {
-    package com.antwerkz.kotlin;
+    package com.antwerkz.kibble;
 }
 
-options { tokenVocab='com/antwerkz/kotlin/KotlinLexer'; }
+options { tokenVocab='com/antwerkz/kibble/KotlinLexer'; }
 
 kotlinFile
     :    preamble toplevelObject*;

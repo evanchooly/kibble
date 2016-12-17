@@ -1,4 +1,4 @@
-package com.antwerkz.kotlin
+package com.antwerkz.kibble
 
 import org.testng.Assert
 import org.testng.Assert.*

@@ -1,12 +1,12 @@
-package com.antwerkz.kotlin.model
+package com.antwerkz.kibble.model
 
-import com.antwerkz.kotlin.model.Mutability.VAR
-import com.antwerkz.kotlin.model.Mutability.valueOf
-import com.antwerkz.kotlin.model.Visibility.INTERNAL
-import com.antwerkz.kotlin.model.Visibility.PRIVATE
-import com.antwerkz.kotlin.model.Visibility.PROTECTED
-import com.antwerkz.kotlin.model.Visibility.PUBLIC
-import com.antwerkz.kotlin.model.Visibility.valueOf
+import com.antwerkz.kibble.model.Mutability.VAR
+import com.antwerkz.kibble.model.Mutability.valueOf
+import com.antwerkz.kibble.model.Visibility.INTERNAL
+import com.antwerkz.kibble.model.Visibility.PRIVATE
+import com.antwerkz.kibble.model.Visibility.PROTECTED
+import com.antwerkz.kibble.model.Visibility.PUBLIC
+import com.antwerkz.kibble.model.Visibility.valueOf
 
 class KotlinClass() : Modifiable, Visible {
     lateinit var name: String
