@@ -8,11 +8,11 @@ import com.antwerkz.kibble.model.Visibility.PROTECTED
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import com.antwerkz.kibble.model.Visibility.valueOf
 
-class KotlinClass() : Modifiable, Visible {
+class KotlinClass() : FunctionHolder, Modifiable, Visible {
     lateinit var name: String
     override var visibility = PUBLIC
     val constructors = mutableListOf<KotlinFunction>()
-    val functions = mutableListOf<KotlinFunction>()
+    override val functions = mutableListOf<KotlinFunction>()
 }
 
 interface Modifiable {

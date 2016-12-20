@@ -4,21 +4,32 @@ import com.antwerkz.kibble.KotlinParser.AccessModifierContext
 import com.antwerkz.kibble.KotlinParser.ClassDeclarationContext
 import com.antwerkz.kibble.KotlinParser.FunctionDeclarationContext
 import com.antwerkz.kibble.KotlinParser.FunctionParameterContext
+import com.antwerkz.kibble.KotlinParser.IdentifierContext
 import com.antwerkz.kibble.KotlinParser.ImportHeaderContext
+import com.antwerkz.kibble.KotlinParser.KotlinFileContext
 import com.antwerkz.kibble.KotlinParser.MemberDeclarationContext
+import com.antwerkz.kibble.KotlinParser.ModifierContext
 import com.antwerkz.kibble.KotlinParser.ModifiersContext
 import com.antwerkz.kibble.KotlinParser.PackageHeaderContext
 import com.antwerkz.kibble.KotlinParser.ParameterContext
 import com.antwerkz.kibble.KotlinParser.PrimaryConstructorContext
+import com.antwerkz.kibble.KotlinParser.SimpleUserTypeContext
+import com.antwerkz.kibble.KotlinParser.SimpleUserType_typeParamContext
+import com.antwerkz.kibble.KotlinParser.TypeContext
+import com.antwerkz.kibble.KotlinParser.TypeDescriptorContext
+import com.antwerkz.kibble.KotlinParser.UserTypeContext
+import com.antwerkz.kibble.KotlinParser.ValueParametersContext
+import com.antwerkz.kibble.model.FunctionHolder
 import com.antwerkz.kibble.model.Import
 import com.antwerkz.kibble.model.KotlinClass
+import com.antwerkz.kibble.model.KotlinFile
 import com.antwerkz.kibble.model.KotlinFunction
 import com.antwerkz.kibble.model.Modifiable
 import com.antwerkz.kibble.model.Parameter
 import org.antlr.v4.runtime.tree.TerminalNode
 
 @Suppress("UNCHECKED_CAST")
-class KotlinFileListener : LoggingFileListener(false) {
+class KotlinFileListener(enableLogging: Boolean = false) : LoggingFileListener(enableLogging) {
 
     @Suppress("UNCHECKED_CAST")
     fun <T> peek(): T {
@@ -28,6 +39,15 @@ class KotlinFileListener : LoggingFileListener(false) {
             println("ClassCastException with ${context.last()}")
             throw e
         }
+    }
+
+    override fun enterKotlinFile(ctx: KotlinFileContext) {
+        context.add(file)
+    }
+
+    override fun exitKotlinFile(ctx: KotlinFileContext) {
+        context.pop<KotlinFile>()
+        super.exitKotlinFile(ctx)
     }
 
     override fun enterPackageHeader(ctx: PackageHeaderContext) {
@@ -48,9 +68,12 @@ class KotlinFileListener : LoggingFileListener(false) {
     }
 
     override fun exitImportHeader(ctx: ImportHeaderContext) {
-        file.imports.add(Import(markExit("ImportHeader")
-                .drop(1)
-                .joinToString("")))
+        val importName = ctx.children
+                .filterIsInstance(IdentifierContext::class.java)
+                .flatMap { it.children }
+                .map { it.text }
+                .joinToString(".")
+        file.imports.add(Import(importName))
         super.exitImportHeader(ctx)
     }
 
@@ -61,16 +84,14 @@ class KotlinFileListener : LoggingFileListener(false) {
     }
 
     override fun exitFunctionDeclaration(ctx: FunctionDeclarationContext) {
-        val list = markExit("FunctionDeclaration")
-        val function = list[0] as KotlinFunction
-        function.name = list[2] as String
-        var start = list.indexOf("(") + 1
-
-        while ( list[start] != ")") {
-            function.parameters.add(list[start++] as Parameter)
+        val function: KotlinFunction
+        if (context.peek<KotlinFunction>() is KotlinFunction) {
+            function = context.pop()
+            val holder: FunctionHolder? = context.peek()
+            holder?.let {
+                holder += function
+            }
         }
-        currentClass!!.functions += function
-        context.add(function)
         super.exitFunctionDeclaration(ctx)
     }
 
@@ -79,44 +100,12 @@ class KotlinFileListener : LoggingFileListener(false) {
     }
 
     override fun exitFunctionParameter(ctx: FunctionParameterContext) {
-        val list = markExit("FunctionParameter")
-        if (list.size > 1) {
-            val parameter = list[1] as Parameter
-            parameter.addModifier(list[0] as String)
-            context.add(parameter)
-        } else if(list[0] is Parameter) {
-            context.add(list[0])
-        } else {
-            throw IllegalStateException("Unknown state for function parameter: $list")
+        val parameter: Parameter = context.pop()
+        val function: KotlinFunction?  = context.peek()
+        function?.let {
+            function += parameter
         }
-    }
-
-    override fun enterParameter(ctx: ParameterContext) {
-        markEntry("Parameter")
-        super.enterParameter(ctx)
-    }
-
-    override fun exitParameter(ctx: ParameterContext) {
-        val params = markExit("Parameter") as List<String>
-        context.add(Parameter(name = params[0], type = params[2]))
-        super.exitParameter(ctx)
-    }
-
-/*
-    override fun enterModifiers(ctx: ModifiersContext) {
-        markEntry("Modifiers")
-        super.enterModifiers(ctx)
-    }
-
-    override fun exitModifiers(ctx: ModifiersContext) {
-        val list = markExit("Modifiers")
-        super.exitModifiers(ctx)
-    }
-
-*/
-    override fun enterModifiers(ctx: ModifiersContext) {
-        markEntry("Modifiers")
-        super.enterModifiers(ctx)
+        super.exitFunctionParameter(ctx)
     }
 
     override fun exitModifiers(ctx: ModifiersContext) {
@@ -126,6 +115,64 @@ class KotlinFileListener : LoggingFileListener(false) {
             modifiable.addModifier(it)
         }
         super.exitModifiers(ctx)
+    }
+
+    override fun exitModifier(ctx: ModifierContext) {
+        super.exitModifier(ctx)
+    }
+
+    override fun exitValueParameters(ctx: ValueParametersContext) {
+        super.exitValueParameters(ctx)
+    }
+
+    override fun exitParameter(ctx: ParameterContext) {
+        val name = ctx.children
+                .filterIsInstance<TerminalNode>()
+                .map { it.text }
+                .first<String>()
+        context.add(Parameter(name = name, type = context.pop()))
+        super.exitParameter(ctx)
+    }
+
+    override fun exitType(ctx: TypeContext) {
+        super.exitType(ctx)
+    }
+
+    override fun exitTypeDescriptor(ctx: TypeDescriptorContext) {
+        super.exitTypeDescriptor(ctx)
+    }
+
+    override fun exitUserType(ctx: UserTypeContext) {
+        super.exitUserType(ctx)
+    }
+
+    override fun exitSimpleUserType(ctx: SimpleUserTypeContext) {
+        context.add(ctx.children
+                .filterIsInstance(TerminalNode::class.java)
+                .map { it.text }[0]
+        )
+        super.exitSimpleUserType(ctx)
+    }
+
+    override fun exitSimpleUserType_typeParam(ctx: SimpleUserType_typeParamContext) {
+        super.exitSimpleUserType_typeParam(ctx)
+    }
+
+    /*
+        override fun enterModifiers(ctx: ModifiersContext) {
+            markEntry("Modifiers")
+            super.enterModifiers(ctx)
+        }
+
+        override fun exitModifiers(ctx: ModifiersContext) {
+            val list = markExit("Modifiers")
+            super.exitModifiers(ctx)
+        }
+
+    */
+    override fun enterModifiers(ctx: ModifiersContext) {
+        markEntry("Modifiers")
+        super.enterModifiers(ctx)
     }
 
     override fun enterAccessModifier(ctx: AccessModifierContext) {
@@ -173,8 +220,8 @@ class KotlinFileListener : LoggingFileListener(false) {
     }
 
     override fun visitTerminal(node: TerminalNode?) {
-        super.visitTerminal(node)
-        context.add(node?.symbol?.text ?: "")
+//        super.visitTerminal(node)
+//        context.add(node?.symbol?.text ?: "")
     }
 
 }

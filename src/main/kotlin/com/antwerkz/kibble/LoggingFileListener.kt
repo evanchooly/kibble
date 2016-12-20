@@ -137,11 +137,12 @@ open class LoggingFileListener(var log: Boolean = false): KotlinParserBaseListen
     }
 
     protected fun markEntry(name: String) {
-        context.add(PREFIX + name)
+//        context.add(PREFIX + name)
     }
 
     protected fun markExit(name: String): List<Any> {
-        return context.popUntil(PREFIX + name)
+        return mutableListOf()
+//        return context.popUntil(PREFIX + name)
     }
 
     fun logExit(name: String) {
@@ -1060,15 +1061,14 @@ open class LoggingFileListener(var log: Boolean = false): KotlinParserBaseListen
         super.visitErrorNode(node)
     }
 
-    private fun <T> MutableList<T>.pop(count: Int = 1): List<T> {
-        val items = takeLast(count)
-        var i = count
-        while (i > 0) {
-            removeAt(size - i)
-            i--
-        }
+    @Suppress("UNCHECKED_CAST")
+    protected fun <T> MutableList<Any>.peek(): T? {
+        return if (size > 0) last() as T else null
+    }
 
-        return items
+    @Suppress("UNCHECKED_CAST")
+    protected fun <T> MutableList<Any>.pop(): T {
+        return removeAt(size - 1) as T
     }
 
     private fun MutableList<Any>.popUntil(value: String): List<Any> {

@@ -7,6 +7,10 @@ class KotlinFunction(): Modifiable, Visible, Overridable {
     val parameters = mutableListOf<Parameter>()
     override var isOverride = false
     override var visibility = PUBLIC
+
+    operator fun plusAssign(parameter: Parameter) {
+        parameters += parameter
+    }
 }
 
 interface Overridable {
