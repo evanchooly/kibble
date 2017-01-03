@@ -3,9 +3,9 @@ package ktest
 import java.util.ArrayList
 import java.util.HashMap
 
-private class KotlinSampleClass(val name: String, var time: Int) {
-    val age: Int = -1
-    val list = ArrayList<String>()
+internal open class KotlinSampleClass(val name: String, var time: Int) {
+    protected open val age: Double = -1.0
+    val list: List<String> = ArrayList()
     val map = HashMap<String, Int>()
 
     protected fun output(count: Long) {

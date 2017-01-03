@@ -8,14 +8,14 @@ import java.io.File
 class KotlinFileListenerTest {
     @Test
     fun parse() {
-        val file = Kibble.parse(File("src/test/resources/com/antwerkz/test/KotlinSampleClass.kt"))
+        val file = Kibble.parse(File("src/test/resources/com/antwerkz/test/KotlinSampleClass.kt"), true)
 
         Assert.assertEquals(file.imports.size, 2)
         Assert.assertEquals(file.classes.size, 1)
         val klass = file.classes[0]
 
-        Assert.assertEquals(klass.constructors.size, 1)
-        Assert.assertEquals(klass.constructors[0].parameters, listOf(
+        Assert.assertEquals(klass.secondaries.size, 1)
+        Assert.assertEquals(klass.secondaries[0].parameters, listOf(
                 Parameter("name", "String"),
                 Parameter("time", "Int")))
         Assert.assertEquals(klass.functions.size, 2)
