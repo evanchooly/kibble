@@ -1,8 +1,17 @@
 package com.antwerkz.kibble.model
 
 interface Hierarchical {
-    var isAbstract: Boolean
-    var isFinal: Boolean
-    var isOpen: Boolean
-    var isOverride: Boolean
+    var modality: Modality
+
+    fun isAbstract(): Boolean {
+        return Modality.ABSTRACT == modality
+    }
+
+    fun isFinal(): Boolean {
+        return Modality.FINAL == modality
+    }
+
+    fun isOpen(): Boolean {
+        return Modality.OPEN == modality
+    }
 }

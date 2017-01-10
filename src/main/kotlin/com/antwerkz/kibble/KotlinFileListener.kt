@@ -1,16 +1,13 @@
 package com.antwerkz.kibble
 
 import com.antwerkz.kibble.KotlinParser.AtomicExpressionContext
-import com.antwerkz.kibble.KotlinParser.CallSuffixContext
 import com.antwerkz.kibble.KotlinParser.ClassBodyContext
 import com.antwerkz.kibble.KotlinParser.ClassDeclarationContext
-import com.antwerkz.kibble.KotlinParser.ExpressionContext
 import com.antwerkz.kibble.KotlinParser.FunctionDeclarationContext
 import com.antwerkz.kibble.KotlinParser.FunctionParameterContext
 import com.antwerkz.kibble.KotlinParser.IdentifierContext
 import com.antwerkz.kibble.KotlinParser.ImportHeaderContext
 import com.antwerkz.kibble.KotlinParser.KotlinFileContext
-import com.antwerkz.kibble.KotlinParser.MemberDeclarationContext
 import com.antwerkz.kibble.KotlinParser.ModifiersContext
 import com.antwerkz.kibble.KotlinParser.PackageHeaderContext
 import com.antwerkz.kibble.KotlinParser.ParameterContext
@@ -20,17 +17,15 @@ import com.antwerkz.kibble.KotlinParser.SimpleUserTypeContext
 import com.antwerkz.kibble.KotlinParser.TypeContext
 import com.antwerkz.kibble.KotlinParser.TypeDescriptorContext
 import com.antwerkz.kibble.KotlinParser.VariableDeclarationEntryContext
+import com.antwerkz.kibble.model.Constructor
 import com.antwerkz.kibble.model.FunctionHolder
 import com.antwerkz.kibble.model.Import
 import com.antwerkz.kibble.model.KotlinClass
 import com.antwerkz.kibble.model.KotlinFile
 import com.antwerkz.kibble.model.KotlinFunction
 import com.antwerkz.kibble.model.Parameter
-import com.antwerkz.kibble.model.Constructor
-import com.antwerkz.kibble.model.KotlinProperty
 import com.antwerkz.kibble.model.ParameterHolder
 import com.antwerkz.kibble.model.Type
-import com.antwerkz.kibble.model.TypeDescriptor
 import org.antlr.v4.runtime.tree.TerminalNode
 
 class KotlinFileListener(enableLogging: Boolean = false) : LoggingFileListener(enableLogging) {
@@ -38,10 +33,10 @@ class KotlinFileListener(enableLogging: Boolean = false) : LoggingFileListener(e
         val name = ctx.children.filterIsInstance(VariableDeclarationEntryContext::class.java)
                 .first()
                 .children[0].text
-        val property = KotlinProperty(name, pop<Type>())
-        (ctx.children[0] as ModifiersContext).children?.forEach {
-            property.addModifier(it.text)
-        }
+//        val property = KotlinProperty(name, pop<Type>())
+//        (ctx.children[0] as ModifiersContext).children?.forEach {
+//            property.addModifier(it.text)
+//        }
         super.exitPropertyDeclaration(ctx)
     }
 
