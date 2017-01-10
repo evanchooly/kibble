@@ -9,7 +9,7 @@ import java.io.File
 class KibbleTest {
     @Test
     fun standalone() {
-        val file = Kibble.compile("src/test/resources/com/antwerkz/test/standalone.kt")[0]
+        val file = Kibble.parse("src/test/resources/com/antwerkz/test/standalone.kt")[0]
 
         Assert.assertEquals(file.functions.size, 1)
         Assert.assertEquals(file.functions[0].visibility, Visibility.INTERNAL)
@@ -22,7 +22,7 @@ class KibbleTest {
 
     @Test
     fun sampleClass() {
-        val file = Kibble.compile("src/test/resources/com/antwerkz/test/KotlinSampleClass.kt")[0]
+        val file = Kibble.parse("src/test/resources/com/antwerkz/test/KotlinSampleClass.kt")[0]
 
         Assert.assertEquals(file.imports.size, 2)
         Assert.assertEquals(file.imports[1].alias, "HMap")
