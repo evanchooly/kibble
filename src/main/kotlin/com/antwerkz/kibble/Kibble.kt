@@ -23,7 +23,7 @@ class Kibble {
             return KotlinCoreEnvironment
                     .createForProduction(Disposable { }, configuration, listOf())
                     .getSourceFiles()
-                    .map { KotlinFile.evaluate(it) }
+                    .map(::KotlinFile)
         }
     }
 }

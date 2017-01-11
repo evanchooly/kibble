@@ -1,29 +1,21 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.model.Modality.FINAL
-import com.antwerkz.kibble.model.Visibility.PRIVATE
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
-import org.jetbrains.kotlin.psi.psiUtil.isPrivate
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
 class KotlinFunction(var name: String? = null): Visible, Hierarchical, ParameterHolder, KotlinElement {
-    companion object  {
-        fun evaluate(kt: KtFunction): KotlinFunction {
-            val kotlinFunction = KotlinFunction(kt.name)
+    internal constructor(kt: KtFunction): this(kt.name) {
             kt.valueParameters.forEach {
-                kotlinFunction += Parameter.evaluate(it)
+                this += Parameter(it)
             }
-            kotlinFunction.body = kt.bodyExpression?.text ?: ""
-            kotlinFunction.type = kt.typeReference?.text ?: ""
-            kotlinFunction.addModifier(kt.visibilityModifier()?.text)
-            kotlinFunction.addModifier(kt.modalityModifier()?.text)
-
-            return kotlinFunction
+            this.body = kt.bodyExpression?.text ?: ""
+            this.type = kt.typeReference?.text ?: ""
+            this.addModifier(kt.visibilityModifier()?.text)
+            this.addModifier(kt.modalityModifier()?.text)
         }
-    }
 
     override val parameters = mutableListOf<Parameter>()
     override var visibility = PUBLIC

@@ -12,8 +12,8 @@ interface KotlinElement {
         val LOG: Logger = LoggerFactory.getLogger(KotlinElement::class.java)
         fun evaluate(declaration: KtDeclaration): KotlinElement? {
             return when (declaration) {
-                is KtClass -> KotlinClass.evaluate(declaration)
-                is KtFunction -> KotlinFunction.evaluate(declaration)
+                is KtClass -> KotlinClass(declaration)
+                is KtFunction -> KotlinFunction(declaration)
                 is KtProperty -> KotlinProperty(declaration)
                 else -> {
                     LOG.warn("Unknown type: ${declaration.javaClass}")

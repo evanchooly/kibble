@@ -9,34 +9,32 @@ import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
 class KotlinClass(var name: String? = null) : KotlinElement, FunctionHolder, Visible, Hierarchical {
-    companion object {
-        fun evaluate(kt: KtClass): KotlinClass {
-            val kotlinClass = KotlinClass(kt.name)
-            kotlinClass.addModifier(kt.modalityModifier()?.text)
-            kotlinClass.addModifier(kt.visibilityModifier()?.text)
-            kotlinClass.constructor = Constructor.evaluate(kt.getPrimaryConstructor())
-            kotlinClass.constructor?.parameters
+    internal constructor(kt: KtClass): this(kt.name) {
+            addModifier(kt.modalityModifier()?.text)
+            addModifier(kt.visibilityModifier()?.text)
+            kt.getPrimaryConstructor()?.let {
+                constructor = Constructor(it)
+            }
+            constructor?.parameters
                     ?.filter { it.mutability != null }
                     ?.forEach {
-                        kotlinClass += KotlinProperty(it.name, it.type, it.defaultValue, true)
+                        this += KotlinProperty(it.name, it.type, it.defaultValue, true)
                     }
             kt.getSecondaryConstructors().forEach {
-                kotlinClass += SecondaryConstructor.evaluate(it)
+                this += SecondaryConstructor(it)
             }
             kt.getOrCreateBody().declarations
                     .filter { it !is KtSecondaryConstructor }
                     .forEach {
                         KotlinElement.evaluate(it)?.let { element ->
                             when (element) {
-                                is KotlinClass -> kotlinClass += element
-                                is KotlinFunction -> kotlinClass += element
-                                is KotlinProperty -> kotlinClass += element
-                                else -> throw IllegalArgumentException("Unknown type being added to KotlinClass: $element")
+                                is KotlinClass -> this += element
+                                is KotlinFunction -> this += element
+                                is KotlinProperty -> this += element
+                                else -> throw IllegalArgumentException("Unknown type being added to this: $element")
                             }
                         }
                     }
-            return kotlinClass
-        }
     }
 
     override var modality: Modality = FINAL

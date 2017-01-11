@@ -1,25 +1,27 @@
 package com.antwerkz.kibble.model
 
 import org.jetbrains.kotlin.psi.KtFile
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class KotlinFile(val name: String? = null) : KotlinElement, FunctionHolder {
     companion object {
-        internal fun evaluate(file: KtFile): KotlinFile {
-            val kotlinFile = KotlinFile(file.name)
-            file.declarations.forEach {
-                val element = KotlinElement.evaluate(it)
-                when (element) {
-                    is KotlinClass -> kotlinFile += element
-                    is KotlinFunction -> kotlinFile += element
-                    else -> throw IllegalArgumentException("Unknown type being added to KotlinFile: ${element}")
-                }
-            }
-            file.importDirectives.forEach {
-                kotlinFile += Import.evaluate(it)
-            }
+        val LOG: Logger = LoggerFactory.getLogger(KotlinFile::class.java)
+    }
 
-            return kotlinFile
+    internal constructor(file: KtFile) : this(file.name) {
+        file.declarations.forEach {
+            val element = KotlinElement.evaluate(it)
+            when (element) {
+                is KotlinClass -> this += element
+                is KotlinFunction -> this += element
+                else -> LOG.warn("Unknown type being added to KotlinFile: $element")
+            }
         }
+        file.importDirectives.forEach {
+            this += Import(it)
+        }
+        pkgName = file.packageDirective?.text
     }
 
     var pkgName: String? = null

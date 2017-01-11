@@ -2,16 +2,12 @@ package com.antwerkz.kibble.model
 
 import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 
-class SecondaryConstructor: ParameterHolder {
-    companion object {
-        fun evaluate(kt: KtSecondaryConstructor): SecondaryConstructor {
-            val ctor = SecondaryConstructor()
+class SecondaryConstructor(): ParameterHolder {
+    internal constructor(kt: KtSecondaryConstructor): this() {
             kt.valueParameters.forEach {
-                ctor += Parameter.evaluate(it)
+                this += Parameter(it)
             }
-            ctor.body = kt.bodyExpression?.text  ?: ""
-            return ctor
-        }
+            body = kt.bodyExpression?.text  ?: ""
     }
 
     var body: String = ""
