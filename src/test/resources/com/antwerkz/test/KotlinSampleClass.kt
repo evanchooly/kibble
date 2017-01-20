@@ -1,17 +1,15 @@
-package ktest
+package com.antwerkz.test
 
 import java.util.ArrayList
 import java.util.HashMap as HMap
 
-internal open abstract class KotlinSampleClass(val cost: Double, ignored: Int) {
+internal abstract class KotlinSampleClass(val cost: Double, ignored: Int) {
     protected open val age: Double = -1.0
     val list: List<String> = ArrayList()
-    val map: HMap<String, Int> = HMap()
+    val map: java.util.HashMap<String, Int> = java.util.HashMap()
     var name: String? = null
     var time: Int? = null
-    init {
-        ignored + 1
-    }
+    lateinit var random: String
 
     constructor(name: String, time: Int) : this(2.0, 12) {
         this.name = name
@@ -19,7 +17,7 @@ internal open abstract class KotlinSampleClass(val cost: Double, ignored: Int) {
     }
 
     protected fun output(count: Long) {
-        println("age = ${age}")
+        println("age = $age")
     }
 
     override fun toString(): String {

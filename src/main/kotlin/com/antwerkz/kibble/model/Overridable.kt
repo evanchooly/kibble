@@ -1,9 +1,9 @@
 package com.antwerkz.kibble.model
 
 interface Overridable {
-    var overridden: Boolean
+    var overriding: Boolean
 
     fun isOverride(): Boolean {
-        return overridden
+        return overriding
     }
 }

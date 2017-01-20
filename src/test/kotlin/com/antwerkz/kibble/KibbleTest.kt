@@ -1,12 +1,23 @@
 package com.antwerkz.kibble
 
+import com.antwerkz.kibble.model.KotlinClass
+import com.antwerkz.kibble.model.KotlinFile
+import com.antwerkz.kibble.model.KotlinFunction
+import com.antwerkz.kibble.model.KotlinProperty
 import com.antwerkz.kibble.model.Parameter
 import com.antwerkz.kibble.model.Visibility
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
+import java.io.PrintWriter
+import java.io.StringWriter
+
 
 class KibbleTest {
+    companion object {
+        val path = "src/test/resources/com/antwerkz/test/KotlinSampleClass.kt"
+    }
+
     @Test
     fun standalone() {
         val file = Kibble.parse("src/test/resources/com/antwerkz/test/standalone.kt")[0]
@@ -22,7 +33,7 @@ class KibbleTest {
 
     @Test
     fun sampleClass() {
-        val file = Kibble.parse("src/test/resources/com/antwerkz/test/KotlinSampleClass.kt")[0]
+        val file = Kibble.parse(path)[0]
 
         Assert.assertEquals(file.imports.size, 2)
         Assert.assertEquals(file.imports[1].alias, "HMap")
@@ -48,4 +59,41 @@ class KibbleTest {
 //        Assert.assertEquals(klass.name, "KotlinSampleClass")
     }
 
+    @Test
+    fun writeSource() {
+        val file = Kibble.parse(path)[0]
+        ConsoleSourceWriter().use {
+            file.toSource(it)
+        }
+
+        val stringWriter = StringWriter()
+        var sourceWriter = object : SourceWriter(PrintWriter(stringWriter)) {
+            override fun close() {
+                writer.flush()
+                writer.close()
+            }
+        }
+        sourceWriter.use { file.toSource(it) }
+        val source = stringWriter.toString()
+        Assert.assertTrue(source.contains("lateinit var random: String"))
+        Assert.assertEquals(source, File(path).readText())
+    }
+
+    @Test
+    fun create() {
+        val file = KotlinFile(
+                classes = mutableListOf(KotlinClass("KibbleTest",
+                        properties = mutableListOf(KotlinProperty("property", "Double", lateInit = false)),
+                        functions = mutableListOf(KotlinFunction("test", visibility = Visibility.PROTECTED,
+                                type = "Double",
+                                body = """println("hello")""")))
+
+
+                )
+        )
+
+        ConsoleSourceWriter().use {
+            file.toSource(it)
+        }
+    }
 }

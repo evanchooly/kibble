@@ -25,5 +25,19 @@ class Kibble {
                     .getSourceFiles()
                     .map(::KotlinFile)
         }
+
+        fun  parseFunctionBody(body: String): String {
+            val tempFile = File.createTempFile("kibble-", ".kt")
+            tempFile.deleteOnExit()
+
+            try {
+                tempFile.writeText("fun temp() {\n\t$body\n}")
+                val parse = parse(tempFile.absolutePath)[0]
+                return parse.functions[0].body
+            } finally {
+                tempFile.delete()
+            }
+        }
+
     }
 }

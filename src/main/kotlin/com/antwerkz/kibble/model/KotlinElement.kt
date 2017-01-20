@@ -1,5 +1,6 @@
 package com.antwerkz.kibble.model
 
+import com.antwerkz.kibble.SourceWriter
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
@@ -25,17 +26,17 @@ interface KotlinElement {
 
     fun addModifier(modifier: String?) {
         when (modifier) {
-            null -> {}
+            null, " " -> {}
             "public", "protected", "private", "internal" -> (this as Visible).visibility = Visibility.valueOf(modifier.toUpperCase())
             "final", "abstract", "open" -> (this as Hierarchical).modality = Modality.valueOf(modifier.toUpperCase())
             "var", "val" -> (this as Mutable).mutability = Mutability.valueOf(modifier.toUpperCase())
-/*
-            "override" -> {
-                this as Hierarchical
-//                isOverride = true
-            }
-*/
-            else -> throw IllegalStateException("Unknown modifier: $modifier")
+            "lateinit" -> (this as KotlinProperty).lateInit = true
+            "override" -> (this as Overridable).overriding = true
+            else -> throw IllegalStateException("Unknown modifier: '$modifier' on $this")
         }
+    }
+
+    fun toSource(writer: SourceWriter, indentationLevel: Int = 0) {
+        writer.writeln("toSource not implemented for ${javaClass.name}")
     }
 }

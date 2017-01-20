@@ -14,6 +14,6 @@ data class Parameter(val name: String, val type: String, val defaultValue: Strin
     override var mutability: Mutability? = null
 
     override fun toString(): String {
-        return "${if (mutability != null) (mutability.toString() + " ") else ""}$name: $type"
+        return "${if (mutability != null) "$mutability" else ""}$name: $type"
     }
 }

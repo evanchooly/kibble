@@ -1,10 +1,18 @@
 package com.antwerkz.kibble.model
 
 enum class Modality {
-    FINAL,
+    FINAL {
+        override fun toString(): String {
+            return ""
+        }
+    },
     SEALED,
     OPEN,
     ABSTRACT;
+
+    override fun toString(): String {
+        return name.toLowerCase() + " "
+    }
 
 }
 

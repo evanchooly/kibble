@@ -1,5 +1,6 @@
 package com.antwerkz.kibble.model
 
+import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtClass
@@ -8,7 +9,17 @@ import org.jetbrains.kotlin.psi.getOrCreateBody
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KotlinClass(var name: String? = null) : KotlinElement, FunctionHolder, Visible, Hierarchical {
+class KotlinClass(var name: String? = null,
+                  override var modality: Modality = FINAL,
+                  override val functions: MutableList<KotlinFunction> = mutableListOf<KotlinFunction>(),
+                  override var visibility: Visibility = PUBLIC,
+
+                  var constructor: Constructor? = null,
+                  val secondaries: MutableList<SecondaryConstructor> = mutableListOf<SecondaryConstructor>(),
+                  var parent: KotlinClass? = null,
+                  val nestedClasses: MutableList<KotlinClass> = mutableListOf<KotlinClass>(),
+                  val properties: MutableList<KotlinProperty> = mutableListOf<KotlinProperty>()
+) : KotlinElement, FunctionHolder, Visible, Hierarchical {
     internal constructor(kt: KtClass): this(kt.name) {
             addModifier(kt.modalityModifier()?.text)
             addModifier(kt.visibilityModifier()?.text)
@@ -18,7 +29,9 @@ class KotlinClass(var name: String? = null) : KotlinElement, FunctionHolder, Vis
             constructor?.parameters
                     ?.filter { it.mutability != null }
                     ?.forEach {
-                        this += KotlinProperty(it.name, it.type, it.defaultValue, true)
+                        val kotlinProperty = KotlinProperty(it.name, it.type, it.defaultValue, lateInit = false)
+                        kotlinProperty.ctorParam = true
+                        this += kotlinProperty
                     }
             kt.getSecondaryConstructors().forEach {
                 this += SecondaryConstructor(it)
@@ -37,19 +50,10 @@ class KotlinClass(var name: String? = null) : KotlinElement, FunctionHolder, Vis
                     }
     }
 
-    override var modality: Modality = FINAL
-    override val functions = mutableListOf<KotlinFunction>()
-    override var visibility = PUBLIC
-
-    var constructor: Constructor? = null
-    val secondaries = mutableListOf<SecondaryConstructor>()
-    var parent: KotlinClass? = null
-    val nestedClasses = mutableListOf<KotlinClass>()
-    val properties = mutableListOf<KotlinProperty>()
-
     operator fun plusAssign(ctor: SecondaryConstructor) {
         secondaries += ctor
     }
+
     operator fun plusAssign(property: KotlinProperty) {
         properties += property
     }
@@ -61,6 +65,18 @@ class KotlinClass(var name: String? = null) : KotlinElement, FunctionHolder, Vis
 
     override fun toString(): String {
         return "class $name"
+    }
+
+    override fun toSource(writer: SourceWriter, indentationLevel: Int) {
+        writer.writeIndent(indentationLevel)
+        writer.write("$visibility${modality}class ")
+        name?.let { writer.write(it) }
+        constructor?.toSource(writer, indentationLevel)
+        writer.writeln(" {")
+        properties.filter { !it.ctorParam }
+                .forEach { it.toSource(writer, indentationLevel + 1) }
+        functions.forEach { it.toSource(writer, indentationLevel + 1) }
+        writer.writeln("}")
     }
 }
 
