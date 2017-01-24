@@ -41,13 +41,9 @@ class KibbleTest {
         val klass = file.classes[0]
 
         Assert.assertTrue(klass.isInternal())
-        Assert.assertEquals(klass.properties.size, 6)
+        Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
         Assert.assertEquals(klass.properties[0].name, "cost")
         Assert.assertEquals(klass.properties[0].type, "Double")
-        Assert.assertEquals(klass.secondaries.size, 1)
-        Assert.assertEquals(klass.secondaries[0].parameters, listOf(
-                Parameter("name", "String"),
-                Parameter("time", "Int")))
         Assert.assertEquals(klass.functions.size, 2)
 
         Assert.assertEquals(klass.functions[0].name, "output")
@@ -62,21 +58,12 @@ class KibbleTest {
     @Test
     fun writeSource() {
         val file = Kibble.parse(path)[0]
-        ConsoleSourceWriter().use {
-            file.toSource(it)
-        }
 
-        val stringWriter = StringWriter()
-        var sourceWriter = object : SourceWriter(PrintWriter(stringWriter)) {
-            override fun close() {
-                writer.flush()
-                writer.close()
-            }
-        }
-        sourceWriter.use { file.toSource(it) }
-        val source = stringWriter.toString()
-        Assert.assertTrue(source.contains("lateinit var random: String"))
-        Assert.assertEquals(source, File(path).readText())
+        val tempFile = File("kibble-test.kt")
+        tempFile.deleteOnExit()
+        FileSourceWriter(tempFile).use { file.toSource(it)}
+
+        Assert.assertEquals(tempFile.readLines(), File(path).readLines())
     }
 
     @Test

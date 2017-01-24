@@ -20,16 +20,10 @@ class KotlinProperty(val name: String, val type: String?,
     : KotlinElement, Visible, Mutable, Hierarchical, Overridable {
 
     internal constructor(kt: KtProperty) : this(kt.name!!, kt.typeReference?.text, kt.initializer?.text) {
-        println("this = ${this}")
         kt.modifierList
                 ?.allChildren
                 ?.forEach {
-                    println("it.node.text = ${it.node.text}")
                     addModifier(it.node.text)
-                }
-        kt.children
-                .forEach {
-                    println("child it.node.text = ${it.node.text}")
                 }
         addModifier(kt.visibilityModifier()?.text)
         addModifier(kt.modalityModifier()?.text)

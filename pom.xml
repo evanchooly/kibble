@@ -1,0 +1,106 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.antwerkz.kibble</groupId>
+    <artifactId>kibble</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>kibble</name>
+
+    <scm>
+        <connection>scm:git:git://github.com/evanchooly/kibble</connection>
+        <url>https://github.com/evanchooly/kibble</url>
+    </scm>
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-evanchooly-maven</id>
+            <name>bintray</name>
+            <url>http://dl.bintray.com/evanchooly/maven</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
+              <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
+
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.5.1</version>
+            <inherited>true</inherited>
+            <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+            </configuration>
+        </plugin>
+        <plugin>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-maven-plugin</artifactId>
+            <version>${kotlin.version}</version>
+
+            <executions>
+                <execution>
+                    <id>compile</id>
+                    <phase>process-sources</phase>
+                    <goals>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+
+                <execution>
+                    <id>test-compile</id>
+                    <phase>test-compile</phase>
+                    <goals>
+                        <goal>test-compile</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
+    </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-compiler-embeddable</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <critter.version>2.1.1</critter.version>
+        <kotlin.version>1.0.6</kotlin.version>
+        <slf4j.version>1.7.22</slf4j.version>
+        <testng.version>6.10</testng.version>
+        <jacoco.version>0.7.7.201606060606</jacoco.version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+</project>

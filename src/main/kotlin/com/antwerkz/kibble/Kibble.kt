@@ -13,6 +13,7 @@ import java.io.File
 
 class Kibble {
     companion object {
+        @JvmStatic
         fun parse(path: String): List<KotlinFile> {
             val configuration = CompilerConfiguration()
             configuration.put(CompilerConfigurationKey.create<File>("output directory"), File(""))
