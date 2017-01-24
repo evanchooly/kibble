@@ -11,11 +11,6 @@ internal abstract class KotlinSampleClass(val cost: Double, ignored: Int) {
     var time: Int? = null
     lateinit var random: String
 
-    constructor(name: String, time: Int) : this(2.0, 12) {
-        this.name = name
-        this.time = time
-    }
-
     protected fun output(count: Long) {
         println("age = $age")
     }
