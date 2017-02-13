@@ -3,11 +3,11 @@ package com.antwerkz.test
 import java.util.ArrayList
 import java.util.HashMap as HMap
 
-internal abstract class KotlinSampleClass(val cost: Double, ignored: Int) {
+internal abstract class KotlinSampleClass(val cost: Double, ignored: Int): ParentClass(21), Cloneable {
+    var name: String? = null
     protected open val age: Double = -1.0
     val list: List<String> = ArrayList()
     val map: java.util.HashMap<String, Int> = java.util.HashMap()
-    var name: String? = null
     var time: Int? = null
     lateinit var random: String
 
@@ -19,3 +19,5 @@ internal abstract class KotlinSampleClass(val cost: Double, ignored: Int) {
         return "KotlinSampleClass(name='$name', time=$time, age=$age, list=$list, map=$map)"
     }
 }
+
+open class ParentClass(val blurb: Int)

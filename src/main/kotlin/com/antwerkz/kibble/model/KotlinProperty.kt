@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KotlinProperty(val name: String, val type: String?,
+class KotlinProperty(val name: String, val type: KotlinType?,
                      val initializer: String? = null,
                      override var modality: Modality = FINAL,
                      override var overriding: Boolean = false,
@@ -19,7 +19,7 @@ class KotlinProperty(val name: String, val type: String?,
                      var lateInit: Boolean = false)
     : KotlinElement, Visible, Mutable, Hierarchical, Overridable {
 
-    internal constructor(kt: KtProperty) : this(kt.name!!, kt.typeReference?.text, kt.initializer?.text) {
+    internal constructor(kt: KtProperty) : this(kt.name!!, KotlinType.from(kt.typeReference), kt.initializer?.text) {
         kt.modifierList
                 ?.allChildren
                 ?.forEach {

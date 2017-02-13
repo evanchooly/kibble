@@ -48,6 +48,11 @@ class KotlinFile(val name: String? = null,
         if (imports.size > 0) {
             writer.writeln()
         }
-        classes.forEach { it.toSource(writer, indentationLevel) }
+        classes.forEachIndexed { i, kotlinClass ->
+            kotlinClass.toSource(writer, indentationLevel)
+            if ( i < classes.size ) {
+                writer.writeln()
+            }
+        }
     }
 }

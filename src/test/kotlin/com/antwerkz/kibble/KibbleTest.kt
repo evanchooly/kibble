@@ -4,13 +4,12 @@ import com.antwerkz.kibble.model.KotlinClass
 import com.antwerkz.kibble.model.KotlinFile
 import com.antwerkz.kibble.model.KotlinFunction
 import com.antwerkz.kibble.model.KotlinProperty
+import com.antwerkz.kibble.model.KotlinType
 import com.antwerkz.kibble.model.Parameter
 import com.antwerkz.kibble.model.Visibility
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
-import java.io.PrintWriter
-import java.io.StringWriter
 
 
 class KibbleTest {
@@ -37,22 +36,20 @@ class KibbleTest {
 
         Assert.assertEquals(file.imports.size, 2)
         Assert.assertEquals(file.imports[1].alias, "HMap")
-        Assert.assertEquals(file.classes.size, 1)
+        Assert.assertEquals(file.classes.size, 2)
         val klass = file.classes[0]
 
         Assert.assertTrue(klass.isInternal())
         Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
         Assert.assertEquals(klass.properties[0].name, "cost")
-        Assert.assertEquals(klass.properties[0].type, "Double")
+        Assert.assertEquals(klass.properties[0].type, KotlinType("Double", nullable = false))
         Assert.assertEquals(klass.functions.size, 2)
 
         Assert.assertEquals(klass.functions[0].name, "output")
-        Assert.assertEquals(klass.functions[0].parameters, listOf(Parameter("count", "Long")))
+        Assert.assertEquals(klass.functions[0].parameters, listOf(Parameter("count", KotlinType("Long", nullable = false))))
 
         Assert.assertEquals(klass.functions[1].name, "toString")
         Assert.assertEquals(klass.functions[1].parameters, listOf<Parameter>())
-//        Assert.assertEquals(klass.functions[1].type, listOf<Parameter>())
-//        Assert.assertEquals(klass.name, "KotlinSampleClass")
     }
 
     @Test
@@ -60,24 +57,22 @@ class KibbleTest {
         val file = Kibble.parse(path)[0]
 
         val tempFile = File("kibble-test.kt")
-        tempFile.deleteOnExit()
+//        tempFile.deleteOnExit()
         FileSourceWriter(tempFile).use { file.toSource(it)}
 
-        Assert.assertEquals(tempFile.readLines(), File(path).readLines())
+        val readLines = tempFile.readLines()
+        Assert.assertEquals(readLines, File(path).readLines())
     }
 
     @Test
     fun create() {
-        val file = KotlinFile(
-                classes = mutableListOf(KotlinClass("KibbleTest",
-                        properties = mutableListOf(KotlinProperty("property", "Double", lateInit = false)),
-                        functions = mutableListOf(KotlinFunction("test", visibility = Visibility.PROTECTED,
-                                type = "Double",
-                                body = """println("hello")""")))
+        val elements = KotlinClass("KibbleTest")
 
-
-                )
-        )
+        elements += KotlinProperty("property", KotlinType("Double", nullable = false), lateInit = false)
+        elements += KotlinFunction("test", visibility = Visibility.PROTECTED,
+                type = "Double",
+                body = """println("hello")""")
+        val file = KotlinFile(classes = mutableListOf(elements))
 
         ConsoleSourceWriter().use {
             file.toSource(it)
