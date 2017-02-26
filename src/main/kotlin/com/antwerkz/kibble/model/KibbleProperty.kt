@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KotlinProperty(val name: String, var type: KotlinType,
+class KibbleProperty(val name: String, var type: KibbleType,
                      var initializer: String? = null,
                      override var modality: Modality = FINAL,
                      override var overriding: Boolean = false,
@@ -22,9 +22,9 @@ class KotlinProperty(val name: String, var type: KotlinType,
                      override var mutability: Mutability? = VAL,
                      var lateInit: Boolean = false,
                      var parent: Packaged<*>)
-    : KotlinElement, Visible, Mutable, Hierarchical<KotlinProperty>, Overridable, Annotatable, Packaged<KotlinProperty> {
+    : KibbleElement, Visible, Mutable, Hierarchical<KibbleProperty>, Overridable, Annotatable, Packaged<KibbleProperty> {
 
-    internal constructor(parent: Packaged<*>, kt: KtProperty) : this(kt.name!!, KotlinType.from(kt.typeReference),
+    internal constructor(parent: Packaged<*>, kt: KtProperty) : this(kt.name!!, KibbleType.from(kt.typeReference),
             kt.initializer?.text, parent = parent) {
         kt.modifierList
                 ?.allChildren
@@ -45,16 +45,16 @@ class KotlinProperty(val name: String, var type: KotlinType,
     }
 
     internal var ctorParam: Boolean = false
-    override var annotations: MutableList<KotlinAnnotation> = mutableListOf()
+    override var annotations: MutableList<KibbleAnnotation> = mutableListOf()
 
-    fun addInitializer(init: String): KotlinProperty {
+    fun addInitializer(init: String): KibbleProperty {
         initializer = init
         return this
     }
 
     fun isParameterized(): Boolean = type?.parameters?.isEmpty()?.not() ?: false
 
-    override fun getFile(): KotlinFile {
+    override fun getFile(): KibbleFile {
         return parent.getFile()
     }
 

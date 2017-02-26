@@ -8,14 +8,14 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-interface KotlinElement {
+interface KibbleElement {
     fun addModifier(modifier: String?) {
         when (modifier) {
             null, " " -> {}
             "public", "protected", "private", "internal" -> (this as Visible).visibility = Visibility.valueOf(modifier.toUpperCase())
             "final", "abstract", "open" -> (this as Hierarchical<*>).modality = Modality.valueOf(modifier.toUpperCase())
             "var", "val" -> (this as Mutable).mutability = Mutability.valueOf(modifier.toUpperCase())
-            "lateinit" -> (this as KotlinProperty).lateInit = true
+            "lateinit" -> (this as KibbleProperty).lateInit = true
             "override" -> (this as Overridable).overriding = true
             else -> throw IllegalStateException("Unknown modifier: '$modifier' on $this")
         }

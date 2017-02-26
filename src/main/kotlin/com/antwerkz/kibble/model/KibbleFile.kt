@@ -8,24 +8,24 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class KotlinFile(val name: String? = null,
+class KibbleFile(val name: String? = null,
                  var pkgName: String? = null,
                  val imports: MutableList<Import> = mutableListOf<Import>(),
-                 val classes: MutableList<KotlinClass> = mutableListOf<KotlinClass>(),
-                 override val functions: MutableList<KotlinFunction> = mutableListOf<KotlinFunction>(),
-                 override val properties: MutableList<KotlinProperty> = mutableListOf<KotlinProperty>()) :
-        KotlinElement, FunctionHolder, PropertyHolder, Packaged<KotlinFile> {
+                 val classes: MutableList<KibbleClass> = mutableListOf<KibbleClass>(),
+                 override val functions: MutableList<KibbleFunction> = mutableListOf<KibbleFunction>(),
+                 override val properties: MutableList<KibbleProperty> = mutableListOf<KibbleProperty>()) :
+        KibbleElement, FunctionHolder, PropertyHolder, Packaged<KibbleFile> {
 
     companion object {
-        val LOG: Logger = LoggerFactory.getLogger(KotlinFile::class.java)
+        val LOG: Logger = LoggerFactory.getLogger(KibbleFile::class.java)
     }
 
     internal constructor(file: KtFile) : this(file.name) {
         file.declarations.forEach {
             when (it) {
-                is KtClass -> this += KotlinClass(this, it)
-                is KtFunction -> this += KotlinFunction(this, it)
-                is KtProperty -> this += KotlinProperty(this, it)
+                is KtClass -> this += KibbleClass(this, it)
+                is KtFunction -> this += KibbleFunction(this, it)
+                is KtProperty -> this += KibbleProperty(this, it)
                 else -> LOG.warn("Unknown type being added to KotlinFile: $it")
             }
         }
@@ -35,9 +35,9 @@ class KotlinFile(val name: String? = null,
         pkgName = file.packageDirective?.children?.firstOrNull()?.text
     }
 
-    override var parentClass: KotlinClass? = null
+    override var parentClass: KibbleClass? = null
 
-    override fun getFile(): KotlinFile {
+    override fun getFile(): KibbleFile {
         return this
     }
 
@@ -45,8 +45,8 @@ class KotlinFile(val name: String? = null,
         imports += value
     }
 
-    operator fun plusAssign(kotlinClass : KotlinClass) {
-        classes += kotlinClass
+    operator fun plusAssign(kibbleClass: KibbleClass) {
+        classes += kibbleClass
     }
 
     override fun toSource(writer: SourceWriter, indentationLevel: Int) {

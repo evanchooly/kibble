@@ -1,6 +1,6 @@
 package com.antwerkz.kibble
 
-import com.antwerkz.kibble.model.KotlinFile
+import com.antwerkz.kibble.model.KibbleFile
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer.PLAIN_FULL_PATHS
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
@@ -14,11 +14,11 @@ import java.io.File
 class Kibble {
     companion object {
         @JvmStatic
-        fun parse(file: File): KotlinFile {
+        fun parse(file: File): KibbleFile {
             return parse(file.absolutePath)[0]
         }
 
-        fun parse(path: String): List<KotlinFile> {
+        fun parse(path: String): List<KibbleFile> {
             val configuration = CompilerConfiguration()
             configuration.put(CompilerConfigurationKey.create<File>("output directory"), File(""))
             configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY,
@@ -28,7 +28,7 @@ class Kibble {
             return KotlinCoreEnvironment
                     .createForProduction(Disposable { }, configuration, listOf())
                     .getSourceFiles()
-                    .map(::KotlinFile)
+                    .map(::KibbleFile)
         }
 
         fun  parseFunctionBody(body: String): String {

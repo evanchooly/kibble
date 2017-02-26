@@ -6,10 +6,10 @@ import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.KtUserType
 import java.io.File
 
-open class KotlinType(val name: String, var qualifiedName: String = name, val parameters: List<KotlinType> = listOf<KotlinType>(),
+open class KibbleType(val name: String, var qualifiedName: String = name, val parameters: List<KibbleType> = listOf<KibbleType>(),
                       val nullable: Boolean = false) {
     companion object {
-        fun  from(type: String): KotlinType {
+        fun  from(type: String): KibbleType {
             val temp = File.createTempFile("kibble-temp", ".kt")
             try {
                 temp.deleteOnExit()
@@ -20,16 +20,16 @@ open class KotlinType(val name: String, var qualifiedName: String = name, val pa
             }
         }
 
-        fun from(typeReference: KtTypeReference?): KotlinType {
+        fun from(typeReference: KtTypeReference?): KibbleType {
             val typeElement = typeReference?.typeElement
             return when (typeElement) {
                 is KtUserType -> {
-                    KotlinType(typeElement.referencedName ?: "", qualify(typeElement) ?: "",
+                    KibbleType(typeElement.referencedName ?: "", qualify(typeElement) ?: "",
                             typeElement.typeArguments.map { from(it.typeReference) })
                 }
                 is KtNullableType -> {
                     val type = typeElement.innerType as KtUserType
-                    KotlinType(type.referencedName ?: "", qualify(type) ?: "",
+                    KibbleType(type.referencedName ?: "", qualify(type) ?: "",
                             type.typeArguments.map { from(it.typeReference) }, nullable = true)
                 }
                 else -> throw IllegalArgumentException("unknown type $typeElement")
@@ -63,7 +63,7 @@ open class KotlinType(val name: String, var qualifiedName: String = name, val pa
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
 
-        other as KotlinType
+        other as KibbleType
 
         if (name != other.name) return false
         if (qualifiedName != name && other.qualifiedName != other.name) {

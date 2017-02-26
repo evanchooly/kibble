@@ -1,10 +1,10 @@
 package com.antwerkz.kibble.model
 
-import com.antwerkz.kibble.model.KotlinAnnotation.Companion.from
+import com.antwerkz.kibble.model.KibbleAnnotation.Companion.from
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 
 interface Annotatable {
-    var annotations: MutableList<KotlinAnnotation>
+    var annotations: MutableList<KibbleAnnotation>
 
     fun extract(entries: List<KtAnnotationEntry>) {
         annotations.addAll(entries.map { from(it) })

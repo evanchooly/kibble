@@ -1,10 +1,10 @@
 package com.antwerkz.kibble
 
-import com.antwerkz.kibble.model.KotlinClass
-import com.antwerkz.kibble.model.KotlinFile
-import com.antwerkz.kibble.model.KotlinFunction
-import com.antwerkz.kibble.model.KotlinProperty
-import com.antwerkz.kibble.model.KotlinType
+import com.antwerkz.kibble.model.KibbleClass
+import com.antwerkz.kibble.model.KibbleFile
+import com.antwerkz.kibble.model.KibbleFunction
+import com.antwerkz.kibble.model.KibbleProperty
+import com.antwerkz.kibble.model.KibbleType
 import com.antwerkz.kibble.model.Parameter
 import com.antwerkz.kibble.model.Visibility
 import org.jetbrains.kotlin.javax.inject.Singleton
@@ -45,11 +45,11 @@ class KibbleTest {
         Assert.assertTrue(klass.hasAnnotation(Singleton::class.java))
         Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
         Assert.assertEquals(klass.properties[0].name, "cost")
-        Assert.assertEquals(klass.properties[0].type, KotlinType("Double"))
+        Assert.assertEquals(klass.properties[0].type, KibbleType("Double"))
         Assert.assertEquals(klass.functions.size, 2)
 
         Assert.assertEquals(klass.functions[0].name, "output")
-        Assert.assertEquals(klass.functions[0].parameters, listOf(Parameter("count", KotlinType("Long"))))
+        Assert.assertEquals(klass.functions[0].parameters, listOf(Parameter("count", KibbleType("Long"))))
 
         Assert.assertEquals(klass.functions[1].name, "toString")
         Assert.assertEquals(klass.functions[1].parameters, listOf<Parameter>())
@@ -68,16 +68,16 @@ class KibbleTest {
 
     @Test
     fun create() {
-        val elements = KotlinClass(KotlinFile(), "KibbleTest")
+        val elements = KibbleClass(KibbleFile(), "KibbleTest")
                 .markOpen()
 
-        elements += KotlinProperty("property", KotlinType("Double"), parent = elements)
+        elements += KibbleProperty("property", KibbleType("Double"), parent = elements)
                 .addInitializer("0.0")
-        elements += KotlinFunction(KotlinFile(), "test", visibility = Visibility.PROTECTED,
+        elements += KibbleFunction(KibbleFile(), "test", visibility = Visibility.PROTECTED,
                 type = "Double",
                 body = """println("hello")
 return 0.0""")
-        val file = KotlinFile(classes = mutableListOf(elements))
+        val file = KibbleFile(classes = mutableListOf(elements))
 
         val writer = StringWriter()
         StringSourceWriter(writer).use {

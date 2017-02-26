@@ -4,9 +4,9 @@ import org.testng.Assert
 import org.testng.annotations.Test
 
 @Test
-class KotlinTypeTest {
+class KibbleTypeTest {
     fun simpleType() {
-        val from = KotlinType.from("com.foo.bar.Type")
+        val from = KibbleType.from("com.foo.bar.Type")
 
         Assert.assertEquals(from.qualifiedName, "com.foo.bar.Type")
         Assert.assertEquals(from.name, "Type")
@@ -15,7 +15,7 @@ class KotlinTypeTest {
 
     fun generics() {
         val string = "com.foo.bar.Type<kotlin.String, kotlin.Double>?"
-        val type = KotlinType.from(string)
+        val type = KibbleType.from(string)
 
         Assert.assertEquals(type.fullName, string)
         Assert.assertEquals(type.qualifiedName, "com.foo.bar.Type")

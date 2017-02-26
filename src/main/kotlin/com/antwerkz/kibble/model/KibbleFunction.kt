@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KotlinFunction(val parent: Packaged<*>,
+class KibbleFunction(val parent: Packaged<*>,
                      var name: String? = null,
                      override val parameters: MutableList<Parameter> = mutableListOf<Parameter>(),
                      override var visibility: Visibility = PUBLIC,
@@ -17,9 +17,9 @@ class KotlinFunction(val parent: Packaged<*>,
                      var type: String = "",
                      var body: String = "",
                      override var overriding: Boolean = false)
-    : Visible, Hierarchical<KotlinFunction>, ParameterHolder, KotlinElement, Overridable, Packaged<KotlinFile> {
+    : Visible, Hierarchical<KibbleFunction>, ParameterHolder, KibbleElement, Overridable, Packaged<KibbleFile> {
 
-    internal constructor(file: KotlinFile, kt: KtFunction) : this(file, kt.name) {
+    internal constructor(file: KibbleFile, kt: KtFunction) : this(file, kt.name) {
         kt.valueParameters.forEach {
             this += Parameter(it)
         }
@@ -32,7 +32,7 @@ class KotlinFunction(val parent: Packaged<*>,
         this.addModifier(kt.modalityModifier()?.text)
     }
 
-    override fun getFile(): KotlinFile {
+    override fun getFile(): KibbleFile {
         return parent.getFile()
     }
 

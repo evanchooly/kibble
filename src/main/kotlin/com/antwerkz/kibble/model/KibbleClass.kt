@@ -14,44 +14,44 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.jetbrains.kotlin.resolve.calls.callUtil.getValueArgumentsInParentheses
 import org.slf4j.LoggerFactory
 
-class KotlinClass(val parent: KotlinFile,
+class KibbleClass(val parent: KibbleFile,
                   var name: String = "",
                   override var modality: Modality = FINAL,
-                  override val functions: MutableList<KotlinFunction> = mutableListOf<KotlinFunction>(),
+                  override val functions: MutableList<KibbleFunction> = mutableListOf<KibbleFunction>(),
                   override var visibility: Visibility = PUBLIC,
 
                   var constructor: Constructor? = null,
                   val secondaries: MutableList<SecondaryConstructor> = mutableListOf<SecondaryConstructor>(),
-                  var enclosingType: KotlinClass? = null,
-                  val nestedClasses: MutableList<KotlinClass> = mutableListOf<KotlinClass>(),
-                  override val properties: MutableList<KotlinProperty> = mutableListOf<KotlinProperty>()
-) : KotlinElement, FunctionHolder, Visible, Hierarchical<KotlinClass>, Annotatable, PropertyHolder, Packaged<KotlinClass> {
-    override var annotations: MutableList<KotlinAnnotation> = mutableListOf()
+                  var enclosingType: KibbleClass? = null,
+                  val nestedClasses: MutableList<KibbleClass> = mutableListOf<KibbleClass>(),
+                  override val properties: MutableList<KibbleProperty> = mutableListOf<KibbleProperty>()
+) : KibbleElement, FunctionHolder, Visible, Hierarchical<KibbleClass>, Annotatable, PropertyHolder, Packaged<KibbleClass> {
+    override var annotations: MutableList<KibbleAnnotation> = mutableListOf()
 
     companion object {
-        val LOG = LoggerFactory.getLogger(KotlinClass::class.java)
+        val LOG = LoggerFactory.getLogger(KibbleClass::class.java)
     }
 
-    var superType: KotlinType? = null
-    var interfaces = listOf<KotlinType>()
+    var superType: KibbleType? = null
+    var interfaces = listOf<KibbleType>()
     var superCallArgs = listOf<String>()
-    override var parentClass: KotlinClass? = this
+    override var parentClass: KibbleClass? = this
 
-    internal constructor(file: KotlinFile, kt: KtClass) : this(file, kt.name ?: "") {
+    internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
         val superTypeListEntries = kt.getSuperTypeListEntries()
-        val list = mutableListOf<KotlinType>()
+        val list = mutableListOf<KibbleType>()
         val superCallArgs = mutableListOf<String>()
         superTypeListEntries
                 .forEach {
                     when (it) {
                         is KtSuperTypeCallEntry -> {
-                            superType = KotlinType.from(it.typeReference)
+                            superType = KibbleType.from(it.typeReference)
                             it.getValueArgumentsInParentheses().forEach { arg ->
                                 superCallArgs += arg.getArgumentExpression()!!.text
                             }
                         }
                         is KtSuperTypeEntry -> {
-                            KotlinType.from(it.typeReference).let {
+                            KibbleType.from(it.typeReference).let {
                                 list += it
                             }
                         }
@@ -71,7 +71,7 @@ class KotlinClass(val parent: KotlinFile,
         constructor?.parameters
                 ?.filter { it.mutability != null }
                 ?.forEach {
-                    val kotlinProperty = KotlinProperty(it.name, it.type, it.defaultValue, lateInit = false, parent = this)
+                    val kotlinProperty = KibbleProperty(it.name, it.type, it.defaultValue, lateInit = false, parent = this)
                     kotlinProperty.ctorParam = true
                     this += kotlinProperty
                 }
@@ -83,15 +83,15 @@ class KotlinClass(val parent: KotlinFile,
                 ?.filter { it !is KtSecondaryConstructor }
                 ?.forEach {
                     when (it) {
-                        is KtClass -> this += KotlinClass(file, it)
-                        is KtFunction -> this += KotlinFunction(file, it)
-                        is KtProperty -> this += KotlinProperty(this, it)
+                        is KtClass -> this += KibbleClass(file, it)
+                        is KtFunction -> this += KibbleFunction(file, it)
+                        is KtProperty -> this += KibbleProperty(this, it)
                         else -> throw IllegalArgumentException("Unknown type being added to this: $it")
                     }
                 }
     }
 
-    override fun getFile(): KotlinFile {
+    override fun getFile(): KibbleFile {
         return parent
     }
 
@@ -99,7 +99,7 @@ class KotlinClass(val parent: KotlinFile,
         secondaries += ctor
     }
 
-    operator fun plusAssign(nested: KotlinClass) {
+    operator fun plusAssign(nested: KibbleClass) {
         nested.enclosingType = this
         nestedClasses += nested
     }

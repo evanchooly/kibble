@@ -6,10 +6,10 @@ import org.jetbrains.kotlin.psi.KtValueArgumentList
 import org.jetbrains.kotlin.psi.KtValueArgumentName
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
 
-class KotlinAnnotation(name: String, val arguments: Map<String, String?> = mapOf()) : KotlinType(name) {
+class KibbleAnnotation(name: String, val arguments: Map<String, String?> = mapOf()) : KibbleType(name) {
     companion object {
-        fun from(annotation: KtAnnotationEntry): KotlinAnnotation {
-            return KotlinAnnotation(
+        fun from(annotation: KtAnnotationEntry): KibbleAnnotation {
+            return KibbleAnnotation(
                     annotation.typeReference?.typeElement?.name
                             ?: (annotation.typeReference?.typeElement as KtUserType).referencedName ?: "",
                     annotation.allChildren

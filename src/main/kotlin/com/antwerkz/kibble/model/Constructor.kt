@@ -4,7 +4,7 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 
-open class Constructor() : Visible, ParameterHolder, KotlinElement {
+open class Constructor() : Visible, ParameterHolder, KibbleElement {
     internal constructor(kt: KtPrimaryConstructor) : this() {
         kt.valueParameters.forEach {
             val parameter = Parameter(it)

@@ -1,7 +1,7 @@
 package com.antwerkz.kibble.model
 
 interface Packaged<out T> {
-    fun getFile(): KotlinFile
+    fun getFile(): KibbleFile
 
     fun getPackage() = getFile().pkgName
 
