@@ -4,6 +4,8 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 import org.jetbrains.kotlin.psi.KtSuperTypeCallEntry
 import org.jetbrains.kotlin.psi.KtSuperTypeEntry
@@ -12,7 +14,8 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.jetbrains.kotlin.resolve.calls.callUtil.getValueArgumentsInParentheses
 import org.slf4j.LoggerFactory
 
-class KotlinClass(var name: String? = null,
+class KotlinClass(val parent: KotlinFile,
+                  var name: String = "",
                   override var modality: Modality = FINAL,
                   override val functions: MutableList<KotlinFunction> = mutableListOf<KotlinFunction>(),
                   override var visibility: Visibility = PUBLIC,
@@ -21,8 +24,10 @@ class KotlinClass(var name: String? = null,
                   val secondaries: MutableList<SecondaryConstructor> = mutableListOf<SecondaryConstructor>(),
                   var enclosingType: KotlinClass? = null,
                   val nestedClasses: MutableList<KotlinClass> = mutableListOf<KotlinClass>(),
-                  val properties: MutableList<KotlinProperty> = mutableListOf<KotlinProperty>()
-) : KotlinElement, FunctionHolder, Visible, Hierarchical {
+                  override val properties: MutableList<KotlinProperty> = mutableListOf<KotlinProperty>()
+) : KotlinElement, FunctionHolder, Visible, Hierarchical<KotlinClass>, Annotatable, PropertyHolder, Packaged<KotlinClass> {
+    override var annotations: MutableList<KotlinAnnotation> = mutableListOf()
+
     companion object {
         val LOG = LoggerFactory.getLogger(KotlinClass::class.java)
     }
@@ -30,8 +35,9 @@ class KotlinClass(var name: String? = null,
     var superType: KotlinType? = null
     var interfaces = listOf<KotlinType>()
     var superCallArgs = listOf<String>()
+    override var parentClass: KotlinClass? = this
 
-    internal constructor(kt: KtClass) : this(kt.name) {
+    internal constructor(file: KotlinFile, kt: KtClass) : this(file, kt.name ?: "") {
         val superTypeListEntries = kt.getSuperTypeListEntries()
         val list = mutableListOf<KotlinType>()
         val superCallArgs = mutableListOf<String>()
@@ -45,7 +51,7 @@ class KotlinClass(var name: String? = null,
                             }
                         }
                         is KtSuperTypeEntry -> {
-                            KotlinType.from(it.typeReference)?.let {
+                            KotlinType.from(it.typeReference).let {
                                 list += it
                             }
                         }
@@ -65,33 +71,32 @@ class KotlinClass(var name: String? = null,
         constructor?.parameters
                 ?.filter { it.mutability != null }
                 ?.forEach {
-                    val kotlinProperty = KotlinProperty(it.name, it.type, it.defaultValue, lateInit = false)
+                    val kotlinProperty = KotlinProperty(it.name, it.type, it.defaultValue, lateInit = false, parent = this)
                     kotlinProperty.ctorParam = true
                     this += kotlinProperty
                 }
         kt.getSecondaryConstructors().forEach {
             this += SecondaryConstructor(it)
         }
+        extract(kt.annotationEntries)
         kt.getBody()?.declarations
                 ?.filter { it !is KtSecondaryConstructor }
                 ?.forEach {
-                    KotlinElement.evaluate(it)?.let { element ->
-                        when (element) {
-                            is KotlinClass -> this += element
-                            is KotlinFunction -> this += element
-                            is KotlinProperty -> this += element
-                            else -> throw IllegalArgumentException("Unknown type being added to this: $element")
-                        }
+                    when (it) {
+                        is KtClass -> this += KotlinClass(file, it)
+                        is KtFunction -> this += KotlinFunction(file, it)
+                        is KtProperty -> this += KotlinProperty(this, it)
+                        else -> throw IllegalArgumentException("Unknown type being added to this: $it")
                     }
                 }
     }
 
-    operator fun plusAssign(ctor: SecondaryConstructor) {
-        secondaries += ctor
+    override fun getFile(): KotlinFile {
+        return parent
     }
 
-    operator fun plusAssign(property: KotlinProperty) {
-        properties += property
+    operator fun plusAssign(ctor: SecondaryConstructor) {
+        secondaries += ctor
     }
 
     operator fun plusAssign(nested: KotlinClass) {
@@ -104,9 +109,11 @@ class KotlinClass(var name: String? = null,
     }
 
     override fun toSource(writer: SourceWriter, indentationLevel: Int) {
+        writer.writeln()
         writer.writeIndent(indentationLevel)
+        annotations.forEach { writer.writeln(it.toString()) }
         writer.write("$visibility${modality}class ")
-        name?.let { writer.write(it) }
+        writer.write(name)
         constructor?.toSource(writer, indentationLevel)
         superType?.let {
             writer.write(": $it")
@@ -126,4 +133,3 @@ class KotlinClass(var name: String? = null,
         }
     }
 }
-

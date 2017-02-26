@@ -1,30 +1,42 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
+import com.antwerkz.kibble.StringSourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability.VAL
 import com.antwerkz.kibble.model.Mutability.VAR
 import com.antwerkz.kibble.model.Visibility.PUBLIC
+import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.com.intellij.psi.PsiWhiteSpace
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KotlinProperty(val name: String, val type: KotlinType?,
-                     val initializer: String? = null,
+class KotlinProperty(val name: String, var type: KotlinType,
+                     var initializer: String? = null,
                      override var modality: Modality = FINAL,
                      override var overriding: Boolean = false,
                      override var visibility: Visibility = PUBLIC,
                      override var mutability: Mutability? = VAL,
-                     var lateInit: Boolean = false)
-    : KotlinElement, Visible, Mutable, Hierarchical, Overridable {
+                     var lateInit: Boolean = false,
+                     var parent: Packaged<*>)
+    : KotlinElement, Visible, Mutable, Hierarchical<KotlinProperty>, Overridable, Annotatable, Packaged<KotlinProperty> {
 
-    internal constructor(kt: KtProperty) : this(kt.name!!, KotlinType.from(kt.typeReference), kt.initializer?.text) {
+    internal constructor(parent: Packaged<*>, kt: KtProperty) : this(kt.name!!, KotlinType.from(kt.typeReference),
+            kt.initializer?.text, parent = parent) {
         kt.modifierList
                 ?.allChildren
+                ?.filter { it is PsiElement && it !is PsiWhiteSpace }
                 ?.forEach {
-                    addModifier(it.node.text)
+                    when (it) {
+                        is KtAnnotationEntry -> extract(it)
+                        else -> addModifier(it.node.text)
+                    }
                 }
+
+
         addModifier(kt.visibilityModifier()?.text)
         addModifier(kt.modalityModifier()?.text)
         if (kt.isVar || lateInit) {
@@ -33,9 +45,26 @@ class KotlinProperty(val name: String, val type: KotlinType?,
     }
 
     internal var ctorParam: Boolean = false
+    override var annotations: MutableList<KotlinAnnotation> = mutableListOf()
+
+    fun addInitializer(init: String): KotlinProperty {
+        initializer = init
+        return this
+    }
+
+    fun isParameterized(): Boolean = type?.parameters?.isEmpty()?.not() ?: false
+
+    override fun getFile(): KotlinFile {
+        return parent.getFile()
+    }
 
     override fun toSource(writer: SourceWriter, indentationLevel: Int) {
+        annotations.forEach {
+            writer.writeIndent(indentationLevel)
+            writer.writeln(it.toString())
+        }
         writer.writeIndent(indentationLevel)
+
         writer.write(visibility.toString())
         writer.write(modality.toString())
         if (overriding) {
@@ -46,29 +75,15 @@ class KotlinProperty(val name: String, val type: KotlinType?,
         }
         writer.write(mutability?.toString() ?: "")
         writer.write(name)
-        type?.let { writer.write(": $it") }
+        type.let { writer.write(": $it") }
         initializer?.let { writer.write(" = $it") }
         writer.writeln()
     }
 
     override fun toString(): String {
-        var value = ""
-        if (visibility != PUBLIC) {
-            value += visibility.name.toLowerCase() + " "
-        }
-        if (modality != FINAL) {
-            value += modality.name.toLowerCase() + " "
-        }
-        if (isOverride()) value += "override "
-        value += "$mutability $name"
-        type.let {
-            value += ": $it"
-        }
-        initializer.let {
-            value += " = $it"
-        }
-
-        return value
+        val writer = StringSourceWriter()
+        toSource(writer)
+        return writer.toString()
     }
 }
 

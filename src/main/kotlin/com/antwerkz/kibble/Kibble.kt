@@ -14,6 +14,10 @@ import java.io.File
 class Kibble {
     companion object {
         @JvmStatic
+        fun parse(file: File): KotlinFile {
+            return parse(file.absolutePath)[0]
+        }
+
         fun parse(path: String): List<KotlinFile> {
             val configuration = CompilerConfiguration()
             configuration.put(CompilerConfigurationKey.create<File>("output directory"), File(""))

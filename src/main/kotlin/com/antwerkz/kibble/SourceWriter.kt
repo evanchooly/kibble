@@ -4,6 +4,7 @@ import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
+import java.io.StringWriter
 
 abstract class SourceWriter(val writer: PrintWriter): Closeable {
 
@@ -28,9 +29,19 @@ class FileSourceWriter(file: File) : SourceWriter(PrintWriter(FileOutputStream(f
     }
 }
 
-
 class ConsoleSourceWriter: SourceWriter(PrintWriter(System.out)) {
     override fun close() {
         writer.flush()
     }
+}
+
+class StringSourceWriter(val stringWriter: StringWriter = StringWriter()): SourceWriter(PrintWriter(stringWriter)) {
+    override fun close() {
+    }
+
+    override fun toString(): String {
+        return stringWriter.toString()
+    }
+
+
 }

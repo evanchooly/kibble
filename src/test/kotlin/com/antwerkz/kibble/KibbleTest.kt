@@ -7,9 +7,11 @@ import com.antwerkz.kibble.model.KotlinProperty
 import com.antwerkz.kibble.model.KotlinType
 import com.antwerkz.kibble.model.Parameter
 import com.antwerkz.kibble.model.Visibility
+import org.jetbrains.kotlin.javax.inject.Singleton
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
+import java.io.StringWriter
 
 
 class KibbleTest {
@@ -34,19 +36,20 @@ class KibbleTest {
     fun sampleClass() {
         val file = Kibble.parse(path)[0]
 
-        Assert.assertEquals(file.imports.size, 2)
-        Assert.assertEquals(file.imports[1].alias, "HMap")
+        Assert.assertEquals(file.imports.size, 4)
+        Assert.assertEquals(file.imports[3].alias, "HMap")
         Assert.assertEquals(file.classes.size, 2)
         val klass = file.classes[0]
 
         Assert.assertTrue(klass.isInternal())
+        Assert.assertTrue(klass.hasAnnotation(Singleton::class.java))
         Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
         Assert.assertEquals(klass.properties[0].name, "cost")
-        Assert.assertEquals(klass.properties[0].type, KotlinType("Double", nullable = false))
+        Assert.assertEquals(klass.properties[0].type, KotlinType("Double"))
         Assert.assertEquals(klass.functions.size, 2)
 
         Assert.assertEquals(klass.functions[0].name, "output")
-        Assert.assertEquals(klass.functions[0].parameters, listOf(Parameter("count", KotlinType("Long", nullable = false))))
+        Assert.assertEquals(klass.functions[0].parameters, listOf(Parameter("count", KotlinType("Long"))))
 
         Assert.assertEquals(klass.functions[1].name, "toString")
         Assert.assertEquals(klass.functions[1].parameters, listOf<Parameter>())
@@ -57,25 +60,30 @@ class KibbleTest {
         val file = Kibble.parse(path)[0]
 
         val tempFile = File("kibble-test.kt")
-//        tempFile.deleteOnExit()
+        tempFile.deleteOnExit()
         FileSourceWriter(tempFile).use { file.toSource(it)}
 
-        val readLines = tempFile.readLines()
-        Assert.assertEquals(readLines, File(path).readLines())
+        Assert.assertEquals(tempFile.readText().split("\n"), File(path).readLines())
     }
 
     @Test
     fun create() {
-        val elements = KotlinClass("KibbleTest")
+        val elements = KotlinClass(KotlinFile(), "KibbleTest")
+                .markOpen()
 
-        elements += KotlinProperty("property", KotlinType("Double", nullable = false), lateInit = false)
-        elements += KotlinFunction("test", visibility = Visibility.PROTECTED,
+        elements += KotlinProperty("property", KotlinType("Double"), parent = elements)
+                .addInitializer("0.0")
+        elements += KotlinFunction(KotlinFile(), "test", visibility = Visibility.PROTECTED,
                 type = "Double",
-                body = """println("hello")""")
+                body = """println("hello")
+return 0.0""")
         val file = KotlinFile(classes = mutableListOf(elements))
 
-        ConsoleSourceWriter().use {
+        val writer = StringWriter()
+        StringSourceWriter(writer).use {
             file.toSource(it)
         }
+
+        Assert.assertEquals(writer.toString(), File("src/test/resources/generated.kt").readText())
     }
 }

@@ -1,15 +1,20 @@
 package com.antwerkz.test
 
+import org.jetbrains.kotlin.javax.inject.Singleton
 import java.util.ArrayList
+import javax.annotation.Generated
 import java.util.HashMap as HMap
 
+@Singleton
+@Generated("I'm the value", date = "123455", comments = "Fingers crossed")
 internal abstract class KotlinSampleClass(val cost: Double, ignored: Int): ParentClass(21), Cloneable {
     var name: String? = null
     protected open val age: Double = -1.0
     val list: List<String> = ArrayList()
     val map: java.util.HashMap<String, Int> = java.util.HashMap()
     var time: Int? = null
-    lateinit var random: String
+    @SuppressWarnings("message")
+    protected lateinit var random: String
 
     protected fun output(count: Long) {
         println("age = $age")
