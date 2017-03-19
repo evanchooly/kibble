@@ -4,17 +4,17 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 
-open class Constructor() : Visible, ParameterHolder, KibbleElement {
+open class Constructor internal constructor() : Visible, ParameterHolder, KibbleElement {
     internal constructor(kt: KtPrimaryConstructor) : this() {
         kt.valueParameters.forEach {
-            val parameter = Parameter(it)
+            val parameter = KibbleParameter(it)
             this += parameter
         }
         body = kt.bodyExpression?.text ?: ""
     }
 
     override var visibility: Visibility = PUBLIC
-    override val parameters = mutableListOf<Parameter>()
+    override val parameters = mutableListOf<KibbleParameter>()
     var body: String = ""
 
     override fun toSource(writer: SourceWriter, indentationLevel: Int) {

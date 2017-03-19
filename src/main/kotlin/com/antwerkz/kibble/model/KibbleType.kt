@@ -6,8 +6,8 @@ import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.KtUserType
 import java.io.File
 
-open class KibbleType(val name: String, var qualifiedName: String = name, val parameters: List<KibbleType> = listOf<KibbleType>(),
-                      val nullable: Boolean = false) {
+open class KibbleType internal constructor(val name: String, var qualifiedName: String = name, val parameters: List<KibbleType> =
+        listOf<KibbleType>(), val nullable: Boolean = false) {
     companion object {
         fun  from(type: String): KibbleType {
             val temp = File.createTempFile("kibble-temp", ".kt")

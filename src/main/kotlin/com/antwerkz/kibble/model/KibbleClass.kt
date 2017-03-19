@@ -14,19 +14,22 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.jetbrains.kotlin.resolve.calls.callUtil.getValueArgumentsInParentheses
 import org.slf4j.LoggerFactory
 
-class KibbleClass(val parent: KibbleFile,
+class KibbleClass internal constructor(override var kibbleFile: KibbleFile,
                   var name: String = "",
                   override var modality: Modality = FINAL,
-                  override val functions: MutableList<KibbleFunction> = mutableListOf<KibbleFunction>(),
                   override var visibility: Visibility = PUBLIC,
 
-                  var constructor: Constructor? = null,
-                  val secondaries: MutableList<SecondaryConstructor> = mutableListOf<SecondaryConstructor>(),
                   var enclosingType: KibbleClass? = null,
-                  val nestedClasses: MutableList<KibbleClass> = mutableListOf<KibbleClass>(),
                   override val properties: MutableList<KibbleProperty> = mutableListOf<KibbleProperty>()
 ) : KibbleElement, FunctionHolder, Visible, Hierarchical<KibbleClass>, Annotatable, PropertyHolder, Packaged<KibbleClass> {
-    override var annotations: MutableList<KibbleAnnotation> = mutableListOf()
+
+    override var annotations = mutableListOf<KibbleAnnotation>()
+    override val functions = mutableListOf<KibbleFunction>()
+
+    var constructor: Constructor? = null
+        private set
+    val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
+    val nestedClasses: MutableList<KibbleClass> = mutableListOf()
 
     companion object {
         val LOG = LoggerFactory.getLogger(KibbleClass::class.java)
@@ -71,19 +74,17 @@ class KibbleClass(val parent: KibbleFile,
         constructor?.parameters
                 ?.filter { it.mutability != null }
                 ?.forEach {
-                    val kotlinProperty = KibbleProperty(it.name, it.type, it.defaultValue, lateInit = false, parent = this)
-                    kotlinProperty.ctorParam = true
-                    this += kotlinProperty
+                    this += KibbleProperty(this, it.name, it.type, it.defaultValue, lateInit = false, ctorParam = true)
                 }
         kt.getSecondaryConstructors().forEach {
-            this += SecondaryConstructor(it)
+            secondaries += SecondaryConstructor(it)
         }
         extract(kt.annotationEntries)
         kt.getBody()?.declarations
                 ?.filter { it !is KtSecondaryConstructor }
                 ?.forEach {
                     when (it) {
-                        is KtClass -> this += KibbleClass(file, it)
+                        is KtClass -> nestedClasses += KibbleClass(file, it)
                         is KtFunction -> this += KibbleFunction(file, it)
                         is KtProperty -> this += KibbleProperty(this, it)
                         else -> throw IllegalArgumentException("Unknown type being added to this: $it")
@@ -91,12 +92,37 @@ class KibbleClass(val parent: KibbleFile,
                 }
     }
 
-    override fun getFile(): KibbleFile {
-        return parent
+    fun addPrimaryConstructor(): Constructor {
+        return if (constructor == null) {
+            val ctor = Constructor()
+            constructor = ctor
+            ctor
+        } else throw IllegalStateException("This class already has a primary constructor")
     }
 
-    operator fun plusAssign(ctor: SecondaryConstructor) {
+    fun addSecondaryConstructor(): SecondaryConstructor {
+        val ctor = SecondaryConstructor()
         secondaries += ctor
+        return ctor
+    }
+
+    override fun addProperty(name: String, type: String): KibbleProperty {
+        val property = KibbleProperty(this, name, KibbleType.from(type))
+        properties += property
+        return property
+    }
+
+    override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
+        val function = KibbleFunction(this, name, type = type, body = body)
+        functions += function
+        return function
+    }
+
+    fun addClass(name: String): KibbleClass {
+        val klass = KibbleClass(kibbleFile, name, enclosingType = this)
+        nestedClasses += klass
+
+        return klass
     }
 
     operator fun plusAssign(nested: KibbleClass) {

@@ -1,18 +1,14 @@
 package com.antwerkz.kibble
 
-import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFile
-import com.antwerkz.kibble.model.KibbleFunction
-import com.antwerkz.kibble.model.KibbleProperty
 import com.antwerkz.kibble.model.KibbleType
-import com.antwerkz.kibble.model.Parameter
+import com.antwerkz.kibble.model.KibbleParameter
 import com.antwerkz.kibble.model.Visibility
 import org.jetbrains.kotlin.javax.inject.Singleton
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
 import java.io.StringWriter
-
 
 class KibbleTest {
     companion object {
@@ -37,7 +33,6 @@ class KibbleTest {
         val file = Kibble.parse(path)[0]
 
         Assert.assertEquals(file.imports.size, 4)
-        Assert.assertEquals(file.imports[3].alias, "HMap")
         Assert.assertEquals(file.classes.size, 2)
         val klass = file.classes[0]
 
@@ -49,10 +44,10 @@ class KibbleTest {
         Assert.assertEquals(klass.functions.size, 2)
 
         Assert.assertEquals(klass.functions[0].name, "output")
-        Assert.assertEquals(klass.functions[0].parameters, listOf(Parameter("count", KibbleType("Long"))))
+        Assert.assertEquals(klass.functions[0].parameters, listOf(KibbleParameter("count", KibbleType("Long"))))
 
         Assert.assertEquals(klass.functions[1].name, "toString")
-        Assert.assertEquals(klass.functions[1].parameters, listOf<Parameter>())
+        Assert.assertEquals(klass.functions[1].parameters, listOf<KibbleParameter>())
     }
 
     @Test
@@ -61,23 +56,28 @@ class KibbleTest {
 
         val tempFile = File("kibble-test.kt")
         tempFile.deleteOnExit()
-        FileSourceWriter(tempFile).use { file.toSource(it)}
+        FileSourceWriter(tempFile).use { file.toSource(it) }
 
         Assert.assertEquals(tempFile.readText().split("\n"), File(path).readLines())
     }
 
     @Test
     fun create() {
-        val elements = KibbleClass(KibbleFile(), "KibbleTest")
+        val file = KibbleFile("create.kt")
+        val klass = file.addClass("KibbleTest")
                 .markOpen()
 
-        elements += KibbleProperty("property", KibbleType("Double"), parent = elements)
-                .addInitializer("0.0")
-        elements += KibbleFunction(KibbleFile(), "test", visibility = Visibility.PROTECTED,
-                type = "Double",
+        klass.addProperty("property", "Double")
+                .initializer = "0.0"
+        klass.addFunction("test", type = "Double",
                 body = """println("hello")
 return 0.0""")
-        val file = KibbleFile(classes = mutableListOf(elements))
+                .visibility = Visibility.PROTECTED
+
+        file.addProperty("topLevel", "Int")
+                .initializer = "4"
+
+        file.addFunction("bareMethod", body= """println("hi")""")
 
         val writer = StringWriter()
         StringSourceWriter(writer).use {

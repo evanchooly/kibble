@@ -9,19 +9,19 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleFunction(val parent: Packaged<*>,
-                     var name: String? = null,
-                     override val parameters: MutableList<Parameter> = mutableListOf<Parameter>(),
-                     override var visibility: Visibility = PUBLIC,
-                     override var modality: Modality = FINAL,
-                     var type: String = "",
-                     var body: String = "",
-                     override var overriding: Boolean = false)
+class KibbleFunction internal constructor(parent: Packaged<*>,
+                                          var name: String? = null,
+                                          override val parameters: MutableList<KibbleParameter> = mutableListOf<KibbleParameter>(),
+                                          override var visibility: Visibility = PUBLIC,
+                                          override var modality: Modality = FINAL,
+                                          var type: String = "Unit",
+                                          var body: String = "",
+                                          override var overriding: Boolean = false)
     : Visible, Hierarchical<KibbleFunction>, ParameterHolder, KibbleElement, Overridable, Packaged<KibbleFile> {
 
     internal constructor(file: KibbleFile, kt: KtFunction) : this(file, kt.name) {
         kt.valueParameters.forEach {
-            this += Parameter(it)
+            this += KibbleParameter(it)
         }
         kt.modifierList?.allChildren?.forEach {
             addModifier(it.text)
@@ -32,16 +32,14 @@ class KibbleFunction(val parent: Packaged<*>,
         this.addModifier(kt.modalityModifier()?.text)
     }
 
-    override fun getFile(): KibbleFile {
-        return parent.getFile()
-    }
+    override var kibbleFile = parent.kibbleFile
 
     override fun toString() = StringSourceWriter().apply { toSource(this) }.toString()
 
     override fun toSource(writer: SourceWriter, indentationLevel: Int) {
         writer.writeln()
         writer.writeIndent(indentationLevel)
-        val returnType = if (type != "") ": $type " else " "
+        val returnType = if (type != "" && type != "Unit") ": $type " else " "
         if (overriding) {
             writer.write("override ")
         }

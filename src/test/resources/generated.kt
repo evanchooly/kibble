@@ -1,3 +1,4 @@
+val topLevel: Int = 4
 
 open class KibbleTest {
     val property: Double = 0.0
@@ -6,4 +7,8 @@ open class KibbleTest {
         println("hello")
         return 0.0
     }
+}
+
+fun bareMethod() {
+    println("hi")
 }

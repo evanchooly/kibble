@@ -7,4 +7,6 @@ interface PropertyHolder {
     operator fun plusAssign(property: KibbleProperty) {
         properties += property
     }
+
+    fun addProperty(name: String, type: String): KibbleProperty
 }

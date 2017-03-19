@@ -14,18 +14,20 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleProperty(val name: String, var type: KibbleType,
-                     var initializer: String? = null,
-                     override var modality: Modality = FINAL,
-                     override var overriding: Boolean = false,
-                     override var visibility: Visibility = PUBLIC,
-                     override var mutability: Mutability? = VAL,
-                     var lateInit: Boolean = false,
-                     var parent: Packaged<*>)
+class KibbleProperty internal constructor(val parent: Packaged<*>,
+                                          val name: String,
+                                          var type: KibbleType,
+                                          var initializer: String? = null,
+                                          override var modality: Modality = FINAL,
+                                          override var overriding: Boolean = false,
+                                          override var visibility: Visibility = PUBLIC,
+                                          override var mutability: Mutability? = VAL,
+                                          var lateInit: Boolean = false,
+                                          var ctorParam: Boolean = false)
     : KibbleElement, Visible, Mutable, Hierarchical<KibbleProperty>, Overridable, Annotatable, Packaged<KibbleProperty> {
 
-    internal constructor(parent: Packaged<*>, kt: KtProperty) : this(kt.name!!, KibbleType.from(kt.typeReference),
-            kt.initializer?.text, parent = parent) {
+    internal constructor(parent: Packaged<*>, kt: KtProperty) : this(parent, kt.name!!, KibbleType.from(kt.typeReference),
+            kt.initializer?.text) {
         kt.modifierList
                 ?.allChildren
                 ?.filter { it is PsiElement && it !is PsiWhiteSpace }
@@ -44,19 +46,10 @@ class KibbleProperty(val name: String, var type: KibbleType,
         }
     }
 
-    internal var ctorParam: Boolean = false
     override var annotations: MutableList<KibbleAnnotation> = mutableListOf()
+    override var kibbleFile = parent.kibbleFile
 
-    fun addInitializer(init: String): KibbleProperty {
-        initializer = init
-        return this
-    }
-
-    fun isParameterized(): Boolean = type?.parameters?.isEmpty()?.not() ?: false
-
-    override fun getFile(): KibbleFile {
-        return parent.getFile()
-    }
+    fun isParameterized(): Boolean = type.parameters.isEmpty().not()
 
     override fun toSource(writer: SourceWriter, indentationLevel: Int) {
         annotations.forEach {

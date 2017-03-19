@@ -1,13 +1,13 @@
 package com.antwerkz.kibble.model
 
 interface Packaged<out T> {
-    fun getFile(): KibbleFile
+    var kibbleFile: KibbleFile
 
-    fun getPackage() = getFile().pkgName
+    fun getPackage() = kibbleFile.pkgName
 
     @Suppress("UNCHECKED_CAST")
     fun setPackage(name: String?): T {
-        getFile().pkgName = name
+        kibbleFile.pkgName = name
         return this as T
     }
 }

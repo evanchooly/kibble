@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.psi.KtValueArgumentList
 import org.jetbrains.kotlin.psi.KtValueArgumentName
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
 
-class KibbleAnnotation(name: String, val arguments: Map<String, String?> = mapOf()) : KibbleType(name) {
+class KibbleAnnotation internal constructor(name: String, val arguments: Map<String, String?> = mapOf()) : KibbleType(name) {
     companion object {
         fun from(annotation: KtAnnotationEntry): KibbleAnnotation {
             return KibbleAnnotation(
