@@ -14,19 +14,24 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.jetbrains.kotlin.resolve.calls.callUtil.getValueArgumentsInParentheses
 import org.slf4j.LoggerFactory
 
-class KibbleClass internal constructor(override var kibbleFile: KibbleFile,
-                  var name: String = "",
-                  override var modality: Modality = FINAL,
-                  override var visibility: Visibility = PUBLIC,
+class KibbleClass internal constructor(var kibbleFile: KibbleFile,
+                                       var name: String = "",
+                                       override var modality: Modality = FINAL,
+                                       override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder,
+        Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Packaged {
 
-                  var enclosingType: KibbleClass? = null,
-                  override val properties: MutableList<KibbleProperty> = mutableListOf<KibbleProperty>()
-) : KibbleElement, FunctionHolder, Visible, Hierarchical<KibbleClass>, Annotatable, PropertyHolder, Packaged<KibbleClass> {
+    override var pkgName: String?
+        get() = kibbleFile.pkgName
+        set(value) {
+            kibbleFile.pkgName = value
+        }
 
+    var enclosingType: KibbleClass? = null
     override var annotations = mutableListOf<KibbleAnnotation>()
     override val functions = mutableListOf<KibbleFunction>()
+    override val properties = mutableListOf<KibbleProperty>()
 
-    var constructor: Constructor? = null
+    var constructor= Constructor(this)
         private set
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
     val nestedClasses: MutableList<KibbleClass> = mutableListOf()
@@ -38,7 +43,6 @@ class KibbleClass internal constructor(override var kibbleFile: KibbleFile,
     var superType: KibbleType? = null
     var interfaces = listOf<KibbleType>()
     var superCallArgs = listOf<String>()
-    override var parentClass: KibbleClass? = this
 
     internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
         val superTypeListEntries = kt.getSuperTypeListEntries()
@@ -69,15 +73,17 @@ class KibbleClass internal constructor(override var kibbleFile: KibbleFile,
         addModifier(kt.modalityModifier()?.text)
         addModifier(kt.visibilityModifier()?.text)
         kt.getPrimaryConstructor()?.let {
-            constructor = Constructor(it)
+            constructor = Constructor(this, it)
         }
+/*
         constructor?.parameters
                 ?.filter { it.mutability != null }
                 ?.forEach {
-                    this += KibbleProperty(this, it.name, it.type, it.defaultValue, lateInit = false, ctorParam = true)
+                    properties += KibbleProperty(kibbleFile, this, it.name, it.type, it.defaultValue, lateInit = false, ctorParam = true)
                 }
+*/
         kt.getSecondaryConstructors().forEach {
-            secondaries += SecondaryConstructor(it)
+            secondaries += SecondaryConstructor(this, it)
         }
         extract(kt.annotationEntries)
         kt.getBody()?.declarations
@@ -85,41 +91,42 @@ class KibbleClass internal constructor(override var kibbleFile: KibbleFile,
                 ?.forEach {
                     when (it) {
                         is KtClass -> nestedClasses += KibbleClass(file, it)
-                        is KtFunction -> this += KibbleFunction(file, it)
-                        is KtProperty -> this += KibbleProperty(this, it)
+                        is KtFunction -> functions += KibbleFunction(file, it)
+                        is KtProperty -> properties += KibbleProperty(this, it)
                         else -> throw IllegalArgumentException("Unknown type being added to this: $it")
                     }
                 }
     }
 
-    fun addPrimaryConstructor(): Constructor {
-        return if (constructor == null) {
-            val ctor = Constructor()
-            constructor = ctor
-            ctor
-        } else throw IllegalStateException("This class already has a primary constructor")
-    }
-
     fun addSecondaryConstructor(): SecondaryConstructor {
-        val ctor = SecondaryConstructor()
+        val ctor = SecondaryConstructor(this)
         secondaries += ctor
         return ctor
     }
 
-    override fun addProperty(name: String, type: String): KibbleProperty {
-        val property = KibbleProperty(this, name, KibbleType.from(type))
-        properties += property
+    override fun addProperty(name: String, type: String, initializer: String?, modality: Modality, overriding: Boolean,
+                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParameter: Boolean)
+            : KibbleProperty {
+        val property = KibbleProperty(this, name, KibbleType.from(type), initializer, modality, overriding, lateInit)
+        property.visibility = visibility
+        property.mutability = mutability
+        if(constructorParameter) {
+            constructor.parameters += property
+        } else {
+            properties += property
+        }
         return property
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        val function = KibbleFunction(this, name, type = type, body = body)
+        val function = KibbleFunction(this.kibbleFile, this, name = name, type = type, body = body)
         functions += function
         return function
     }
 
     fun addClass(name: String): KibbleClass {
-        val klass = KibbleClass(kibbleFile, name, enclosingType = this)
+        val klass = KibbleClass(kibbleFile, name)
+        klass.enclosingType = this
         nestedClasses += klass
 
         return klass
@@ -140,7 +147,8 @@ class KibbleClass internal constructor(override var kibbleFile: KibbleFile,
         annotations.forEach { writer.writeln(it.toString()) }
         writer.write("$visibility${modality}class ")
         writer.write(name)
-        constructor?.toSource(writer, indentationLevel)
+
+        constructor.toSource(writer, indentationLevel)
         superType?.let {
             writer.write(": $it")
             writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))
@@ -148,13 +156,13 @@ class KibbleClass internal constructor(override var kibbleFile: KibbleFile,
         if (!interfaces.isEmpty()) {
             writer.write(interfaces.joinToString(prefix = ", "))
         }
-        if (!properties
-                .filter { !it.ctorParam }
-                .isEmpty() || !functions.isEmpty()) {
+        if (!properties.isEmpty() || !functions.isEmpty()) {
             writer.writeln(" {")
-            properties.filter { !it.ctorParam }
-                    .forEach { it.toSource(writer, indentationLevel + 1) }
+            properties.forEach { it.toSource(writer, indentationLevel + 1) }
             functions.forEach { it.toSource(writer, indentationLevel + 1) }
+            nestedClasses.forEach { it.toSource(writer, indentationLevel + 1) }
+
+            writer.writeIndent(indentationLevel)
             writer.writeln("}")
         }
     }

@@ -14,16 +14,20 @@ import java.io.File
 class Kibble {
     companion object {
         @JvmStatic
-        fun parse(file: File): KibbleFile {
-            return parse(file.absolutePath)[0]
+        fun parseFile(file: String): KibbleFile {
+            return parse(File(file))[0]
         }
 
-        fun parse(path: String): List<KibbleFile> {
+        fun parseFile(file: File): KibbleFile {
+            return parse(file.absoluteFile)[0]
+        }
+
+        fun parse(path: File): List<KibbleFile> {
             val configuration = CompilerConfiguration()
             configuration.put(CompilerConfigurationKey.create<File>("output directory"), File(""))
             configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY,
                     PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false))
-            configuration.addKotlinSourceRoot(path)
+            configuration.addKotlinSourceRoot(path.absolutePath)
 
             return KotlinCoreEnvironment
                     .createForProduction(Disposable { }, configuration, listOf())
@@ -31,14 +35,13 @@ class Kibble {
                     .map(::KibbleFile)
         }
 
-        fun  parseFunctionBody(body: String): String {
+        fun parseSource(source: String): KibbleFile {
             val tempFile = File.createTempFile("kibble-", ".kt")
             tempFile.deleteOnExit()
 
             try {
-                tempFile.writeText("fun temp() {\n\t$body\n}")
-                val parse = parse(tempFile.absolutePath)[0]
-                return parse.functions[0].body
+                tempFile.writeText(source)
+                return parse(tempFile.absoluteFile)[0]
             } finally {
                 tempFile.delete()
             }

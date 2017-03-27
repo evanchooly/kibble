@@ -14,7 +14,7 @@ open class KibbleType internal constructor(val name: String, var qualifiedName: 
             try {
                 temp.deleteOnExit()
                 temp.writeText("val temp: $type\n")
-                return Kibble.parse(temp).properties[0].type
+                return Kibble.parseFile(temp).properties[0].type
             } finally {
                 temp.delete()
             }

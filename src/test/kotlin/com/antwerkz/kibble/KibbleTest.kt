@@ -17,7 +17,7 @@ class KibbleTest {
 
     @Test
     fun standalone() {
-        val file = Kibble.parse("src/test/resources/com/antwerkz/test/standalone.kt")[0]
+        val file = Kibble.parseFile("src/test/resources/com/antwerkz/test/standalone.kt")
 
         Assert.assertEquals(file.functions.size, 1)
         Assert.assertEquals(file.functions[0].visibility, Visibility.INTERNAL)
@@ -30,7 +30,7 @@ class KibbleTest {
 
     @Test
     fun sampleClass() {
-        val file = Kibble.parse(path)[0]
+        val file = Kibble.parseFile(path)
 
         Assert.assertEquals(file.imports.size, 4)
         Assert.assertEquals(file.classes.size, 2)
@@ -38,9 +38,10 @@ class KibbleTest {
 
         Assert.assertTrue(klass.isInternal())
         Assert.assertTrue(klass.hasAnnotation(Singleton::class.java))
-        Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
-        Assert.assertEquals(klass.properties[0].name, "cost")
-        Assert.assertEquals(klass.properties[0].type, KibbleType("Double"))
+        Assert.assertEquals(klass.properties.size, 6, klass.properties.toString())
+        Assert.assertEquals(klass.constructor.parameters.size, 2, klass.constructor.parameters.toString())
+        Assert.assertEquals(klass.properties[0].name, "name")
+        Assert.assertEquals(klass.properties[0].type, KibbleType("String", nullable = true))
         Assert.assertEquals(klass.functions.size, 2)
 
         Assert.assertEquals(klass.functions[0].name, "output")
@@ -52,7 +53,7 @@ class KibbleTest {
 
     @Test
     fun writeSource() {
-        val file = Kibble.parse(path)[0]
+        val file = Kibble.parseFile(path)
 
         val tempFile = File("kibble-test.kt")
         tempFile.deleteOnExit()
@@ -67,8 +68,7 @@ class KibbleTest {
         val klass = file.addClass("KibbleTest")
                 .markOpen()
 
-        klass.addProperty("property", "Double")
-                .initializer = "0.0"
+        klass.addProperty("property", "Double", initializer = "0.0")
         klass.addFunction("test", type = "Double",
                 body = """println("hello")
 return 0.0""")
@@ -79,11 +79,11 @@ return 0.0""")
 
         file.addFunction("bareMethod", body= """println("hi")""")
 
-        val writer = StringWriter()
-        StringSourceWriter(writer).use {
+        val generated = StringSourceWriter().use {
             file.toSource(it)
+            it.toString()
         }
 
-        Assert.assertEquals(writer.toString(), File("src/test/resources/generated.kt").readText())
+        Assert.assertEquals(generated, File("src/test/resources/generated.kt").readText())
     }
 }

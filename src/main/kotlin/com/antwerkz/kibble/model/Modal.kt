@@ -2,7 +2,7 @@ package com.antwerkz.kibble.model
 
 
 @Suppress("UNCHECKED_CAST")
-interface Hierarchical<T> {
+interface Modal<T> {
     var modality: Modality
 
     fun isAbstract(): Boolean {

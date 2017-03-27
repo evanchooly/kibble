@@ -32,6 +32,7 @@ class KibbleAnnotation internal constructor(name: String, val arguments: Map<Str
         }
     }
 
+    
     override fun toString(): String {
         var string = name
         if(arguments.isNotEmpty()) {
@@ -40,5 +41,19 @@ class KibbleAnnotation internal constructor(name: String, val arguments: Map<Str
             })
         }
         return "@$string"
+    }
+
+    /**
+     * @return the value of the named parameter for the annotation
+     */
+    operator fun get(name: String): String? {
+        return arguments[name]
+    }
+
+    /**
+     * @return the value of the "value" parameter for the annotation
+     */
+    fun getValue(): String? {
+        return arguments["value"]
     }
 }

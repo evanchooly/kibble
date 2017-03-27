@@ -14,19 +14,21 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleProperty internal constructor(val parent: Packaged<*>,
-                                          val name: String,
-                                          var type: KibbleType,
-                                          var initializer: String? = null,
+class KibbleProperty internal constructor(val parent: KibbleClass?,
+                                          name: String,
+                                          type: KibbleType,
+                                          initializer: String? = null,
                                           override var modality: Modality = FINAL,
                                           override var overriding: Boolean = false,
-                                          override var visibility: Visibility = PUBLIC,
-                                          override var mutability: Mutability? = VAL,
-                                          var lateInit: Boolean = false,
-                                          var ctorParam: Boolean = false)
-    : KibbleElement, Visible, Mutable, Hierarchical<KibbleProperty>, Overridable, Annotatable, Packaged<KibbleProperty> {
+                                          var lateInit: Boolean = false)
+    : KibbleParameter(name, type, initializer), Visible, Mutable, Modal<KibbleProperty>, Overridable, Annotatable {
 
-    internal constructor(parent: Packaged<*>, kt: KtProperty) : this(parent, kt.name!!, KibbleType.from(kt.typeReference),
+    init {
+        visibility = PUBLIC
+        mutability = VAL
+    }
+
+    internal constructor(parent: KibbleClass?, kt: KtProperty) : this(parent, kt.name!!, KibbleType.from(kt.typeReference),
             kt.initializer?.text) {
         kt.modifierList
                 ?.allChildren
@@ -47,9 +49,6 @@ class KibbleProperty internal constructor(val parent: Packaged<*>,
     }
 
     override var annotations: MutableList<KibbleAnnotation> = mutableListOf()
-    override var kibbleFile = parent.kibbleFile
-
-    fun isParameterized(): Boolean = type.parameters.isEmpty().not()
 
     override fun toSource(writer: SourceWriter, indentationLevel: Int) {
         annotations.forEach {
@@ -66,7 +65,7 @@ class KibbleProperty internal constructor(val parent: Packaged<*>,
         if (lateInit) {
             writer.write("lateinit ")
         }
-        writer.write(mutability?.toString() ?: "")
+        writer.write(mutability.toString())
         writer.write(name)
         type.let { writer.write(": $it") }
         initializer?.let { writer.write(" = $it") }
@@ -76,7 +75,7 @@ class KibbleProperty internal constructor(val parent: Packaged<*>,
     override fun toString(): String {
         val writer = StringSourceWriter()
         toSource(writer)
-        return writer.toString()
+        return writer.toString().trim()
     }
 }
 

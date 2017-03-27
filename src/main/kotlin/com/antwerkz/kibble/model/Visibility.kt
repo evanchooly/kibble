@@ -1,6 +1,11 @@
 package com.antwerkz.kibble.model
 
 enum class Visibility {
+    NONE {
+        override fun toString(): String {
+            return ""
+        }
+    },
     PUBLIC {
         override fun toString(): String {
             return ""

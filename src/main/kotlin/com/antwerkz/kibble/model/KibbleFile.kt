@@ -9,15 +9,15 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 
-class KibbleFile(val name: String? = null, var pkgName: String? = null) :
-        KibbleElement, FunctionHolder, PropertyHolder, Packaged<KibbleFile> {
+class KibbleFile(val name: String? = null, override var pkgName: String? = null) :
+        KibbleElement, FunctionHolder, PropertyHolder, Packaged {
 
     companion object {
         val LOG: Logger = LoggerFactory.getLogger(KibbleFile::class.java)
     }
 
-    private val imports = mutableSetOf<KibbleImport>()
-    private val classes = mutableListOf<KibbleClass>()
+    val imports = mutableSetOf<KibbleImport>()
+    val classes = mutableListOf<KibbleClass>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
 
@@ -27,7 +27,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null) :
             when (it) {
                 is KtClass -> classes += KibbleClass(this, it)
                 is KtFunction -> functions += KibbleFunction(this, it)
-                is KtProperty -> properties += KibbleProperty(this, it)
+                is KtProperty -> properties += KibbleProperty(null, it)
                 else -> LOG.warn("Unknown type being added to KotlinFile: $it")
             }
         }
@@ -37,11 +37,8 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null) :
         pkgName = file.packageDirective?.children?.firstOrNull()?.text
     }
 
-    override var parentClass: KibbleClass? = null
     var sourcePath: String? = null
         private set
-
-    override var kibbleFile = this
 
     fun addClass(name: String): KibbleClass {
         val klass = KibbleClass(this, name)
@@ -50,16 +47,30 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null) :
         return klass
     }
 
-    override fun addProperty(name: String, type: String): KibbleProperty {
-        val property = KibbleProperty(this, name, KibbleType.from(type))
-        properties += property
-        return property
-    }
-
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        val function = KibbleFunction(this, name, type = type, body = body)
+        val function = KibbleFunction(this, null, name, type = type, body = body)
         functions += function
         return function
+    }
+
+    fun addImport(name: String, alias: String? = null) {
+        imports += KibbleImport(name, alias)
+    }
+
+    fun addImport(type: Class<*>, alias: String? = null) {
+        imports += KibbleImport(type, alias)
+    }
+
+    override fun addProperty(name: String, type: String, initializer: String?, modality: Modality, overriding: Boolean,
+                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam:Boolean): KibbleProperty {
+        if (constructorParam) {
+            throw IllegalArgumentException("File level properties can not also be constructor parameters")
+        }
+        val property = KibbleProperty(null, name, KibbleType.from(type))
+        property.visibility = visibility
+        property.mutability = mutability
+        properties += property
+        return property
     }
 
     operator fun plusAssign(value: KibbleImport) {
@@ -69,7 +80,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null) :
     }
 
     fun outputFile(directory: File): File {
-        var fileName = name + ".kt"
+        var fileName = name
         pkgName?.let {
             fileName = it.replace('.', '/') + "/" + fileName
         }
@@ -85,7 +96,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null) :
 
         imports.forEach { it.toSource(writer, indentationLevel) }
         properties.forEach { it.toSource(writer, indentationLevel) }
-        classes.forEach{ it.toSource(writer, indentationLevel) }
+        classes.forEach { it.toSource(writer, indentationLevel) }
         functions.forEach { it.toSource(writer, indentationLevel) }
     }
 

@@ -15,8 +15,12 @@ interface Annotatable {
     }
 
     fun hasAnnotation(annotation: Class<out Annotation>): Boolean {
+        return getAnnotation(annotation) != null
+    }
+
+    fun getAnnotation(annotation: Class<out Annotation>): KibbleAnnotation? {
         return annotations.firstOrNull {
             it.name == annotation.simpleName || it.name == annotation.name
-        } != null
+        }
     }
 }

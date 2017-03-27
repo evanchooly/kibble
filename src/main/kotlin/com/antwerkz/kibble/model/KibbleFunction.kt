@@ -9,17 +9,33 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleFunction internal constructor(parent: Packaged<*>,
+class KibbleFunction internal constructor(val file: KibbleFile,
+                                          val parent: KibbleClass? = null,
                                           var name: String? = null,
-                                          override val parameters: MutableList<KibbleParameter> = mutableListOf<KibbleParameter>(),
                                           override var visibility: Visibility = PUBLIC,
                                           override var modality: Modality = FINAL,
                                           var type: String = "Unit",
                                           var body: String = "",
                                           override var overriding: Boolean = false)
-    : Visible, Hierarchical<KibbleFunction>, ParameterHolder, KibbleElement, Overridable, Packaged<KibbleFile> {
+    : Visible, Modal<KibbleFunction>, ParameterHolder, KibbleElement, Overridable, Packaged {
 
-    internal constructor(file: KibbleFile, kt: KtFunction) : this(file, kt.name) {
+    override val parameters = mutableListOf<KibbleParameter>()
+
+    override var pkgName: String?
+        get() = file.pkgName
+        set(value) {
+            file.pkgName = value
+        }
+
+    internal constructor(file: KibbleFile, kt: KtFunction) : this(file, null, kt.name) {
+        parse(kt)
+    }
+
+    internal constructor(parent: KibbleClass, kt: KtFunction) : this(parent.kibbleFile, parent, kt.name) {
+        parse(kt)
+    }
+
+    private fun parse(kt: KtFunction) {
         kt.valueParameters.forEach {
             this += KibbleParameter(it)
         }
@@ -31,8 +47,6 @@ class KibbleFunction internal constructor(parent: Packaged<*>,
         this.addModifier(kt.visibilityModifier()?.text)
         this.addModifier(kt.modalityModifier()?.text)
     }
-
-    override var kibbleFile = parent.kibbleFile
 
     override fun toString() = StringSourceWriter().apply { toSource(this) }.toString()
 
