@@ -18,10 +18,12 @@ class Kibble {
             return parse(File(file))[0]
         }
 
+        @JvmStatic
         fun parseFile(file: File): KibbleFile {
             return parse(file.absoluteFile)[0]
         }
 
+        @JvmStatic
         fun parse(path: File): List<KibbleFile> {
             val configuration = CompilerConfiguration()
             configuration.put(CompilerConfigurationKey.create<File>("output directory"), File(""))
@@ -35,6 +37,7 @@ class Kibble {
                     .map(::KibbleFile)
         }
 
+        @JvmStatic
         fun parseSource(source: String): KibbleFile {
             val tempFile = File.createTempFile("kibble-", ".kt")
             tempFile.deleteOnExit()
