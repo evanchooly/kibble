@@ -11,8 +11,9 @@
     <name>kibble</name>
 
     <scm>
-        <connection>scm:git:git@github.com:evanchooly/kibble</connection>
-        <url>https://github.com/evanchooly/kibble</url>
+        <connection>scm:git:git@github.com:evanchooly/kibble.git</connection>
+        <developerConnection>scm:git:git@github.com:evanchooly/kibble.git</developerConnection>
+        <url>git@github.com:evanchooly/kibble.git</url>
     </scm>
 
     <repositories>
