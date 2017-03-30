@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -8,12 +9,60 @@
     <packaging>jar</packaging>
 
     <name>kibble</name>
+    <url>https://github.com/evanchooly/kibble</url>
 
     <scm>
         <connection>scm:git:git@github.com:evanchooly/kibble.git</connection>
         <developerConnection>scm:git:git@github.com:evanchooly/kibble.git</developerConnection>
         <url>git@github.com:evanchooly/kibble.git</url>
     </scm>
+
+    <properties>
+        <critter.version>2.1.1</critter.version>
+        <kotlin.version>1.0.6</kotlin.version>
+        <slf4j.version>1.7.22</slf4j.version>
+        <testng.version>6.10</testng.version>
+        <jacoco.version>0.7.7.201606060606</jacoco.version>
+        <dokka.version>0.9.13</dokka.version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-compiler-embeddable</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <repositories>
         <repository>
@@ -87,53 +136,7 @@
         </plugins>
     </build>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-compiler-embeddable</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${testng.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test</artifactId>
-            <version>${kotlin.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <properties>
-        <critter.version>2.1.1</critter.version>
-        <kotlin.version>1.0.6</kotlin.version>
-        <slf4j.version>1.7.22</slf4j.version>
-        <testng.version>6.10</testng.version>
-        <jacoco.version>0.7.7.201606060606</jacoco.version>
-        <dokka.version>0.9.13</dokka.version>
-
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
+<!--
     <distributionManagement>
         <repository>
             <id>bintray-evanchooly-maven</id>
@@ -141,4 +144,5 @@
             <url>https://api.bintray.com/maven/evanchooly/maven/kibble/;publish=1</url>
         </repository>
     </distributionManagement>
+-->
 </project>
