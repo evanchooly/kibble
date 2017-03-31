@@ -9,9 +9,7 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
         Mutable, Visible {
 
     internal constructor(kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference)) {
-        if (kt.hasValOrVar()) {
-            addModifier(kt.valOrVarKeyword?.text)
-        }
+        mutability = Mutable.apply(kt.valOrVarKeyword)
     }
 
     override var mutability: Mutability = NEITHER

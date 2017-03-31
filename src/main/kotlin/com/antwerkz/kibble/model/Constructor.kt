@@ -17,7 +17,7 @@ open class Constructor internal constructor(val klass: KibbleClass) : Visible, P
     override val parameters = mutableListOf<KibbleParameter>()
     var body: String = ""
 
-    override fun toSource(writer: SourceWriter, indentationLevel: Int) {
+    override fun toSource(writer: SourceWriter, level: Int) {
         if (parameters.size != 0) {
             writer.write("(")
             writer.write(parameters.joinToString(", "))

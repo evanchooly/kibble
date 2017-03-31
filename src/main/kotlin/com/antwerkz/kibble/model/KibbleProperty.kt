@@ -34,15 +34,12 @@ class KibbleProperty internal constructor(val parent: KibbleClass?,
                 ?.allChildren
                 ?.filter { it is PsiElement && it !is PsiWhiteSpace }
                 ?.forEach {
-                    when (it) {
-                        is KtAnnotationEntry -> extract(it)
-                        else -> addModifier(it.node.text)
-                    }
+                    addModifier(it.node.text)
                 }
 
-
-        addModifier(kt.visibilityModifier()?.text)
-        addModifier(kt.modalityModifier()?.text)
+        kt.annotationEntries.forEach { extractAnnotation(it) }
+        modality = Modal.apply(kt.modalityModifier())
+        visibility = Visible.apply(kt.visibilityModifier())
         if (kt.isVar || lateInit) {
             mutability = VAR
         }
@@ -50,12 +47,12 @@ class KibbleProperty internal constructor(val parent: KibbleClass?,
 
     override var annotations: MutableList<KibbleAnnotation> = mutableListOf()
 
-    override fun toSource(writer: SourceWriter, indentationLevel: Int) {
+    override fun toSource(writer: SourceWriter, level: Int) {
         annotations.forEach {
-            writer.writeIndent(indentationLevel)
+            writer.writeIndent(level)
             writer.writeln(it.toString())
         }
-        writer.writeIndent(indentationLevel)
+        writer.writeIndent(level)
 
         writer.write(visibility.toString())
         writer.write(modality.toString())

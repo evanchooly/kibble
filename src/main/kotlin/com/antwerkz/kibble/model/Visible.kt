@@ -4,8 +4,18 @@ import com.antwerkz.kibble.model.Visibility.INTERNAL
 import com.antwerkz.kibble.model.Visibility.PRIVATE
 import com.antwerkz.kibble.model.Visibility.PROTECTED
 import com.antwerkz.kibble.model.Visibility.PUBLIC
+import com.antwerkz.kibble.model.Visibility.valueOf
+import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 
 interface Visible {
+    companion object {
+        internal fun apply(modifier: PsiElement?): Visibility {
+            return modifier?.text?.let {
+                valueOf(it.toUpperCase())
+            } ?: PUBLIC
+        }
+    }
+
     var visibility: Visibility
     fun isInternal(): Boolean {
         return visibility == INTERNAL

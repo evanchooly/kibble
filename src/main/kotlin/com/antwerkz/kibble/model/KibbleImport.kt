@@ -9,7 +9,7 @@ data class KibbleImport internal constructor(val name: String, val alias: String
 
     internal constructor(kt: KtImportDirective) : this(kt.importedFqName!!.asString(), kt.aliasName)
 
-    override fun toSource(writer: SourceWriter, indentationLevel: Int) {
+    override fun toSource(writer: SourceWriter, level: Int) {
         writer.write("import $name")
         alias?.let { writer.write(" as $alias") }
         writer.writeln()

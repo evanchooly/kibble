@@ -5,10 +5,12 @@ import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 import org.jetbrains.kotlin.psi.KtSuperTypeCallEntry
 import org.jetbrains.kotlin.psi.KtSuperTypeEntry
+import org.jetbrains.kotlin.psi.KtSuperTypeListEntry
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.jetbrains.kotlin.resolve.calls.callUtil.getValueArgumentsInParentheses
@@ -18,7 +20,7 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
                                        var name: String = "",
                                        override var modality: Modality = FINAL,
                                        override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder,
-        Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Packaged {
+        Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Packaged, Extendable {
 
     override var pkgName: String?
         get() = kibbleFile.pkgName
@@ -30,6 +32,7 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
     override var annotations = mutableListOf<KibbleAnnotation>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
+    val objects = mutableListOf<KibbleObject>()
 
     var constructor= Constructor(this)
         private set
@@ -40,38 +43,16 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
         val LOG = LoggerFactory.getLogger(KibbleClass::class.java)
     }
 
-    var superType: KibbleType? = null
-    var interfaces = listOf<KibbleType>()
-    var superCallArgs = listOf<String>()
+    override var interfaces = listOf<KibbleType>()
+    override var superType: KibbleType? = null
+    override var superCallArgs = listOf<String>()
 
     internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
-        val superTypeListEntries = kt.getSuperTypeListEntries()
-        val list = mutableListOf<KibbleType>()
-        val superCallArgs = mutableListOf<String>()
-        superTypeListEntries
-                .forEach {
-                    when (it) {
-                        is KtSuperTypeCallEntry -> {
-                            superType = KibbleType.from(it.typeReference)
-                            it.getValueArgumentsInParentheses().forEach { arg ->
-                                superCallArgs += arg.getArgumentExpression()!!.text
-                            }
-                        }
-                        is KtSuperTypeEntry -> {
-                            KibbleType.from(it.typeReference).let {
-                                list += it
-                            }
-                        }
-                        else -> {
-                            LOG.warn("Unknown super type entry: ${it.javaClass.name}")
-                        }
-                    }
-                }
-        this.interfaces = list
-        this.superCallArgs = superCallArgs
+        Extendable.extractSuperInformation(this, kt.getSuperTypeListEntries())
 
-        addModifier(kt.modalityModifier()?.text)
-        addModifier(kt.visibilityModifier()?.text)
+        modality = Modal.apply(kt.modalityModifier())
+        visibility = Visible.apply(kt.visibilityModifier())
+
         kt.getPrimaryConstructor()?.let {
             constructor = Constructor(this, it)
         }
@@ -85,7 +66,7 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
         kt.getSecondaryConstructors().forEach {
             secondaries += SecondaryConstructor(this, it)
         }
-        extract(kt.annotationEntries)
+        extractAnnotation(kt.annotationEntries)
         kt.getBody()?.declarations
                 ?.filter { it !is KtSecondaryConstructor }
                 ?.forEach {
@@ -93,7 +74,8 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
                         is KtClass -> nestedClasses += KibbleClass(file, it)
                         is KtFunction -> functions += KibbleFunction(file, it)
                         is KtProperty -> properties += KibbleProperty(this, it)
-                        else -> throw IllegalArgumentException("Unknown type being added to this: $it")
+                        is KtObjectDeclaration -> objects += KibbleObject(this, it)
+                        else -> throw IllegalArgumentException("Unknown type being added to this: ${it.javaClass}")
                     }
                 }
     }
@@ -141,14 +123,13 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
         return "class $name"
     }
 
-    override fun toSource(writer: SourceWriter, indentationLevel: Int) {
+    override fun toSource(writer: SourceWriter, level: Int) {
         writer.writeln()
-        writer.writeIndent(indentationLevel)
-        annotations.forEach { writer.writeln(it.toString()) }
+        annotations.forEach { writer.writeln(it.toString(), level) }
         writer.write("$visibility${modality}class ")
         writer.write(name)
 
-        constructor.toSource(writer, indentationLevel)
+        constructor.toSource(writer, level)
         superType?.let {
             writer.write(": $it")
             writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))
@@ -158,12 +139,11 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
         }
         if (!properties.isEmpty() || !functions.isEmpty()) {
             writer.writeln(" {")
-            properties.forEach { it.toSource(writer, indentationLevel + 1) }
-            functions.forEach { it.toSource(writer, indentationLevel + 1) }
-            nestedClasses.forEach { it.toSource(writer, indentationLevel + 1) }
+            properties.forEach { it.toSource(writer, level + 1) }
+            functions.forEach { it.toSource(writer, level + 1) }
+            nestedClasses.forEach { it.toSource(writer, level + 1) }
 
-            writer.writeIndent(indentationLevel)
-            writer.writeln("}")
+            writer.writeln("}", level)
         }
     }
 }

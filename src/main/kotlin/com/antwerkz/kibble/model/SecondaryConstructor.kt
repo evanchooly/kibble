@@ -11,5 +11,5 @@ class SecondaryConstructor internal constructor(klass: KibbleClass): Constructor
             body = kt.bodyExpression?.text ?: ""
     }
 
-    override fun toSource(writer: SourceWriter, indentationLevel: Int) = TODO("no source template yet")
+    override fun toSource(writer: SourceWriter, level: Int) = TODO("no source template yet")
 }

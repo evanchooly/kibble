@@ -12,7 +12,7 @@ interface KibbleElement {
     fun addModifier(modifier: String?) {
         when (modifier) {
             null, " " -> {}
-            "public", "protected", "private", "internal" -> (this as Visible).visibility = Visibility.valueOf(modifier.toUpperCase())
+//            "public", "protected", "private", "internal" -> (this as Visible).visibility = Visibility.valueOf(modifier.toUpperCase())
             "final", "abstract", "open" -> (this as Modal<*>).modality = Modality.valueOf(modifier.toUpperCase())
             "var", "val" -> (this as Mutable).mutability = Mutability.valueOf(modifier.toUpperCase())
             "lateinit" -> (this as KibbleProperty).lateInit = true
@@ -21,7 +21,7 @@ interface KibbleElement {
         }
     }
 
-    fun toSource(writer: SourceWriter, indentationLevel: Int = 0) {
+    fun toSource(writer: SourceWriter, level: Int = 0) {
         writer.writeln("toSource not implemented for ${javaClass.name}")
     }
 }

@@ -88,16 +88,16 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     }
 
 
-    override fun toSource(writer: SourceWriter, indentationLevel: Int) {
+    override fun toSource(writer: SourceWriter, level: Int) {
         pkgName?.let {
             writer.writeln("package $it")
             writer.writeln()
         }
 
-        imports.forEach { it.toSource(writer, indentationLevel) }
-        properties.forEach { it.toSource(writer, indentationLevel) }
-        classes.forEach { it.toSource(writer, indentationLevel) }
-        functions.forEach { it.toSource(writer, indentationLevel) }
+        imports.forEach { it.toSource(writer, level) }
+        properties.forEach { it.toSource(writer, level) }
+        classes.forEach { it.toSource(writer, level) }
+        functions.forEach { it.toSource(writer, level) }
     }
 
     override fun toString(): String {

@@ -44,15 +44,16 @@ class KibbleFunction internal constructor(val file: KibbleFile,
         }
         this.body = kt.bodyExpression?.text ?: ""
         this.type = kt.typeReference?.text ?: ""
-        this.addModifier(kt.visibilityModifier()?.text)
-        this.addModifier(kt.modalityModifier()?.text)
+
+        modality = Modal.apply(kt.modalityModifier())
+        visibility = Visible.apply(kt.visibilityModifier())
     }
 
     override fun toString() = StringSourceWriter().apply { toSource(this) }.toString()
 
-    override fun toSource(writer: SourceWriter, indentationLevel: Int) {
+    override fun toSource(writer: SourceWriter, level: Int) {
         writer.writeln()
-        writer.writeIndent(indentationLevel)
+        writer.writeIndent(level)
         val returnType = if (type != "" && type != "Unit") ": $type " else " "
         if (overriding) {
             writer.write("override ")
@@ -64,7 +65,7 @@ class KibbleFunction internal constructor(val file: KibbleFile,
         split.forEachIndexed { i, s ->
             if (i > 0) {
                 if (!s.startsWith(" ")) {
-                    writer.writeIndent(indentationLevel + (if (i < size - 1) 1 else 0))
+                    writer.writeIndent(level + (if (i < size - 1) 1 else 0))
                 }
             }
             writer.writeln(s)
