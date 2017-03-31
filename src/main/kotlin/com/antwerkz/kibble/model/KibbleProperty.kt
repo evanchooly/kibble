@@ -30,12 +30,14 @@ class KibbleProperty internal constructor(val parent: KibbleClass?,
 
     internal constructor(parent: KibbleClass?, kt: KtProperty) : this(parent, kt.name!!, KibbleType.from(kt.typeReference),
             kt.initializer?.text) {
+/*
         kt.modifierList
                 ?.allChildren
                 ?.filter { it is PsiElement && it !is PsiWhiteSpace }
                 ?.forEach {
                     addModifier(it.node.text)
                 }
+*/
 
         kt.annotationEntries.forEach { extractAnnotation(it) }
         modality = Modal.apply(kt.modalityModifier())
