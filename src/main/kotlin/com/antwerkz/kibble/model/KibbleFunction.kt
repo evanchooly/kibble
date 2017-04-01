@@ -39,14 +39,13 @@ class KibbleFunction internal constructor(val file: KibbleFile,
         kt.valueParameters.forEach {
             this += KibbleParameter(it)
         }
-        kt.modifierList?.allChildren?.forEach {
-            addModifier(it.text)
-        }
         this.body = kt.bodyExpression?.text ?: ""
         this.type = kt.typeReference?.text ?: ""
 
+        kt.modifierList
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
+        overriding = Overridable.apply(kt)
     }
 
     override fun toString() = StringSourceWriter().apply { toSource(this) }.toString()

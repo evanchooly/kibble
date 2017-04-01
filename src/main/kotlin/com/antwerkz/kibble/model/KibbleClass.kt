@@ -8,12 +8,8 @@ import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtSecondaryConstructor
-import org.jetbrains.kotlin.psi.KtSuperTypeCallEntry
-import org.jetbrains.kotlin.psi.KtSuperTypeEntry
-import org.jetbrains.kotlin.psi.KtSuperTypeListEntry
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
-import org.jetbrains.kotlin.resolve.calls.callUtil.getValueArgumentsInParentheses
 import org.slf4j.LoggerFactory
 
 class KibbleClass internal constructor(var kibbleFile: KibbleFile,
@@ -87,12 +83,12 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
     }
 
     override fun addProperty(name: String, type: String, initializer: String?, modality: Modality, overriding: Boolean,
-                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParameter: Boolean)
+                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean)
             : KibbleProperty {
         val property = KibbleProperty(this, name, KibbleType.from(type), initializer, modality, overriding, lateInit)
         property.visibility = visibility
         property.mutability = mutability
-        if(constructorParameter) {
+        if(constructorParam) {
             constructor.parameters += property
         } else {
             properties += property
