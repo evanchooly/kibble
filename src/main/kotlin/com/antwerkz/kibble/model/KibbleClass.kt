@@ -4,36 +4,34 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
-import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.slf4j.LoggerFactory
 
-class KibbleClass internal constructor(var kibbleFile: KibbleFile,
+class KibbleClass internal constructor(var file: KibbleFile,
                                        var name: String = "",
                                        override var modality: Modality = FINAL,
                                        override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder,
-        Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Packaged, Extendable {
+        Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Packaged, Extendable, ClassOrObjectHolder {
 
     override var pkgName: String?
-        get() = kibbleFile.pkgName
+        get() = file.pkgName
         set(value) {
-            kibbleFile.pkgName = value
+            file.pkgName = value
         }
 
     var enclosingType: KibbleClass? = null
     override var annotations = mutableListOf<KibbleAnnotation>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
-    val objects = mutableListOf<KibbleObject>()
 
     var constructor= Constructor(this)
         private set
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
-    val nestedClasses: MutableList<KibbleClass> = mutableListOf()
+    override val nestedClasses: MutableList<KibbleClass> = mutableListOf()
+    override val objects: MutableList<KibbleObject> = mutableListOf()
 
     companion object {
         val LOG = LoggerFactory.getLogger(KibbleClass::class.java)
@@ -44,7 +42,7 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
     override var superCallArgs = listOf<String>()
 
     internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
-        Extendable.extractSuperInformation(this, kt.getSuperTypeListEntries())
+        Extendable.extractSuperInformation(this, kt)
 
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
@@ -63,15 +61,17 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
             secondaries += SecondaryConstructor(this, it)
         }
         extractAnnotation(kt.annotationEntries)
+        functions.addAll(FunctionHolder.apply(file, kt))
+        val (classes, objs) = ClassOrObjectHolder.apply(file, kt)
+        nestedClasses.addAll(classes)
+        objects.addAll(objs)
+        properties.addAll(PropertyHolder.apply(file, kt, this))
         kt.getBody()?.declarations
                 ?.filter { it !is KtSecondaryConstructor }
                 ?.forEach {
                     when (it) {
-                        is KtClass -> nestedClasses += KibbleClass(file, it)
-                        is KtFunction -> functions += KibbleFunction(file, it)
-                        is KtProperty -> properties += KibbleProperty(this, it)
-                        is KtObjectDeclaration -> objects += KibbleObject(this, it)
-                        else -> throw IllegalArgumentException("Unknown type being added to this: ${it.javaClass}")
+                        is KtObjectDeclaration -> objects += KibbleObject(file, this, it)
+                        else -> LOG.warn("Unknown type being added to this: ${it.javaClass}")
                     }
                 }
     }
@@ -85,7 +85,7 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
     override fun addProperty(name: String, type: String, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean)
             : KibbleProperty {
-        val property = KibbleProperty(this, name, KibbleType.from(type), initializer, modality, overriding, lateInit)
+        val property = KibbleProperty(file, this, name, KibbleType.from(type), initializer, modality, overriding, lateInit)
         property.visibility = visibility
         property.mutability = mutability
         if(constructorParam) {
@@ -97,13 +97,13 @@ class KibbleClass internal constructor(var kibbleFile: KibbleFile,
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        val function = KibbleFunction(this.kibbleFile, this, name = name, type = type, body = body)
+        val function = KibbleFunction(this.file, this, name = name, type = type, body = body)
         functions += function
         return function
     }
 
     fun addClass(name: String): KibbleClass {
-        val klass = KibbleClass(kibbleFile, name)
+        val klass = KibbleClass(file, name)
         klass.enclosingType = this
         nestedClasses += klass
 

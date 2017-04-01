@@ -7,16 +7,27 @@ import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
 class KibbleObject(val parent: KibbleClass?, val name: String?, val companion: Boolean = false) :
-        Annotatable,  FunctionHolder, KibbleElement, PropertyHolder, Visible {
+        Annotatable, ClassOrObjectHolder, Extendable, FunctionHolder, KibbleElement, PropertyHolder, Visible {
+
+    override var interfaces = listOf<KibbleType>()
+    override var superType: KibbleType? = null
+    override var superCallArgs = listOf<String>()
 
     override var visibility: Visibility = PUBLIC
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
     override var annotations = mutableListOf<KibbleAnnotation>()
+    override val nestedClasses = mutableListOf<KibbleClass>()
+    override val objects = mutableListOf<KibbleObject>()
 
-    internal constructor(parent: KibbleClass, kt: KtObjectDeclaration) : this(parent, kt.name, kt.isCompanion()) {
+    internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtObjectDeclaration) : this(parent, kt.name, kt.isCompanion()) {
+        Extendable.extractSuperInformation(this, kt)
         visibility = Visible.apply(kt.visibilityModifier())
         kt.annotationEntries.forEach { extractAnnotation(it) }
+        functions.addAll(FunctionHolder.apply(file, kt))
+        val (classes, objs) = ClassOrObjectHolder.apply(file, kt)
+        nestedClasses.addAll(classes)
+        objects.addAll(objs)
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {

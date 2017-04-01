@@ -1,6 +1,6 @@
 package com.antwerkz.test
 
-class KibbleObjectTest {
+class SampleKibbleObject {
     @SuppressWarnings("placeholder")
     private companion object : Runnable {
         override fun run() {
@@ -9,6 +9,8 @@ class KibbleObjectTest {
         fun dummy() {
 
         }
+
+        class nested {}
     }
 
     object Dummy {

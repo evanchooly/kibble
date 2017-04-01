@@ -27,7 +27,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
             when (it) {
                 is KtClass -> classes += KibbleClass(this, it)
                 is KtFunction -> functions += KibbleFunction(this, it)
-                is KtProperty -> properties += KibbleProperty(null, it)
+                is KtProperty -> properties += KibbleProperty(this, null, it)
                 else -> LOG.warn("Unknown type being added to KotlinFile: $it")
             }
         }
@@ -66,7 +66,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         if (constructorParam) {
             throw IllegalArgumentException("File level properties can not also be constructor parameters")
         }
-        val property = KibbleProperty(null, name, KibbleType.from(type))
+        val property = KibbleProperty(this, null, name, KibbleType.from(type))
         property.visibility = visibility
         property.mutability = mutability
         properties += property

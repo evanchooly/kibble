@@ -4,7 +4,12 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.StringSourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtObjectDeclaration
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
@@ -31,7 +36,7 @@ class KibbleFunction internal constructor(val file: KibbleFile,
         parse(kt)
     }
 
-    internal constructor(parent: KibbleClass, kt: KtFunction) : this(parent.kibbleFile, parent, kt.name) {
+    internal constructor(parent: KibbleClass, kt: KtFunction) : this(parent.file, parent, kt.name) {
         parse(kt)
     }
 

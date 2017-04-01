@@ -14,7 +14,8 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleProperty internal constructor(val parent: KibbleClass?,
+class KibbleProperty internal constructor(val file: KibbleFile,
+                                          val parent: KibbleClass?,
                                           name: String,
                                           type: KibbleType,
                                           initializer: String? = null,
@@ -28,7 +29,8 @@ class KibbleProperty internal constructor(val parent: KibbleClass?,
         mutability = VAL
     }
 
-    internal constructor(parent: KibbleClass?, kt: KtProperty) : this(parent, kt.name!!, KibbleType.from(kt.typeReference),
+    internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtProperty) : this(file, parent, kt.name!!, KibbleType.from(kt
+            .typeReference),
             kt.initializer?.text) {
 
         kt.annotationEntries.forEach { extractAnnotation(it) }
