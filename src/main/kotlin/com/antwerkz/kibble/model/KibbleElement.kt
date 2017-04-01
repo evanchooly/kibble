@@ -9,7 +9,5 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 interface KibbleElement {
-    fun toSource(writer: SourceWriter, level: Int = 0) {
-        writer.writeln("toSource not implemented for ${javaClass.name}")
-    }
+    fun toSource(writer: SourceWriter, level: Int = 0)
 }

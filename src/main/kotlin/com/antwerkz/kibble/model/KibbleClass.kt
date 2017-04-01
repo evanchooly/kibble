@@ -66,14 +66,6 @@ class KibbleClass internal constructor(var file: KibbleFile,
         nestedClasses.addAll(classes)
         objects.addAll(objs)
         properties.addAll(PropertyHolder.apply(file, kt, this))
-        kt.getBody()?.declarations
-                ?.filter { it !is KtSecondaryConstructor }
-                ?.forEach {
-                    when (it) {
-                        is KtObjectDeclaration -> objects += KibbleObject(file, this, it)
-                        else -> LOG.warn("Unknown type being added to this: ${it.javaClass}")
-                    }
-                }
     }
 
     fun addSecondaryConstructor(): SecondaryConstructor {

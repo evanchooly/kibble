@@ -46,7 +46,7 @@ class KibbleAnnotation internal constructor(name: String, val arguments: Map<Str
      * @return the value of the named parameter for the annotation
      */
     operator fun get(name: String): String? {
-        return arguments[name] as String
+        return arguments[name] as String?
     }
 
     /**
