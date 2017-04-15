@@ -6,9 +6,7 @@ import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability.VAL
 import com.antwerkz.kibble.model.Mutability.VAR
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
-import org.jetbrains.kotlin.com.intellij.psi.PsiWhiteSpace
-import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
@@ -21,7 +19,8 @@ class KibbleProperty internal constructor(val file: KibbleFile,
                                           initializer: String? = null,
                                           override var modality: Modality = FINAL,
                                           override var overriding: Boolean = false,
-                                          var lateInit: Boolean = false)
+                                          var lateInit: Boolean = false,
+                                          var constructorParam: Boolean = false)
     : KibbleParameter(name, type, initializer), Visible, Mutable, Modal<KibbleProperty>, Overridable, Annotatable {
 
     init {
@@ -29,9 +28,17 @@ class KibbleProperty internal constructor(val file: KibbleFile,
         mutability = VAL
     }
 
-    internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtProperty) : this(file, parent, kt.name!!, KibbleType.from(kt
-            .typeReference),
-            kt.initializer?.text) {
+    internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtParameter) : this(file, parent, kt.name!!,
+            KibbleType.from(kt.typeReference), kt.defaultValue?.text) {
+
+        kt.annotationEntries.forEach { extractAnnotation(it) }
+        modality = Modal.apply(kt.modalityModifier())
+        visibility = Visible.apply(kt.visibilityModifier())
+        mutability = Mutable.apply(kt.valOrVarKeyword)
+    }
+
+    internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtProperty) : this(file, parent, kt.name!!,
+            KibbleType.from(kt.typeReference), kt.initializer?.text) {
 
         kt.annotationEntries.forEach { extractAnnotation(it) }
         modality = Modal.apply(kt.modalityModifier())
@@ -47,12 +54,10 @@ class KibbleProperty internal constructor(val file: KibbleFile,
 
     override fun toSource(writer: SourceWriter, level: Int) {
         annotations.forEach {
-            writer.writeIndent(level)
-            writer.writeln(it.toString())
+            writer.writeln(it.toString(), level)
         }
-        writer.writeIndent(level)
 
-        writer.write(visibility.toString())
+        writer.write(visibility.toString(), level)
         writer.write(modality.toString())
         if (overriding) {
             writer.write("override ")

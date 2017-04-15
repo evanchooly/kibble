@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -60,6 +61,7 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
             <version>${kotlin.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -138,16 +140,41 @@
                     </execution>
                 </executions>
             </plugin>
+<!--
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <filters>
+                                <filter>
+                                    <artifact>org.jetbrains.kotlin:kotlin-compiler-embeddable</artifact>
+&lt;!&ndash;
+                                    <includes>
+                                        <include>org/jetbrains/kotlin/config/**</include>
+                                        <include>org/jetbrains/kotlin/com/intellij/**</include>
+                                        <include>org/jetbrains/kotlin/cli/common/**</include>
+                                    </includes>
+&ndash;&gt;
+                                </filter>
+                            </filters>
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.jetbrains.kotlin</pattern>
+                                    <shadedPattern>org.shaded.org.jetbrains.kotlin</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+-->
         </plugins>
     </build>
-
-<!--
-    <distributionManagement>
-        <repository>
-            <id>bintray-evanchooly-maven</id>
-            <name>evanchooly-maven</name>
-            <url>https://api.bintray.com/maven/evanchooly/maven/kibble/;publish=1</url>
-        </repository>
-    </distributionManagement>
--->
 </project>

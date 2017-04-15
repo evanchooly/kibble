@@ -7,8 +7,14 @@ import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 open class Constructor internal constructor(val klass: KibbleClass) : Visible, ParameterHolder, KibbleElement {
     internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this(klass) {
         kt.valueParameters.forEach {
-            val parameter = KibbleParameter(it)
-            this += parameter
+            if (it.hasValOrVar()) {
+                val kibbleProperty = KibbleProperty(klass.file, klass, it)
+                kibbleProperty.constructorParam = true
+                this += kibbleProperty
+                klass.properties += kibbleProperty
+            } else {
+                this += KibbleParameter(it)
+            }
         }
         body = kt.bodyExpression?.text ?: ""
     }

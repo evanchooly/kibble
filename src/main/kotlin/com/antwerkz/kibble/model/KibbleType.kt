@@ -10,14 +10,7 @@ open class KibbleType internal constructor(val name: String, var qualifiedName: 
         listOf<KibbleType>(), val nullable: Boolean = false) {
     companion object {
         fun  from(type: String): KibbleType {
-            val temp = File.createTempFile("kibble-temp", ".kt")
-            try {
-                temp.deleteOnExit()
-                temp.writeText("val temp: $type\n")
-                return Kibble.parseFile(temp).properties[0].type
-            } finally {
-                temp.delete()
-            }
+            return Kibble.parseSource("val temp: $type\n").properties[0].type
         }
 
         fun from(typeReference: KtTypeReference?): KibbleType {

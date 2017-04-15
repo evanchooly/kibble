@@ -4,8 +4,6 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtObjectDeclaration
-import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.slf4j.LoggerFactory
@@ -27,7 +25,7 @@ class KibbleClass internal constructor(var file: KibbleFile,
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
 
-    var constructor= Constructor(this)
+    var constructor = Constructor(this)
         private set
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
     override val nestedClasses: MutableList<KibbleClass> = mutableListOf()
@@ -80,11 +78,11 @@ class KibbleClass internal constructor(var file: KibbleFile,
         val property = KibbleProperty(file, this, name, KibbleType.from(type), initializer, modality, overriding, lateInit)
         property.visibility = visibility
         property.mutability = mutability
-        if(constructorParam) {
+        property.constructorParam = constructorParam
+        if (constructorParam) {
             constructor.parameters += property
-        } else {
-            properties += property
         }
+        properties += property
         return property
     }
 
@@ -125,9 +123,11 @@ class KibbleClass internal constructor(var file: KibbleFile,
         if (!interfaces.isEmpty()) {
             writer.write(interfaces.joinToString(prefix = ", "))
         }
-        if (!properties.isEmpty() || !functions.isEmpty()) {
+        val nonParamProps = properties.filter { !it.constructorParam }
+        if (!nonParamProps.isEmpty() || !functions.isEmpty()) {
             writer.writeln(" {")
-            properties.forEach { it.toSource(writer, level + 1) }
+            nonParamProps.forEach { it.toSource(writer, level + 1) }
+
             functions.forEach { it.toSource(writer, level + 1) }
             nestedClasses.forEach { it.toSource(writer, level + 1) }
 

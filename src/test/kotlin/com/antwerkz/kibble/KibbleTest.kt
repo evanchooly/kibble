@@ -38,10 +38,10 @@ class KibbleTest {
 
         Assert.assertTrue(klass.isInternal())
         Assert.assertTrue(klass.hasAnnotation(Singleton::class.java))
-        Assert.assertEquals(klass.properties.size, 6, klass.properties.toString())
+        Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
         Assert.assertEquals(klass.constructor.parameters.size, 2, klass.constructor.parameters.toString())
-        Assert.assertEquals(klass.properties[0].name, "name")
-        Assert.assertEquals(klass.properties[0].type, KibbleType("String", nullable = true))
+        Assert.assertEquals(klass.properties[0].name, "cost")
+        Assert.assertEquals(klass.properties[0].type, KibbleType("Double"))
         Assert.assertEquals(klass.functions.size, 2)
 
         Assert.assertEquals(klass.functions[0].name, "output")
@@ -56,7 +56,7 @@ class KibbleTest {
         val file = Kibble.parseFile(path)
 
         val tempFile = File("kibble-test.kt")
-        tempFile.deleteOnExit()
+//        tempFile.deleteOnExit()
         FileSourceWriter(tempFile).use { file.toSource(it) }
 
         Assert.assertEquals(tempFile.readText().split("\n"), File(path).readLines())
