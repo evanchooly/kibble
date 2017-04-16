@@ -1,6 +1,5 @@
 package com.antwerkz.kibble.model
 
-import com.antwerkz.kibble.StringSourceWriter
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -9,14 +8,14 @@ class KibbleImportTest {
     fun aliases() {
         Assert.assertEquals(
                 KibbleImport("com.foo.Bar")
-                        .toSource(StringSourceWriter())
+                        .toSource()
                         .toString(),
                 "import com.foo.Bar\n")
 
 
         Assert.assertEquals(
                 KibbleImport("com.foo.Bar", "Harry")
-                        .toSource(StringSourceWriter())
+                        .toSource()
                         .toString(),
                 "import com.foo.Bar as Harry\n")
     }
@@ -30,7 +29,7 @@ class KibbleImportTest {
 
         Assert.assertEquals(
                 file
-                        .toSource(StringSourceWriter())
+                        .toSource()
                         .toString(),
                 "import com.foo.Bar\n\n")
     }

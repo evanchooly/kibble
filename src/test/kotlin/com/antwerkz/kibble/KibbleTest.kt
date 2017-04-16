@@ -56,9 +56,9 @@ class KibbleTest {
 
         val tempFile = File("kibble-test.kt")
         try {
-            FileSourceWriter(tempFile).use { file.toSource(it) }
+            file.toSource().format().toFile(tempFile)
 
-            Assert.assertEquals(tempFile.readText().trim().split("\n"), File(path).readText().trim().split("\n"))
+            Assert.assertEquals(tempFile.readText().split("\n"), File(path).readText().split("\n"))
             tempFile.delete()
         } finally {}
     }
@@ -80,7 +80,7 @@ return 0.0""")
 
         file.addFunction("bareMethod", body= """println("hi")""")
 
-        val generated = StringSourceWriter().use { file.toSource(it).toString() }
+        val generated = file.toSource().toString()
 
         Assert.assertEquals(generated, File("src/test/resources/generated.kt").readText())
     }

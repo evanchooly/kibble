@@ -1,7 +1,6 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.StringSourceWriter
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -22,7 +21,7 @@ class Temp {
 
         Assert.assertEquals(kibbleClass.nestedClasses.size, 1)
         Assert.assertEquals(kibbleClass.nestedClasses[0].name, "Nested")
-        Assert.assertEquals(kibbleClass.toSource(StringSourceWriter()).toString().trim(), source.trim())
+        Assert.assertEquals(kibbleClass.toSource().toString().trim(), source.trim())
 
         kibbleClass = KibbleFile()
                 .addClass("Temp")
@@ -32,6 +31,6 @@ class Temp {
 
         Assert.assertEquals(kibbleClass.nestedClasses.size, 1)
         Assert.assertEquals(kibbleClass.nestedClasses[0].name, "Nested")
-        Assert.assertEquals(kibbleClass.toSource(StringSourceWriter()).toString().trim(), source.trim())
+        Assert.assertEquals(kibbleClass.toSource().toString().trim(), source.trim())
     }
 }

@@ -87,7 +87,6 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         return File(directory, fileName)
     }
 
-
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         pkgName?.let {
             writer.writeln("package $it")

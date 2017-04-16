@@ -1,7 +1,6 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import com.antwerkz.kibble.StringSourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtFunction
@@ -47,7 +46,7 @@ class KibbleFunction internal constructor(val file: KibbleFile,
         overriding = Overridable.apply(kt)
     }
 
-    override fun toString() = StringSourceWriter().apply { toSource(this) }.toString()
+    override fun toString() = toSource().toString()
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.writeln()

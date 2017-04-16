@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.com.intellij.openapi.Disposable
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import org.jetbrains.kotlin.config.addKotlinSourceRoot
+import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 
 class Kibble {
@@ -25,16 +26,21 @@ class Kibble {
 
         @JvmStatic
         fun parse(path: File): List<KibbleFile> {
+            return parseToKtFile(path)
+                    .map(::KibbleFile)
+        }
+
+        internal fun parseToKtFile(path: File): List<KtFile> {
             val configuration = CompilerConfiguration()
             configuration.put(CompilerConfigurationKey.create<File>("output directory"), File(""))
             configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY,
                     PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false))
             configuration.addKotlinSourceRoot(path.absolutePath)
 
-            return KotlinCoreEnvironment
+            val sourceFiles = KotlinCoreEnvironment
                     .createForProduction(Disposable { }, configuration, listOf())
                     .getSourceFiles()
-                    .map(::KibbleFile)
+            return sourceFiles
         }
 
         @JvmStatic

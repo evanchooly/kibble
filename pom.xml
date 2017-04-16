@@ -68,6 +68,37 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-compiler</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>idea</artifactId>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/idea.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>extensions</artifactId>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/extensions.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>util</artifactId>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/util.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>openapi</artifactId>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/openapi.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <repositories>
