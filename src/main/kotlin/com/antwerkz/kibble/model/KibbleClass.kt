@@ -100,19 +100,13 @@ class KibbleClass internal constructor(var file: KibbleFile,
         return klass
     }
 
-    operator fun plusAssign(nested: KibbleClass) {
-        nested.enclosingType = this
-        nestedClasses += nested
-    }
-
     override fun toString(): String {
         return "class $name"
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.writeln()
         annotations.forEach { writer.writeln(it.toString(), level) }
-        writer.write("$visibility${modality}class ")
+        writer.write("$visibility${modality}class ", level)
         writer.write(name)
 
         constructor.toSource(writer, level)
@@ -124,15 +118,16 @@ class KibbleClass internal constructor(var file: KibbleFile,
             writer.write(interfaces.joinToString(prefix = ", "))
         }
         val nonParamProps = properties.filter { !it.constructorParam }
-        if (!nonParamProps.isEmpty() || !functions.isEmpty()) {
+        if (!nonParamProps.isEmpty() || !functions.isEmpty() || !nestedClasses.isEmpty()) {
             writer.writeln(" {")
             nonParamProps.forEach { it.toSource(writer, level + 1) }
 
             functions.forEach { it.toSource(writer, level + 1) }
             nestedClasses.forEach { it.toSource(writer, level + 1) }
 
-            writer.writeln("}", level)
+            writer.write("}", level)
         }
+        writer.writeln()
         return writer
     }
 }
