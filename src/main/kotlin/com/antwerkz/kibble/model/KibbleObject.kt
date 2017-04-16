@@ -38,7 +38,7 @@ class KibbleObject(val parent: KibbleClass?, val name: String?, val companion: B
         TODO("not implemented")
     }
 
-    override fun toSource(writer: SourceWriter, level: Int) {
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         annotations.forEach {
             writer.writeln(it.toString(), level)
         }
@@ -48,6 +48,8 @@ class KibbleObject(val parent: KibbleClass?, val name: String?, val companion: B
         }
         writer.writeln("object {")
         writer.writeln("}", level)
+
+        return writer
     }
 
     override fun toString() = StringSourceWriter().apply { toSource(this) }.toString()

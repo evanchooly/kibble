@@ -52,7 +52,7 @@ class KibbleProperty internal constructor(val file: KibbleFile,
 
     override var annotations: MutableList<KibbleAnnotation> = mutableListOf()
 
-    override fun toSource(writer: SourceWriter, level: Int) {
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         annotations.forEach {
             writer.writeln(it.toString(), level)
         }
@@ -70,6 +70,8 @@ class KibbleProperty internal constructor(val file: KibbleFile,
         type.let { writer.write(": $it") }
         initializer?.let { writer.write(" = $it") }
         writer.writeln()
+
+        return writer
     }
 
     override fun toString(): String {

@@ -109,7 +109,7 @@ class KibbleClass internal constructor(var file: KibbleFile,
         return "class $name"
     }
 
-    override fun toSource(writer: SourceWriter, level: Int) {
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.writeln()
         annotations.forEach { writer.writeln(it.toString(), level) }
         writer.write("$visibility${modality}class ")
@@ -133,5 +133,6 @@ class KibbleClass internal constructor(var file: KibbleFile,
 
             writer.writeln("}", level)
         }
+        return writer
     }
 }

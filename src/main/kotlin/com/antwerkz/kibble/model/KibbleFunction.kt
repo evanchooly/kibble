@@ -4,13 +4,7 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.StringSourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFunction
-import org.jetbrains.kotlin.psi.KtObjectDeclaration
-import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.kotlin.psi.KtSecondaryConstructor
-import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
@@ -55,9 +49,9 @@ class KibbleFunction internal constructor(val file: KibbleFile,
 
     override fun toString() = StringSourceWriter().apply { toSource(this) }.toString()
 
-    override fun toSource(writer: SourceWriter, level: Int) {
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.writeln()
-        writer.writeIndent(level)
+        writer.write("", level)
         val returnType = if (type != "" && type != "Unit") ": $type " else " "
         if (overriding) {
             writer.write("override ")
@@ -69,11 +63,12 @@ class KibbleFunction internal constructor(val file: KibbleFile,
         split.forEachIndexed { i, s ->
             if (i > 0) {
                 if (!s.startsWith(" ")) {
-                    writer.writeIndent(level + (if (i < size - 1) 1 else 0))
+                    writer.write("", level + (if (i < size - 1) 1 else 0))
                 }
             }
             writer.writeln(s)
         }
+        return writer
     }
 }
 

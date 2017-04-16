@@ -88,7 +88,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     }
 
 
-    override fun toSource(writer: SourceWriter, level: Int) {
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         pkgName?.let {
             writer.writeln("package $it")
             writer.writeln()
@@ -98,6 +98,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         properties.forEach { it.toSource(writer, level) }
         classes.forEach { it.toSource(writer, level) }
         functions.forEach { it.toSource(writer, level) }
+        return writer
     }
 
     override fun toString(): String {

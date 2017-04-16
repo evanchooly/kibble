@@ -6,14 +6,32 @@ import org.testng.annotations.Test
 
 class KibbleImportTest {
     @Test
-    fun imports() {
-        var writer = StringSourceWriter()
+    fun aliases() {
+        Assert.assertEquals(
+                KibbleImport("com.foo.Bar")
+                        .toSource(StringSourceWriter())
+                        .toString(),
+                "import com.foo.Bar\n")
 
-        KibbleImport("com.foo.Bar").toSource(writer)
-        Assert.assertEquals(writer.toString(), "import com.foo.Bar\n")
 
-        writer = StringSourceWriter()
-        KibbleImport("com.foo.Bar", "Harry").toSource(writer)
-        Assert.assertEquals(writer.toString(), "import com.foo.Bar as Harry\n")
+        Assert.assertEquals(
+                KibbleImport("com.foo.Bar", "Harry")
+                        .toSource(StringSourceWriter())
+                        .toString(),
+                "import com.foo.Bar as Harry\n")
+    }
+
+    @Test
+    fun duplicates() {
+        val file = KibbleFile()
+        file.addImport("com.foo.Bar")
+        file.addImport("com.foo.Bar")
+
+
+        Assert.assertEquals(
+                file
+                        .toSource(StringSourceWriter())
+                        .toString(),
+                "import com.foo.Bar\n")
     }
 }

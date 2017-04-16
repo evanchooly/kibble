@@ -29,8 +29,10 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
         }.toString()
     }
 
-    override fun toSource(writer: SourceWriter, level: Int) {
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.write( "$visibility${mutability}$name: $type", level)
+
+        return writer
     }
 
     override fun equals(other: Any?): Boolean {

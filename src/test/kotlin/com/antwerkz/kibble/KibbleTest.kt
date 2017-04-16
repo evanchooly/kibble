@@ -1,14 +1,13 @@
 package com.antwerkz.kibble
 
 import com.antwerkz.kibble.model.KibbleFile
-import com.antwerkz.kibble.model.KibbleType
 import com.antwerkz.kibble.model.KibbleParameter
+import com.antwerkz.kibble.model.KibbleType
 import com.antwerkz.kibble.model.Visibility
 import org.jetbrains.kotlin.javax.inject.Singleton
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
-import java.io.StringWriter
 
 class KibbleTest {
     companion object {
@@ -56,10 +55,12 @@ class KibbleTest {
         val file = Kibble.parseFile(path)
 
         val tempFile = File("kibble-test.kt")
-//        tempFile.deleteOnExit()
-        FileSourceWriter(tempFile).use { file.toSource(it) }
+        try {
+            FileSourceWriter(tempFile).use { file.toSource(it) }
 
-        Assert.assertEquals(tempFile.readText().split("\n"), File(path).readLines())
+            Assert.assertEquals(tempFile.readText().split("\n"), File(path).readLines())
+            tempFile.delete()
+        } finally {}
     }
 
     @Test
@@ -79,10 +80,7 @@ return 0.0""")
 
         file.addFunction("bareMethod", body= """println("hi")""")
 
-        val generated = StringSourceWriter().use {
-            file.toSource(it)
-            it.toString()
-        }
+        val generated = StringSourceWriter().use { file.toSource(it).toString() }
 
         Assert.assertEquals(generated, File("src/test/resources/generated.kt").readText())
     }
