@@ -62,7 +62,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     }
 
     override fun addProperty(name: String, type: String, initializer: String?, modality: Modality, overriding: Boolean,
-                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam:Boolean): KibbleProperty {
+                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
         if (constructorParam) {
             throw IllegalArgumentException("File level properties can not also be constructor parameters")
         }
@@ -94,11 +94,25 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
             writer.writeln()
         }
 
-        imports.forEach { it.toSource(writer, level) }
-        properties.forEach { it.toSource(writer, level) }
-        classes.forEach { it.toSource(writer, level) }
-        functions.forEach { it.toSource(writer, level) }
+        writeBlock(writer, level, false, imports)
+        writeBlock(writer, level, false, properties)
+        writeBlock(writer, level, true, classes)
+        writeBlock(writer, level, true, functions)
+
         return writer
+    }
+
+    private fun writeBlock(writer: SourceWriter, level: Int, inBetween: Boolean, block: Collection<KibbleElement>) {
+        block.forEachIndexed { i, it ->
+            if (inBetween && i != 0) {
+                writer.writeln()
+            }
+            it.toSource(writer, level)
+        }
+
+        if (!inBetween && !block.isEmpty()) {
+            writer.writeln()
+        }
     }
 
     override fun toString(): String {

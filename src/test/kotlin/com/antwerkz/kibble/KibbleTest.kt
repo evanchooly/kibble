@@ -58,7 +58,7 @@ class KibbleTest {
         try {
             FileSourceWriter(tempFile).use { file.toSource(it) }
 
-            Assert.assertEquals(tempFile.readText().split("\n"), File(path).readLines())
+            Assert.assertEquals(tempFile.readText().trim().split("\n"), File(path).readText().trim().split("\n"))
             tempFile.delete()
         } finally {}
     }

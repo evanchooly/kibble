@@ -32,6 +32,6 @@ class KibbleImportTest {
                 file
                         .toSource(StringSourceWriter())
                         .toString(),
-                "import com.foo.Bar\n")
+                "import com.foo.Bar\n\n")
     }
 }
