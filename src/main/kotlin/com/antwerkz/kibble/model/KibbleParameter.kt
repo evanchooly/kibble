@@ -1,7 +1,6 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import com.antwerkz.kibble.StringSourceWriter
 import com.antwerkz.kibble.model.Mutability.NEITHER
 import com.antwerkz.kibble.model.Mutability.VAL
 import com.antwerkz.kibble.model.Visibility.NONE
@@ -24,13 +23,11 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
         }
 
     override fun toString(): String {
-        return StringSourceWriter().apply {
-            toSource(this)
-        }.toString()
+        return toSource().toString()
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.write( "$visibility${mutability}$name: $type", level)
+        writer.write("$visibility${mutability}$name: $type", level)
 
         return writer
     }

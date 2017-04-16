@@ -1,7 +1,6 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import com.antwerkz.kibble.StringSourceWriter
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
@@ -52,5 +51,5 @@ class KibbleObject(val parent: KibbleClass?, val name: String?, val companion: B
         return writer
     }
 
-    override fun toString() = StringSourceWriter().apply { toSource(this) }.toString()
+    override fun toString() = toSource().toString()
 }

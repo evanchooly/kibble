@@ -1,7 +1,6 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import com.antwerkz.kibble.StringSourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability.VAL
 import com.antwerkz.kibble.model.Mutability.VAR
@@ -75,9 +74,7 @@ class KibbleProperty internal constructor(val file: KibbleFile,
     }
 
     override fun toString(): String {
-        val writer = StringSourceWriter()
-        toSource(writer)
-        return writer.toString().trim()
+        return toSource().toString().trim()
     }
 }
 
