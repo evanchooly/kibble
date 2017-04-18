@@ -36,9 +36,11 @@ class KibbleTypeTest {
         val file = Kibble.parseSource("import java.math.BigDecimal")
 
         val qualified = KibbleType.from(file, "java.math.BigDecimal")
-        val naked = KibbleType.from(file, "BigDecimal")
+        val decimal = KibbleType.from(file, "BigDecimal")
+        val integer = KibbleType.from(file, "BigInteger")
 
         Assert.assertEquals(qualified.fullName, "java.math.BigDecimal")
-        Assert.assertEquals(naked.fullName, "java.math.BigDecimal")
+        Assert.assertEquals(decimal.fullName, "java.math.BigDecimal")
+        Assert.assertEquals(integer.fullName, "BigInteger")
     }
 }
