@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 open class KibbleParameter internal constructor(val name: String, val type: KibbleType, var initializer: String? = null) : KibbleElement,
         Mutable, Visible {
 
-    internal constructor(kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference)) {
+    internal constructor(file: KibbleFile, kt: KtParameter) : this(kt.name!!, KibbleType.from(file, kt.typeReference)) {
         mutability = Mutable.apply(kt.valOrVarKeyword)
     }
 

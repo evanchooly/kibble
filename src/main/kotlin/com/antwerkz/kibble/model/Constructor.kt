@@ -4,8 +4,9 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 
-open class Constructor internal constructor(val klass: KibbleClass) : Visible, ParameterHolder, KibbleElement {
-    internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this(klass) {
+open class Constructor internal constructor(override val file: KibbleFile, val klass: KibbleClass) : Visible, ParameterHolder,
+KibbleElement {
+    internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this(klass.file, klass) {
         kt.valueParameters.forEach {
             if (it.hasValOrVar()) {
                 val kibbleProperty = KibbleProperty(klass.file, klass, it)
@@ -13,7 +14,7 @@ open class Constructor internal constructor(val klass: KibbleClass) : Visible, P
                 this += kibbleProperty
                 klass.properties += kibbleProperty
             } else {
-                this += KibbleParameter(it)
+                this += KibbleParameter(file, it)
             }
         }
         body = kt.bodyExpression?.text ?: ""

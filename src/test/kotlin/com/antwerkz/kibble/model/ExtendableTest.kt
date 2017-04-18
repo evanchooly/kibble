@@ -17,16 +17,16 @@ class ExtendableTest {
         val foo = file.classes[0]
         Assert.assertEquals(foo.superType?.name, "Bar")
         Assert.assertEquals(foo.superCallArgs[0], "12")
-        Assert.assertEquals(foo.interfaces[0].name, "Runnable")
+        Assert.assertEquals(foo.superTypes[0].name, "Runnable")
 
         val baz = file.classes[1]
         Assert.assertEquals(baz.superType?.name, "Foo")
         Assert.assertTrue(baz.superCallArgs.isEmpty())
-        Assert.assertTrue(baz.interfaces.isEmpty())
+        Assert.assertTrue(baz.superTypes.isEmpty())
 
         val jerry = file.classes[2]
         Assert.assertNull(jerry.superType)
         Assert.assertTrue(jerry.superCallArgs.isEmpty())
-        Assert.assertEquals(jerry.interfaces[0].name, "Runnable")
+        Assert.assertEquals(jerry.superTypes[0].name, "Runnable")
     }
 }

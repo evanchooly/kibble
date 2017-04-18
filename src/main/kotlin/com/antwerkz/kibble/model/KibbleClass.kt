@@ -6,9 +6,8 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
-import org.slf4j.LoggerFactory
 
-class KibbleClass internal constructor(var file: KibbleFile,
+class KibbleClass internal constructor(override var file: KibbleFile,
                                        var name: String = "",
                                        override var modality: Modality = FINAL,
                                        override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder,
@@ -19,23 +18,19 @@ class KibbleClass internal constructor(var file: KibbleFile,
         set(value) {
             file.pkgName = value
         }
-
     var enclosingType: KibbleClass? = null
     override var annotations = mutableListOf<KibbleAnnotation>()
     override val functions = mutableListOf<KibbleFunction>()
-    override val properties = mutableListOf<KibbleProperty>()
 
-    var constructor = Constructor(this)
+    override val properties = mutableListOf<KibbleProperty>()
+    var constructor = Constructor(file, this)
         private set
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
     override val nestedClasses: MutableList<KibbleClass> = mutableListOf()
+
     override val objects: MutableList<KibbleObject> = mutableListOf()
 
-    companion object {
-        val LOG = LoggerFactory.getLogger(KibbleClass::class.java)
-    }
-
-    override var interfaces = listOf<KibbleType>()
+    override var superTypes = listOf<KibbleType>()
     override var superType: KibbleType? = null
     override var superCallArgs = listOf<String>()
 
@@ -75,7 +70,7 @@ class KibbleClass internal constructor(var file: KibbleFile,
     override fun addProperty(name: String, type: String, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean)
             : KibbleProperty {
-        val property = KibbleProperty(file, this, name, KibbleType.from(type), initializer, modality, overriding, lateInit)
+        val property = KibbleProperty(file, this, name, KibbleType.from(file, type), initializer, modality, overriding, lateInit)
         property.visibility = visibility
         property.mutability = mutability
         property.constructorParam = constructorParam
@@ -114,8 +109,8 @@ class KibbleClass internal constructor(var file: KibbleFile,
             writer.write(": $it")
             writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))
         }
-        if (!interfaces.isEmpty()) {
-            writer.write(interfaces.joinToString(prefix = ", "))
+        if (!superTypes.isEmpty()) {
+            writer.write(superTypes.joinToString(prefix = ", "))
         }
         val nonParamProps = properties.filter { !it.constructorParam }
         if (!nonParamProps.isEmpty() || !functions.isEmpty() || !nestedClasses.isEmpty()) {

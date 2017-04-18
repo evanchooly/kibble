@@ -5,10 +5,10 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleObject(val parent: KibbleClass?, val name: String?, val companion: Boolean = false) :
+class KibbleObject(override val file: KibbleFile, val parent: KibbleClass?, val name: String?, val companion: Boolean = false) :
         Annotatable, ClassOrObjectHolder, Extendable, FunctionHolder, KibbleElement, PropertyHolder, Visible {
 
-    override var interfaces = listOf<KibbleType>()
+    override var superTypes = listOf<KibbleType>()
     override var superType: KibbleType? = null
     override var superCallArgs = listOf<String>()
 
@@ -19,7 +19,7 @@ class KibbleObject(val parent: KibbleClass?, val name: String?, val companion: B
     override val nestedClasses = mutableListOf<KibbleClass>()
     override val objects = mutableListOf<KibbleObject>()
 
-    internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtObjectDeclaration) : this(parent, kt.name, kt.isCompanion()) {
+    internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtObjectDeclaration) : this(file, parent, kt.name, kt.isCompanion()) {
         Extendable.extractSuperInformation(this, kt)
         visibility = Visible.apply(kt.visibilityModifier())
         kt.annotationEntries.forEach { extractAnnotation(it) }

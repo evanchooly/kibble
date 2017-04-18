@@ -7,14 +7,14 @@ class KibbleImportTest {
     @Test
     fun aliases() {
         Assert.assertEquals(
-                KibbleImport("com.foo.Bar")
+                KibbleImport(KibbleType("com.foo.Bar", "Bar"))
                         .toSource()
                         .toString(),
                 "import com.foo.Bar\n")
 
 
         Assert.assertEquals(
-                KibbleImport("com.foo.Bar", "Harry")
+                KibbleImport(KibbleType("com.foo.Bar", "Bar"), "Harry")
                         .toSource()
                         .toString(),
                 "import com.foo.Bar as Harry\n")

@@ -4,6 +4,7 @@ import com.antwerkz.kibble.SourceWriter
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtImportDirective
 import org.jetbrains.kotlin.psi.KtProperty
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,6 +24,10 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
 
     internal constructor(file: KtFile) : this(file.name, file.packageDirective?.fqName.toString()) {
         sourcePath = file.virtualFile.canonicalPath
+        file.importDirectives.forEach {
+            this += KibbleImport(this, it)
+        }
+
         file.declarations.forEach {
             when (it) {
                 is KtClass -> classes += KibbleClass(this, it)
@@ -30,9 +35,6 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
                 is KtProperty -> properties += KibbleProperty(this, null, it)
                 else -> LOG.warn("Unknown type being added to KotlinFile: $it")
             }
-        }
-        file.importDirectives.forEach {
-            this += KibbleImport(it)
         }
         pkgName = file.packageDirective?.children?.firstOrNull()?.text
     }
@@ -54,11 +56,11 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     }
 
     fun addImport(name: String, alias: String? = null) {
-        imports += KibbleImport(name, alias)
+        imports += KibbleImport(KibbleType.from(this, name), alias)
     }
 
     fun addImport(type: Class<*>, alias: String? = null) {
-        imports += KibbleImport(type, alias)
+        imports += KibbleImport(KibbleType.from(this, type.name), alias)
     }
 
     override fun addProperty(name: String, type: String, initializer: String?, modality: Modality, overriding: Boolean,
@@ -66,7 +68,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         if (constructorParam) {
             throw IllegalArgumentException("File level properties can not also be constructor parameters")
         }
-        val property = KibbleProperty(this, null, name, KibbleType.from(type))
+        val property = KibbleProperty(this, null, name, KibbleType.from(this, type))
         property.visibility = visibility
         property.mutability = mutability
         properties += property
@@ -74,7 +76,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     }
 
     operator fun plusAssign(value: KibbleImport) {
-        if (value.name.contains(".")) {
+        value.type.packageName?.let {
             imports += value
         }
     }
@@ -117,5 +119,11 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
 
     override fun toString(): String {
         return outputFile(File(".")).toString()
+    }
+
+    fun getImport(name: String): KibbleImport? {
+        return imports.firstOrNull {
+            it.type.name == name
+        }
     }
 }

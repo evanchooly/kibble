@@ -3,10 +3,10 @@ package com.antwerkz.kibble.model
 import com.antwerkz.kibble.SourceWriter
 import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 
-class SecondaryConstructor internal constructor(klass: KibbleClass): Constructor(klass) {
+class SecondaryConstructor internal constructor(klass: KibbleClass): Constructor(klass.file, klass) {
     internal constructor(klass: KibbleClass, kt: KtSecondaryConstructor): this(klass) {
             kt.valueParameters.forEach {
-                this += KibbleParameter(it)
+                this += KibbleParameter(file, it)
             }
             body = kt.bodyExpression?.text ?: ""
     }

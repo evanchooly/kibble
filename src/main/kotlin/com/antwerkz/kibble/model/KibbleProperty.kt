@@ -28,7 +28,7 @@ class KibbleProperty internal constructor(val file: KibbleFile,
     }
 
     internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtParameter) : this(file, parent, kt.name!!,
-            KibbleType.from(kt.typeReference), kt.defaultValue?.text) {
+            KibbleType.from(file, kt.typeReference), kt.defaultValue?.text) {
 
         kt.annotationEntries.forEach { extractAnnotation(it) }
         modality = Modal.apply(kt.modalityModifier())
@@ -37,7 +37,7 @@ class KibbleProperty internal constructor(val file: KibbleFile,
     }
 
     internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtProperty) : this(file, parent, kt.name!!,
-            KibbleType.from(kt.typeReference), kt.initializer?.text) {
+            KibbleType.from(file, kt.typeReference), kt.initializer?.text) {
 
         kt.annotationEntries.forEach { extractAnnotation(it) }
         modality = Modal.apply(kt.modalityModifier())

@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleFunction internal constructor(val file: KibbleFile,
+class KibbleFunction internal constructor(override val file: KibbleFile,
                                           val parent: KibbleClass? = null,
                                           var name: String? = null,
                                           override var visibility: Visibility = PUBLIC,
@@ -35,7 +35,7 @@ class KibbleFunction internal constructor(val file: KibbleFile,
 
     private fun parse(kt: KtFunction) {
         kt.valueParameters.forEach {
-            this += KibbleParameter(it)
+            this += KibbleParameter(file, it)
         }
         this.body = kt.bodyExpression?.text ?: ""
         this.type = kt.typeReference?.text ?: ""
