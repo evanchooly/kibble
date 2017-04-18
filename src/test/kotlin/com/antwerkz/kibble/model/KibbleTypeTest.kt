@@ -38,9 +38,12 @@ class KibbleTypeTest {
         val qualified = KibbleType.from(file, "java.math.BigDecimal")
         val decimal = KibbleType.from(file, "BigDecimal")
         val integer = KibbleType.from(file, "BigInteger")
+        val dateTime = KibbleType.from(file, "java.time.LocalDateTime")
 
         Assert.assertEquals(qualified.fullName, "java.math.BigDecimal")
         Assert.assertEquals(decimal.fullName, "java.math.BigDecimal")
         Assert.assertEquals(integer.fullName, "BigInteger")
+//        Assert.assertEquals(dateTime.name, "java.time.LocalDateTime")
+//        Assert.assertEquals(dateTime.fullName, "java.time.LocalDateTime")
     }
 }

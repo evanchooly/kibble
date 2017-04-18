@@ -35,9 +35,17 @@ val temp: $type
 
                 }
                 is KtNullableType -> {
-                    val type = typeElement.innerType as KtUserType
-                    KibbleType(qualify(type.qualifier), type.referencedName ?: "",
-                            type.typeArguments.map { from(file, it.typeReference) }, nullable = true)
+                    val userType = typeElement.innerType as KtUserType
+                    val name = userType.referencedName ?: ""
+                    val packageName = qualify(userType.qualifier)
+
+                    var type: KibbleType? = null
+                    if (packageName == null) {
+                        type = file.getImport(name)?.type
+                    }
+
+                    type ?: KibbleType(packageName, name,
+                            userType.typeArguments.map { from(file, it.typeReference) })
                 }
                 else -> throw IllegalArgumentException("unknown type $typeElement")
             }
