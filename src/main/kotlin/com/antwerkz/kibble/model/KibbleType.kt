@@ -45,7 +45,7 @@ val temp: $type
                     }
 
                     type ?: KibbleType(packageName, name,
-                            userType.typeArguments.map { from(file, it.typeReference) })
+                            userType.typeArguments.map { from(file, it.typeReference) }, nullable = true)
                 }
                 else -> throw IllegalArgumentException("unknown type $typeElement")
             }
