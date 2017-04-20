@@ -20,4 +20,14 @@ class KibblePropertyTest {
         Assert.assertEquals(prop.name, "bar")
         Assert.assertFalse(prop.lateInit)
     }
+
+    @Test
+    fun implicitType() {
+        val file = Kibble.parseSource("var foo = 42")
+        val iterator = file.properties.iterator()
+        val prop = iterator.next()
+        Assert.assertEquals(prop.name, "foo")
+        Assert.assertNull(prop.type)
+        Assert.assertFalse(prop.lateInit)
+    }
 }

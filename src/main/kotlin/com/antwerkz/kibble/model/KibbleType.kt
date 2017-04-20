@@ -8,32 +8,29 @@ import org.jetbrains.kotlin.psi.KtUserType
 open class KibbleType internal constructor(val file: KibbleFile, val name: String, val parameters: List<KibbleType> = listOf<KibbleType>(),
                                            val nullable: Boolean = false) {
     companion object {
-        fun from(file: KibbleFile, type: String): KibbleType {
-            val temp = KibbleFile("temp")
-            temp.imports += file.imports
-            return Kibble.parseSource("""
-${temp.toSource()}
-val temp: $type
-""").properties[0].type
+        fun from(type: String): KibbleType {
+             return Kibble.parseSource("val temp: $type").properties[0].type!!
         }
 
-        fun from(file: KibbleFile, typeReference: KtTypeReference?): KibbleType {
+        internal fun from(file: KibbleFile, typeReference: KtTypeReference?): KibbleType? {
             val typeElement = typeReference?.typeElement
-            return when (typeElement) {
-                is KtUserType -> {
-                    extractType(file, typeElement)
+            return typeElement?.let {
+                when (typeElement) {
+                    is KtUserType -> {
+                        extractType(file, typeElement)
+                    }
+                    is KtNullableType -> {
+                        extractType(file, typeElement.innerType as KtUserType, true)
+                    }
+                    else -> throw IllegalArgumentException("unknown type $typeElement")
                 }
-                is KtNullableType -> {
-                    extractType(file, typeElement.innerType as KtUserType, true)
-                }
-                else -> throw IllegalArgumentException("unknown type $typeElement")
             }
         }
 
         private fun extractType(file: KibbleFile, typeElement: KtUserType, nullable: Boolean = false): KibbleType {
             val name = (typeElement.qualifier?.text?.let { "$it." } ?: "") +
                     (typeElement.referencedName ?: "")
-            val parameters = typeElement.typeArguments.map { from(file, it.typeReference) }
+            val parameters = typeElement.typeArguments.map { from(file, it.typeReference)!! }
 
             return KibbleType(file, name, parameters, nullable)
         }

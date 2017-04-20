@@ -10,9 +10,9 @@ class KibbleTypeTest {
         val file = Kibble.parseSource("val foo: com.foo.bar.Type")
         val type = file.properties[0].type
 
-        Assert.assertEquals(type.fullName, "com.foo.bar.Type")
-        Assert.assertEquals(type.name, "com.foo.bar.Type")
-        Assert.assertTrue(type.parameters.isEmpty())
+        Assert.assertEquals(type?.fullName, "com.foo.bar.Type")
+        Assert.assertEquals(type?.name, "com.foo.bar.Type")
+        Assert.assertTrue(type?.parameters?.isEmpty() ?: false)
     }
 
     fun generics() {
@@ -20,21 +20,21 @@ class KibbleTypeTest {
         val file = Kibble.parseSource("val foo: $string")
         val type = file.properties[0].type
 
-        Assert.assertEquals(type.fullName, string)
-        Assert.assertEquals(type.name, "com.foo.bar.SomeType")
-        Assert.assertTrue(type.nullable)
-        Assert.assertEquals(type.parameters.size, 2)
-        Assert.assertEquals(type.parameters[0].name, "kotlin.String")
-        Assert.assertEquals(type.parameters[1].name, "kotlin.Double")
+        Assert.assertEquals(type?.fullName, string)
+        Assert.assertEquals(type?.name, "com.foo.bar.SomeType")
+        Assert.assertTrue(type?.nullable ?: false)
+        Assert.assertEquals(type?.parameters?.size, 2)
+        Assert.assertEquals(type?.parameters?.get(0)?.name, "kotlin.String")
+        Assert.assertEquals(type?.parameters?.get(1)?.name, "kotlin.Double")
     }
 
     fun fullyQualified() {
         val file = Kibble.parseSource("import java.math.BigDecimal")
 
-        val qualified = KibbleType.from(file, "java.math.BigDecimal")
-        val decimal = KibbleType.from(file, "BigDecimal")
-        val integer = KibbleType.from(file, "BigInteger")
-        val dateTime = KibbleType.from(file, "java.time.LocalDateTime")
+        val qualified = KibbleType.from("java.math.BigDecimal")
+        val decimal = KibbleType.from("BigDecimal")
+        val integer = KibbleType.from("BigInteger")
+        val dateTime = KibbleType.from("java.time.LocalDateTime")
 
         Assert.assertEquals(qualified.fullName, "java.math.BigDecimal")
         Assert.assertEquals(decimal.fullName, "BigDecimal")

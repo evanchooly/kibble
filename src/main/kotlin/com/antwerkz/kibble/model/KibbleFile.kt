@@ -25,7 +25,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     internal constructor(file: KtFile) : this(file.name, file.packageDirective?.fqName.toString()) {
         sourcePath = file.virtualFile.canonicalPath
         file.importDirectives.forEach {
-            this += KibbleImport(this, it)
+            this += KibbleImport(it)
         }
 
         file.declarations.forEach {
@@ -56,19 +56,19 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     }
 
     fun addImport(name: String, alias: String? = null) {
-        imports += KibbleImport(KibbleType.from(this, name), alias)
+        imports += KibbleImport(KibbleType.from(name), alias)
     }
 
     fun addImport(type: Class<*>, alias: String? = null) {
-        imports += KibbleImport(KibbleType.from(this, type.name), alias)
+        imports += KibbleImport(KibbleType.from(type.name), alias)
     }
 
-    override fun addProperty(name: String, type: String, initializer: String?, modality: Modality, overriding: Boolean,
+    override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
         if (constructorParam) {
             throw IllegalArgumentException("File level properties can not also be constructor parameters")
         }
-        val property = KibbleProperty(this, null, name, KibbleType.from(this, type))
+        val property = KibbleProperty(this, null, name, type?.let { KibbleType.from(type) })
         property.visibility = visibility
         property.mutability = mutability
         properties += property
@@ -117,17 +117,5 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
 
     override fun toString(): String {
         return outputFile(File(".")).toString()
-    }
-
-    fun getImportByName(name: String): KibbleImport? {
-        return imports.firstOrNull {
-            it.type.name == name
-        }
-    }
-
-    fun getImportByFullName(name: String): KibbleImport? {
-        return imports.firstOrNull {
-            it.type.fullName == name
-        }
     }
 }

@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 class KibbleProperty internal constructor(val file: KibbleFile,
                                           val parent: KibbleClass?,
                                           name: String,
-                                          type: KibbleType,
+                                          type: KibbleType?,
                                           initializer: String? = null,
                                           override var modality: Modality = FINAL,
                                           override var overriding: Boolean = false,

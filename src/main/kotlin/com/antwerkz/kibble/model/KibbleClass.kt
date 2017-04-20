@@ -67,10 +67,11 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         return ctor
     }
 
-    override fun addProperty(name: String, type: String, initializer: String?, modality: Modality, overriding: Boolean,
+    override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean)
             : KibbleProperty {
-        val property = KibbleProperty(file, this, name, KibbleType.from(file, type), initializer, modality, overriding, lateInit)
+        val property = KibbleProperty(file, this, name, type?.let { KibbleType.from(type) }, initializer, modality, overriding,
+                lateInit)
         property.visibility = visibility
         property.mutability = mutability
         property.constructorParam = constructorParam

@@ -33,7 +33,8 @@ class KibbleObject(override val file: KibbleFile, val parent: KibbleClass?, val 
         TODO("not implemented")
     }
 
-    override fun addProperty(name: String, type: String, initializer: String?, modality: Modality, overriding: Boolean, visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
+    override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
+                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
         TODO("not implemented")
     }
 

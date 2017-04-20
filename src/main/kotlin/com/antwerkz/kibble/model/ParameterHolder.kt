@@ -5,7 +5,7 @@ interface ParameterHolder {
     val parameters: MutableList<KibbleParameter>
 
     fun addParameter(name: String, type: String): KibbleParameter {
-        val param = KibbleParameter(name, KibbleType.from(file, type))
+        val param = KibbleParameter(name, KibbleType.from(type))
         parameters += param
         return param
     }

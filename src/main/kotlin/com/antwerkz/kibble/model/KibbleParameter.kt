@@ -6,7 +6,7 @@ import com.antwerkz.kibble.model.Mutability.VAL
 import com.antwerkz.kibble.model.Visibility.NONE
 import org.jetbrains.kotlin.psi.KtParameter
 
-open class KibbleParameter internal constructor(val name: String, val type: KibbleType, var initializer: String? = null) : KibbleElement,
+open class KibbleParameter internal constructor(val name: String, val type: KibbleType?, var initializer: String? = null) : KibbleElement,
         Mutable, Visible {
 
     internal constructor(file: KibbleFile, kt: KtParameter) : this(kt.name!!, KibbleType.from(file, kt.typeReference)) {
@@ -32,6 +32,8 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
         return writer
     }
 
+    fun isParameterized(): Boolean = type?.parameters?.isEmpty()?.not() ?: false
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
@@ -49,12 +51,10 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
 
     override fun hashCode(): Int {
         var result = name.hashCode()
-        result = 31 * result + type.hashCode()
+        result = 31 * result + (type?.hashCode() ?: 0)
         result = 31 * result + (initializer?.hashCode() ?: 0)
         result = 31 * result + mutability.hashCode()
         result = 31 * result + visibility.hashCode()
         return result
     }
-
-    fun isParameterized(): Boolean = type.parameters.isEmpty().not()
 }

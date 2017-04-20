@@ -18,9 +18,10 @@ interface Extendable {
                                 .map { it.getArgumentExpression()!!.text }
 
                     }
+
             extendable.superTypes = entries
                     .filterIsInstance(KtSuperTypeEntry::class.java)
-                    .map { KibbleType.from(extendable.file, it.typeReference) }
+                    .map { KibbleType.from(extendable.file, it.typeReference)!! }
         }
     }
 
