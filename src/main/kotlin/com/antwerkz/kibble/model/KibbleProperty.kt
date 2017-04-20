@@ -30,7 +30,7 @@ class KibbleProperty internal constructor(val file: KibbleFile,
     internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtParameter) : this(file, parent, kt.name!!,
             KibbleType.from(file, kt.typeReference), kt.defaultValue?.text) {
 
-        kt.annotationEntries.forEach { extractAnnotation(it) }
+        kt.annotationEntries.forEach { extractAnnotation(file, it) }
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
         mutability = Mutable.apply(kt.valOrVarKeyword)
@@ -39,7 +39,7 @@ class KibbleProperty internal constructor(val file: KibbleFile,
     internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtProperty) : this(file, parent, kt.name!!,
             KibbleType.from(file, kt.typeReference), kt.initializer?.text) {
 
-        kt.annotationEntries.forEach { extractAnnotation(it) }
+        kt.annotationEntries.forEach { extractAnnotation(file, it) }
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
         lateInit = kt.modifierList?.allChildren?.find { it.text == "lateinit" } != null

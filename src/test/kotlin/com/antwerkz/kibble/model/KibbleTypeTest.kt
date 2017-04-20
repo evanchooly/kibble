@@ -11,25 +11,21 @@ class KibbleTypeTest {
         val type = file.properties[0].type
 
         Assert.assertEquals(type.fullName, "com.foo.bar.Type")
-        Assert.assertEquals(type.packageName, "com.foo.bar")
-        Assert.assertEquals(type.name, "Type")
+        Assert.assertEquals(type.name, "com.foo.bar.Type")
         Assert.assertTrue(type.parameters.isEmpty())
     }
 
     fun generics() {
-        val string = "com.foo.bar.Type<kotlin.String, kotlin.Double>?"
+        val string = "com.foo.bar.SomeType<kotlin.String, kotlin.Double>?"
         val file = Kibble.parseSource("val foo: $string")
         val type = file.properties[0].type
 
         Assert.assertEquals(type.fullName, string)
-        Assert.assertEquals(type.packageName, "com.foo.bar")
-        Assert.assertEquals(type.name, "Type")
+        Assert.assertEquals(type.name, "com.foo.bar.SomeType")
         Assert.assertTrue(type.nullable)
         Assert.assertEquals(type.parameters.size, 2)
-        Assert.assertEquals(type.parameters[0].name, "String")
-        Assert.assertEquals(type.parameters[0].packageName, "kotlin")
-        Assert.assertEquals(type.parameters[1].name, "Double")
-        Assert.assertEquals(type.parameters[1].packageName, "kotlin")
+        Assert.assertEquals(type.parameters[0].name, "kotlin.String")
+        Assert.assertEquals(type.parameters[1].name, "kotlin.Double")
     }
 
     fun fullyQualified() {
@@ -41,9 +37,9 @@ class KibbleTypeTest {
         val dateTime = KibbleType.from(file, "java.time.LocalDateTime")
 
         Assert.assertEquals(qualified.fullName, "java.math.BigDecimal")
-        Assert.assertEquals(decimal.fullName, "java.math.BigDecimal")
+        Assert.assertEquals(decimal.fullName, "BigDecimal")
         Assert.assertEquals(integer.fullName, "BigInteger")
-//        Assert.assertEquals(dateTime.name, "java.time.LocalDateTime")
-//        Assert.assertEquals(dateTime.fullName, "java.time.LocalDateTime")
+        Assert.assertEquals(dateTime.name, "java.time.LocalDateTime")
+        Assert.assertEquals(dateTime.fullName, "java.time.LocalDateTime")
     }
 }

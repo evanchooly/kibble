@@ -53,7 +53,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         kt.getSecondaryConstructors().forEach {
             secondaries += SecondaryConstructor(this, it)
         }
-        extractAnnotation(kt.annotationEntries)
+        extractAnnotation(file, kt.annotationEntries)
         functions.addAll(FunctionHolder.apply(file, kt))
         val (classes, objs) = ClassOrObjectHolder.apply(file, kt)
         nestedClasses.addAll(classes)

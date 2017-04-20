@@ -76,9 +76,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     }
 
     operator fun plusAssign(value: KibbleImport) {
-        value.type.packageName?.let {
-            imports += value
-        }
+        imports += value
     }
 
     fun outputFile(directory: File): File {
@@ -121,9 +119,15 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         return outputFile(File(".")).toString()
     }
 
-    fun getImport(name: String): KibbleImport? {
+    fun getImportByName(name: String): KibbleImport? {
         return imports.firstOrNull {
             it.type.name == name
+        }
+    }
+
+    fun getImportByFullName(name: String): KibbleImport? {
+        return imports.firstOrNull {
+            it.type.fullName == name
         }
     }
 }

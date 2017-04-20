@@ -5,8 +5,7 @@ import org.jetbrains.kotlin.psi.KtNullableType
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.KtUserType
 
-open class KibbleType internal constructor(val packageName: String? = null, val name: String,
-                                           val parameters: List<KibbleType> = listOf<KibbleType>(),
+open class KibbleType internal constructor(val file: KibbleFile, val name: String, val parameters: List<KibbleType> = listOf<KibbleType>(),
                                            val nullable: Boolean = false) {
     companion object {
         fun from(file: KibbleFile, type: String): KibbleType {
@@ -22,40 +21,21 @@ val temp: $type
             val typeElement = typeReference?.typeElement
             return when (typeElement) {
                 is KtUserType -> {
-                    val name = typeElement.referencedName ?: ""
-                    val packageName = qualify(typeElement.qualifier)
-
-                    var type: KibbleType? = null
-                    if (packageName == null) {
-                        type = file.getImport(name)?.type
-                    }
-
-                    type ?: KibbleType(packageName, name,
-                                typeElement.typeArguments.map { from(file, it.typeReference) })
-
+                    extractType(file, typeElement)
                 }
                 is KtNullableType -> {
-                    val userType = typeElement.innerType as KtUserType
-                    val name = userType.referencedName ?: ""
-                    val packageName = qualify(userType.qualifier)
-
-                    var type: KibbleType? = null
-                    if (packageName == null) {
-                        type = file.getImport(name)?.type
-                    }
-
-                    type ?: KibbleType(packageName, name,
-                            userType.typeArguments.map { from(file, it.typeReference) }, nullable = true)
+                    extractType(file, typeElement.innerType as KtUserType, true)
                 }
                 else -> throw IllegalArgumentException("unknown type $typeElement")
             }
         }
 
-        internal fun qualify(type: KtUserType?): String? {
-            return type?.let {
-                val qualified = type.referencedName
-                type.qualifier?.let { qualify(type.qualifier).let { "$it.$qualified" } } ?: qualified
-            }
+        private fun extractType(file: KibbleFile, typeElement: KtUserType, nullable: Boolean = false): KibbleType {
+            val name = (typeElement.qualifier?.text?.let { "$it." } ?: "") +
+                    (typeElement.referencedName ?: "")
+            val parameters = typeElement.typeArguments.map { from(file, it.typeReference) }
+
+            return KibbleType(file, name, parameters, nullable)
         }
     }
 
@@ -63,8 +43,7 @@ val temp: $type
         get() = toString()
 
     override fun toString(): String {
-        return (packageName?.let { it + "." } ?: "") + name +
-                (if (parameters.isNotEmpty()) parameters.joinToString(prefix = "<", postfix = ">") else "") +
+        return name + (if (parameters.isNotEmpty()) parameters.joinToString(prefix = "<", postfix = ">") else "") +
                 if (nullable) "?" else ""
     }
 
@@ -75,7 +54,6 @@ val temp: $type
         other as KibbleType
 
         if (name != other.name) return false
-        if (packageName != other.packageName) return false
         if (parameters != other.parameters) return false
         if (nullable != other.nullable) return false
 
@@ -84,7 +62,6 @@ val temp: $type
 
     override fun hashCode(): Int {
         var result = name.hashCode()
-        result = 31 * result + (packageName?.hashCode() ?: 0)
         result = 31 * result + parameters.hashCode()
         result = 31 * result + nullable.hashCode()
         return result

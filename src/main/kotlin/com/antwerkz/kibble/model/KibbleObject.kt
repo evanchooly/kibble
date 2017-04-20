@@ -22,7 +22,7 @@ class KibbleObject(override val file: KibbleFile, val parent: KibbleClass?, val 
     internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtObjectDeclaration) : this(file, parent, kt.name, kt.isCompanion()) {
         Extendable.extractSuperInformation(this, kt)
         visibility = Visible.apply(kt.visibilityModifier())
-        kt.annotationEntries.forEach { extractAnnotation(it) }
+        kt.annotationEntries.forEach { extractAnnotation(file, it) }
         functions.addAll(FunctionHolder.apply(file, kt))
         val (classes, objs) = ClassOrObjectHolder.apply(file, kt)
         nestedClasses.addAll(classes)

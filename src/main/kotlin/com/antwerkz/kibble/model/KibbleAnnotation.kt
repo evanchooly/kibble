@@ -6,9 +6,11 @@ import org.jetbrains.kotlin.psi.KtUserType
 import org.jetbrains.kotlin.psi.KtValueArgumentList
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
 
-class KibbleAnnotation internal constructor(name: String, val arguments: Map<String, Any> = mapOf()) : KibbleType(name = name) {
+class KibbleAnnotation internal constructor(file: KibbleFile, name: String, val arguments: Map<String, Any> = mapOf()) :
+        KibbleType(file, name = name) {
+
     companion object {
-        fun from(annotation: KtAnnotationEntry): KibbleAnnotation {
+        fun from(file: KibbleFile, annotation: KtAnnotationEntry): KibbleAnnotation {
             val arguments = annotation.allChildren
                     .filterIsInstance(KtValueArgumentList::class.java)
                     .firstOrNull()
@@ -18,23 +20,23 @@ class KibbleAnnotation internal constructor(name: String, val arguments: Map<Str
                         val expression = it.getArgumentExpression()
                         name to when (expression) {
                             is KtAnnotatedExpression -> {
-                                from(expression.allChildren.filterIsInstance(KtAnnotationEntry::class.java).first())
+                                from(file, expression.allChildren.filterIsInstance(KtAnnotationEntry::class.java).first())
                             }
                             else -> expression?.text ?: ""
                         }
                     }?.associateBy({ it.first }, { it.second })
                     ?: mapOf()
-            return KibbleAnnotation(
+            return KibbleAnnotation(file,
                     annotation.typeReference?.typeElement?.name
                             ?: (annotation.typeReference?.typeElement as KtUserType).referencedName ?: "",
                     arguments)
         }
     }
 
-    
+
     override fun toString(): String {
         var string = name
-        if(arguments.isNotEmpty()) {
+        if (arguments.isNotEmpty()) {
             string += arguments.entries.joinToString(prefix = "(", postfix = ")", transform = {
                 if (it.key == "value") it.value.toString() else "${it.key} = ${it.value}"
             })
