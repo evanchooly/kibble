@@ -68,7 +68,8 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         if (constructorParam) {
             throw IllegalArgumentException("File level properties can not also be constructor parameters")
         }
-        val property = KibbleProperty(this, null, name, type?.let { KibbleType.from(type) })
+        val property = KibbleProperty(this, null, name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit)
+
         property.visibility = visibility
         property.mutability = mutability
         properties += property
