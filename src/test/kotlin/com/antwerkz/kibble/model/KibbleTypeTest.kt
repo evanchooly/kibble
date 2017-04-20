@@ -29,8 +29,6 @@ class KibbleTypeTest {
     }
 
     fun fullyQualified() {
-        val file = Kibble.parseSource("import java.math.BigDecimal")
-
         val qualified = KibbleType.from("java.math.BigDecimal")
         val decimal = KibbleType.from("BigDecimal")
         val integer = KibbleType.from("BigInteger")

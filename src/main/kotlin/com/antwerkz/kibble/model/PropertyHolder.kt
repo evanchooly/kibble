@@ -20,7 +20,7 @@ interface PropertyHolder {
 
     val properties: MutableList<KibbleProperty>
 
-    fun addProperty(name: String, type: String?,
+    fun addProperty(name: String, type: String? = null,
                     initializer: String? = null,
                     modality: Modality = FINAL,
                     overriding: Boolean = false,
