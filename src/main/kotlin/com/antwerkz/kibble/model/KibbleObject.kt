@@ -5,8 +5,8 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleObject(override val file: KibbleFile, val parent: KibbleClass?, val name: String?, val companion: Boolean = false) :
-        Annotatable, ClassOrObjectHolder, Extendable, FunctionHolder, KibbleElement, PropertyHolder, Visible {
+class KibbleObject(override val file: KibbleFile, val parent: KibbleClass? = null, val name: String?, val companion: Boolean = false)
+    : Annotatable, ClassOrObjectHolder, Extendable, FunctionHolder, KibbleElement, PropertyHolder, Visible {
 
     override var superTypes = listOf<KibbleType>()
     override var superType: KibbleType? = null
@@ -16,41 +16,114 @@ class KibbleObject(override val file: KibbleFile, val parent: KibbleClass?, val 
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
     override var annotations = mutableListOf<KibbleAnnotation>()
-    override val nestedClasses = mutableListOf<KibbleClass>()
+    override val classes = mutableListOf<KibbleClass>()
     override val objects = mutableListOf<KibbleObject>()
 
-    internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtObjectDeclaration) : this(file, parent, kt.name, kt.isCompanion()) {
+    internal constructor(file: KibbleFile, parent: KibbleClass? = null, kt: KtObjectDeclaration)
+            : this(file, parent, kt.name, kt.isCompanion()) {
         Extendable.extractSuperInformation(this, kt)
         visibility = Visible.apply(kt.visibilityModifier())
-        kt.annotationEntries.forEach { extractAnnotation(file, it) }
-        functions.addAll(FunctionHolder.apply(file, kt))
-        val (classes, objs) = ClassOrObjectHolder.apply(file, kt)
-        nestedClasses.addAll(classes)
-        objects.addAll(objs)
+
+        extractAnnotations(file, kt.annotationEntries)
+        kt.getBody()?.declarations?.let {
+            extractClassesObjects(file, it)
+            extractFunctions(file, it)
+            extractProperties(file, it)
+        }
+    }
+
+    override fun addClass(name: String): KibbleClass {
+        return KibbleClass(file).also {
+            classes += it
+        }
+    }
+    override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
+        return KibbleObject(file, name = name, companion = isCompanion).also {
+            objects += it
+        }
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        TODO("not implemented")
+        return KibbleFunction(file, name = name, type = type, body = body).also {
+            functions += it
+        }
     }
 
     override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
-        TODO("not implemented")
+        if (constructorParam) {
+            throw IllegalArgumentException("Object properties can not also be constructor parameters")
+        }
+        return KibbleProperty(file, name = name, type = type?.let { KibbleType.from(type) }, initializer = initializer,
+                modality = modality, overriding = overriding, lateInit = lateInit).also {
+            it.visibility = visibility
+            properties += it
+        }
     }
 
+
+    override fun toString() = toSource().toString()
+
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        annotations.forEach {
-            writer.writeln(it.toString(), level)
-        }
+        annotations.forEach { writer.writeln(it.toString(), level) }
         writer.write(visibility.toString(), level)
         if (companion) {
             writer.write("companion ")
         }
-        writer.writeln("object {")
-        writer.writeln("}", level)
+        writer.write("object")
+        superType?.let {
+            writer.write(": $it")
+            writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))
+        }
+        if (!superTypes.isEmpty()) {
+            writer.write(superTypes.joinToString(prefix = ", "))
+        }
+        if (!properties.isEmpty() || !functions.isEmpty() || !classes.isEmpty()) {
+            writer.writeln(" {")
 
+            properties.forEach { it.toSource(writer, level + 1) }
+            functions.forEach { it.toSource(writer, level + 1) }
+            classes.forEach { it.toSource(writer, level + 1) }
+
+            writer.write("}", level)
+        }
+        writer.writeln()
         return writer
     }
 
-    override fun toString() = toSource().toString()
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other?.javaClass != javaClass) return false
+
+        other as KibbleObject
+
+        if (name != other.name) return false
+        if (companion != other.companion) return false
+        if (superTypes != other.superTypes) return false
+        if (superType != other.superType) return false
+        if (superCallArgs != other.superCallArgs) return false
+        if (visibility != other.visibility) return false
+        if (functions != other.functions) return false
+        if (properties != other.properties) return false
+        if (annotations != other.annotations) return false
+        if (classes != other.classes) return false
+        if (objects != other.objects) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name?.hashCode() ?: 0
+        result = 31 * result + companion.hashCode()
+        result = 31 * result + superTypes.hashCode()
+        result = 31 * result + (superType?.hashCode() ?: 0)
+        result = 31 * result + superCallArgs.hashCode()
+        result = 31 * result + visibility.hashCode()
+        result = 31 * result + functions.hashCode()
+        result = 31 * result + properties.hashCode()
+        result = 31 * result + annotations.hashCode()
+        result = 31 * result + classes.hashCode()
+        result = 31 * result + objects.hashCode()
+        return result
+    }
 }

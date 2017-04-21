@@ -18,21 +18,20 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         set(value) {
             file.pkgName = value
         }
-    var enclosingType: KibbleClass? = null
-    override var annotations = mutableListOf<KibbleAnnotation>()
-    override val functions = mutableListOf<KibbleFunction>()
-
-    override val properties = mutableListOf<KibbleProperty>()
-    var constructor = Constructor(file, this)
-        private set
-    val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
-    override val nestedClasses: MutableList<KibbleClass> = mutableListOf()
-
-    override val objects: MutableList<KibbleObject> = mutableListOf()
 
     override var superTypes = listOf<KibbleType>()
     override var superType: KibbleType? = null
     override var superCallArgs = listOf<String>()
+
+    override var annotations = mutableListOf<KibbleAnnotation>()
+    override val classes: MutableList<KibbleClass> = mutableListOf()
+    override val objects: MutableList<KibbleObject> = mutableListOf()
+    override val functions = mutableListOf<KibbleFunction>()
+    override val properties = mutableListOf<KibbleProperty>()
+
+    var constructor = Constructor(file, this)
+        private set
+    val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
 
     internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
         Extendable.extractSuperInformation(this, kt)
@@ -40,60 +39,55 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
 
-        kt.getPrimaryConstructor()?.let {
+        kt.primaryConstructor?.let {
             constructor = Constructor(this, it)
         }
-/*
-        constructor?.parameters
-                ?.filter { it.mutability != null }
-                ?.forEach {
-                    properties += KibbleProperty(kibbleFile, this, it.name, it.type, it.defaultValue, lateInit = false, ctorParam = true)
-                }
-*/
-        kt.getSecondaryConstructors().forEach {
+        kt.secondaryConstructors.forEach {
             secondaries += SecondaryConstructor(this, it)
         }
-        extractAnnotation(file, kt.annotationEntries)
-        functions.addAll(FunctionHolder.apply(file, kt))
-        val (classes, objs) = ClassOrObjectHolder.apply(file, kt)
-        nestedClasses.addAll(classes)
-        objects.addAll(objs)
-        properties.addAll(PropertyHolder.apply(file, kt, this))
+        extractAnnotations(file, kt.annotationEntries)
+        kt.getBody()?.let {
+            extractClassesObjects(file, it.declarations)
+            extractFunctions(file, it.declarations)
+            extractProperties(file, it.declarations, this)
+        }
     }
 
     fun addSecondaryConstructor(): SecondaryConstructor {
-        val ctor = SecondaryConstructor(this)
-        secondaries += ctor
-        return ctor
+        return SecondaryConstructor(this).also {
+            secondaries += it
+        }
     }
 
-    override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
-                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean)
-            : KibbleProperty {
-        val property = KibbleProperty(file, this, name, type?.let { KibbleType.from(type) }, initializer, modality, overriding,
-                lateInit)
-        property.visibility = visibility
-        property.mutability = mutability
-        property.constructorParam = constructorParam
-        if (constructorParam) {
-            constructor.parameters += property
+    override fun addClass(name: String): KibbleClass {
+        return KibbleClass(file, name).also {
+            classes += it
         }
-        properties += property
-        return property
+    }
+
+    override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
+        return KibbleObject(file, this, name, isCompanion).also {
+            objects += it
+        }
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        val function = KibbleFunction(this.file, this, name = name, type = type, body = body)
-        functions += function
-        return function
+        return KibbleFunction(this.file, this, name = name, type = type, body = body).also {
+            functions += it
+        }
     }
 
-    fun addClass(name: String): KibbleClass {
-        val klass = KibbleClass(file, name)
-        klass.enclosingType = this
-        nestedClasses += klass
-
-        return klass
+    override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
+                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
+        return KibbleProperty(file, this, name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
+            it.visibility = visibility
+            it.mutability = mutability
+            it.constructorParam = constructorParam
+            if (constructorParam) {
+                constructor.parameters += it
+            }
+            properties += it
+        }
     }
 
     override fun toString(): String {
@@ -114,12 +108,12 @@ class KibbleClass internal constructor(override var file: KibbleFile,
             writer.write(superTypes.joinToString(prefix = ", "))
         }
         val nonParamProps = properties.filter { !it.constructorParam }
-        if (!nonParamProps.isEmpty() || !functions.isEmpty() || !nestedClasses.isEmpty()) {
+        if (!nonParamProps.isEmpty() || !functions.isEmpty() || !classes.isEmpty()) {
             writer.writeln(" {")
             nonParamProps.forEach { it.toSource(writer, level + 1) }
 
             functions.forEach { it.toSource(writer, level + 1) }
-            nestedClasses.forEach { it.toSource(writer, level + 1) }
+            classes.forEach { it.toSource(writer, level + 1) }
 
             writer.write("}", level)
         }

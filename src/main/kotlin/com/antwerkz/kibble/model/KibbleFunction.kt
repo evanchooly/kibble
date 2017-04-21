@@ -37,7 +37,10 @@ class KibbleFunction internal constructor(override val file: KibbleFile,
         kt.valueParameters.forEach {
             this += KibbleParameter(file, it)
         }
-        this.body = kt.bodyExpression?.text ?: ""
+        this.body = (kt.bodyExpression?.text ?: "")
+                .drop(1)
+                .dropLast(1)
+                .trimIndent()
         this.type = kt.typeReference?.text ?: ""
 
         kt.modifierList
@@ -45,6 +48,7 @@ class KibbleFunction internal constructor(override val file: KibbleFile,
         visibility = Visible.apply(kt.visibilityModifier())
         overriding = Overridable.apply(kt)
     }
+
 
     override fun toString() = toSource().toString()
 
@@ -68,6 +72,34 @@ class KibbleFunction internal constructor(override val file: KibbleFile,
             writer.writeln(s)
         }
         return writer
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other?.javaClass != javaClass) return false
+
+        other as KibbleFunction
+
+        if (name != other.name) return false
+        if (visibility != other.visibility) return false
+        if (modality != other.modality) return false
+        if (type != other.type) return false
+        if (body != other.body) return false
+        if (overriding != other.overriding) return false
+        if (parameters != other.parameters) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name?.hashCode() ?: 0
+        result = 31 * result + visibility.hashCode()
+        result = 31 * result + modality.hashCode()
+        result = 31 * result + type.hashCode()
+        result = 31 * result + body.hashCode()
+        result = 31 * result + overriding.hashCode()
+        result = 31 * result + parameters.hashCode()
+        return result
     }
 }
 

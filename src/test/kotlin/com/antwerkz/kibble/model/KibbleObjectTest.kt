@@ -26,4 +26,26 @@ class KibbleObjectTest {
         function = functions.next()
         Assert.assertEquals(function.name, "dummy")
     }
+
+    @Test
+    fun functions() {
+        val obj = Kibble.parseSource("""
+object temp {
+    fun something(): Junk {
+        println("something")
+    }
+}""".trim()).objects[0]
+
+        Assert.assertEquals(obj.name, "temp")
+        val function = obj.functions[0]
+        Assert.assertEquals(function.name, "something")
+        Assert.assertEquals(function.type, "Junk")
+
+        val file = KibbleFile("temp.kt")
+
+        val temp = file.addObject("temp")
+        temp.addFunction("something", "Junk", """println("something")""")
+
+        Assert.assertEquals(temp, obj)
+    }
 }

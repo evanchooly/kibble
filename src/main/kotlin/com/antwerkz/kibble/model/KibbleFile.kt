@@ -1,66 +1,61 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
-import org.jetbrains.kotlin.psi.KtImportDirective
 import org.jetbrains.kotlin.psi.KtProperty
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 
 class KibbleFile(val name: String? = null, override var pkgName: String? = null) :
-        KibbleElement, FunctionHolder, PropertyHolder, Packaged {
+        KibbleElement, FunctionHolder, PropertyHolder, Packaged, ClassOrObjectHolder {
 
     companion object {
         val LOG: Logger = LoggerFactory.getLogger(KibbleFile::class.java)
     }
 
     val imports = mutableSetOf<KibbleImport>()
-    val classes = mutableListOf<KibbleClass>()
+    override val classes = mutableListOf<KibbleClass>()
+    override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
 
-    internal constructor(file: KtFile) : this(file.name, file.packageDirective?.fqName.toString()) {
-        sourcePath = file.virtualFile.canonicalPath
-        file.importDirectives.forEach {
-            this += KibbleImport(it)
+    internal constructor(kt: KtFile) : this(kt.name, kt.packageDirective?.fqName.toString()) {
+        sourcePath = kt.virtualFile.canonicalPath
+        kt.importDirectives.forEach {
+            imports += KibbleImport(it)
         }
 
-        file.declarations.forEach {
-            when (it) {
-                is KtClass -> classes += KibbleClass(this, it)
-                is KtFunction -> functions += KibbleFunction(this, it)
-                is KtProperty -> properties += KibbleProperty(this, null, it)
-                else -> LOG.warn("Unknown type being added to KotlinFile: $it")
-            }
+        kt.declarations.let {
+            extractClassesObjects(this, it)
+            extractFunctions(this, it)
+            extractProperties(this, it)
         }
-        pkgName = file.packageDirective?.children?.firstOrNull()?.text
+
+        pkgName = kt.packageDirective?.children?.firstOrNull()?.text
     }
 
     var sourcePath: String? = null
         private set
 
-    fun addClass(name: String): KibbleClass {
-        val klass = KibbleClass(this, name)
-        classes += klass
+    override fun addClass(name: String): KibbleClass {
+        return KibbleClass(this, name).also {
+            classes += it
+        }
+    }
 
-        return klass
+    override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
+        return KibbleObject(this, name = name, companion = isCompanion).also {
+            objects += it
+        }
+
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        val function = KibbleFunction(this, null, name, type = type, body = body)
-        functions += function
-        return function
-    }
-
-    fun addImport(name: String, alias: String? = null) {
-        imports += KibbleImport(KibbleType.from(name), alias)
-    }
-
-    fun addImport(type: Class<*>, alias: String? = null) {
-        imports += KibbleImport(KibbleType.from(type.name), alias)
+        return KibbleFunction(this, null, name, type = type, body = body).also {
+            functions += it
+        }
     }
 
     override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
@@ -68,7 +63,8 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         if (constructorParam) {
             throw IllegalArgumentException("File level properties can not also be constructor parameters")
         }
-        val property = KibbleProperty(this, null, name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit)
+        val property = KibbleProperty(this, name = name, type = type?.let { KibbleType.from(type) }, initializer = initializer,
+                modality = modality, overriding = overriding, lateInit = lateInit)
 
         property.visibility = visibility
         property.mutability = mutability
@@ -76,8 +72,16 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         return property
     }
 
-    operator fun plusAssign(value: KibbleImport) {
-        imports += value
+    fun addImport(name: String, alias: String? = null): KibbleImport {
+        return KibbleImport(KibbleType.from(name), alias).also {
+            imports += it
+        }
+    }
+
+    fun addImport(type: Class<*>, alias: String? = null): KibbleImport {
+        return KibbleImport(KibbleType.from(type.name), alias).also {
+            imports += it
+        }
     }
 
     fun outputFile(directory: File): File {

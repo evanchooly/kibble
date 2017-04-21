@@ -21,10 +21,8 @@ class KibbleTest {
         Assert.assertEquals(file.functions.size, 1)
         Assert.assertEquals(file.functions[0].visibility, Visibility.INTERNAL)
         Assert.assertEquals(file.functions[0].type, "String")
-        Assert.assertEquals(file.functions[0].body, """{
-    println("hi")
-    return "hi"
-}""")
+        Assert.assertEquals(file.functions[0].body, """println("hi")
+return "hi"""")
     }
 
     @Test

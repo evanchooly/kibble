@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
 class KibbleProperty internal constructor(val file: KibbleFile,
-                                          val parent: KibbleClass?,
+                                          val parent: KibbleClass? = null,
                                           name: String,
                                           type: KibbleType?,
                                           initializer: String? = null,
@@ -27,19 +27,19 @@ class KibbleProperty internal constructor(val file: KibbleFile,
         mutability = VAL
     }
 
-    internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtParameter) : this(file, parent, kt.name!!,
+    internal constructor(file: KibbleFile, parent: KibbleClass? = null, kt: KtParameter) : this(file, parent, kt.name!!,
             KibbleType.from(file, kt.typeReference), kt.defaultValue?.text) {
 
-        kt.annotationEntries.forEach { extractAnnotation(file, it) }
+        extractAnnotations(file, kt.annotationEntries)
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
         mutability = Mutable.apply(kt.valOrVarKeyword)
     }
 
-    internal constructor(file: KibbleFile, parent: KibbleClass?, kt: KtProperty) : this(file, parent, kt.name!!,
+    internal constructor(file: KibbleFile, parent: KibbleClass? = null, kt: KtProperty) : this(file, parent, kt.name!!,
             KibbleType.from(file, kt.typeReference), kt.initializer?.text) {
 
-        kt.annotationEntries.forEach { extractAnnotation(file, it) }
+        extractAnnotations(file, kt.annotationEntries)
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
         lateInit = kt.modifierList?.allChildren?.find { it.text == "lateinit" } != null

@@ -6,14 +6,6 @@ import org.jetbrains.kotlin.psi.KtAnnotationEntry
 interface Annotatable {
     var annotations: MutableList<KibbleAnnotation>
 
-    fun extractAnnotation(file: KibbleFile, entries: List<KtAnnotationEntry>) {
-        annotations.addAll(entries.map { from(file, it) })
-    }
-
-    fun extractAnnotation(file: KibbleFile, entry: KtAnnotationEntry) {
-        annotations.add(from(file, entry))
-    }
-
     fun hasAnnotation(annotation: Class<out Annotation>): Boolean {
         return getAnnotation(annotation) != null
     }
@@ -23,4 +15,8 @@ interface Annotatable {
             it.name == annotation.simpleName || it.name == annotation.name
         }
     }
+}
+
+internal fun Annotatable.extractAnnotations(file: KibbleFile, entries: List<KtAnnotationEntry>) {
+    annotations.addAll(entries.map { from(file, it) })
 }
