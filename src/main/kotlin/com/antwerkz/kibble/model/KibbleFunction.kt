@@ -7,32 +7,34 @@ import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleFunction internal constructor(override val file: KibbleFile,
-                                          var name: String? = null,
+/**
+ * Defines a function
+ *
+ * @property name the function name
+ * @property parameters the function parameters
+ * @property type the function type
+ * @property body the function body
+ * @property overriding true if this function overrides a function in a parent type
+ */
+class KibbleFunction internal constructor(var name: String? = null,
                                           override var visibility: Visibility = PUBLIC,
                                           override var modality: Modality = FINAL,
                                           var type: String = "Unit",
                                           var body: String = "",
                                           override var overriding: Boolean = false)
-    : Visible, Modal<KibbleFunction>, ParameterHolder, KibbleElement, Overridable, Packaged {
+    : Visible, Modal<KibbleFunction>, ParameterHolder, KibbleElement, Overridable {
 
     override val parameters = mutableListOf<KibbleParameter>()
 
-    override var pkgName: String?
-        get() = file.pkgName
-        set(value) {
-            file.pkgName = value
-        }
-
-    internal constructor(file: KibbleFile, kt: KtFunction) : this(file, kt.name) {
-        parse(kt)
+    internal constructor(file: KibbleFile, kt: KtFunction) : this(kt.name) {
+        parse(file, kt)
     }
 
-    internal constructor(parent: KibbleClass, kt: KtFunction) : this(parent.file, kt.name) {
-        parse(kt)
+    internal constructor(parent: KibbleClass, kt: KtFunction) : this(kt.name) {
+        parse(parent.file, kt)
     }
 
-    private fun parse(kt: KtFunction) {
+    private fun parse(file: KibbleFile, kt: KtFunction) {
         kt.valueParameters.forEach {
             this += KibbleParameter(file, it)
         }
@@ -49,8 +51,14 @@ class KibbleFunction internal constructor(override val file: KibbleFile,
     }
 
 
+    /**
+     * @return the string/source form of this type
+     */
     override fun toString() = toSource().toString()
 
+    /**
+     * @return the string/source form of this type
+     */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.writeln()
         writer.write("", level)
@@ -73,6 +81,9 @@ class KibbleFunction internal constructor(override val file: KibbleFile,
         return writer
     }
 
+    /**
+     * @return true if `other` is equal to this
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
@@ -90,6 +101,9 @@ class KibbleFunction internal constructor(override val file: KibbleFile,
         return true
     }
 
+    /**
+     * @return the hash code
+     */
     override fun hashCode(): Int {
         var result = name?.hashCode() ?: 0
         result = 31 * result + visibility.hashCode()

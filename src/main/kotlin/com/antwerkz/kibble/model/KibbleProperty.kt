@@ -17,7 +17,8 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property name the name of the property
  * @property type the type of the property
  * @property initializer any initialization expression for the property
- * @property lateInit true if the property should have the {@code lateinit} modifier
+ * @property lateInit true if the property should have the `lateinit` modifier
+ * @property overriding true if this property is overriding a property in a parent type
  * @property constructorParam true if the property should be listed as a constructor parameter
  */
 class KibbleProperty internal constructor(name: String, type: KibbleType?, initializer: String? = null,

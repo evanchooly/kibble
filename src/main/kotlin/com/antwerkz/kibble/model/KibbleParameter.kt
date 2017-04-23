@@ -6,6 +6,13 @@ import com.antwerkz.kibble.model.Mutability.VAL
 import com.antwerkz.kibble.model.Visibility.NONE
 import org.jetbrains.kotlin.psi.KtParameter
 
+/**
+ * Defines a function parameter
+ *
+ * @property name the parameter name
+ * @property type the parameter type
+ * @property initializer the parameter initializer
+ */
 open class KibbleParameter internal constructor(val name: String, val type: KibbleType?, var initializer: String? = null) : KibbleElement,
         Mutable, Visible {
 
@@ -22,18 +29,25 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
             }
         }
 
+    /**
+     * @return the string/source form of this type
+     */
     override fun toString(): String {
         return toSource().toString()
     }
 
+    /**
+     * @return the string/source form of this type
+     */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.write("$visibility${mutability}$name: $type", level)
 
         return writer
     }
 
-    fun isParameterized(): Boolean = type?.parameters?.isEmpty()?.not() ?: false
-
+    /**
+     * @return true if `other` is equal to this
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
@@ -49,6 +63,9 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
         return true
     }
 
+    /**
+     * @return the hash code
+     */
     override fun hashCode(): Int {
         var result = name.hashCode()
         result = 31 * result + (type?.hashCode() ?: 0)

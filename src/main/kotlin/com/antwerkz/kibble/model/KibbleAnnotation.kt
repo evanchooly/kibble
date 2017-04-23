@@ -1,15 +1,21 @@
 package com.antwerkz.kibble.model
 
+import com.antwerkz.kibble.SourceWriter
 import org.jetbrains.kotlin.psi.KtAnnotatedExpression
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtUserType
 import org.jetbrains.kotlin.psi.KtValueArgumentList
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
 
-class KibbleAnnotation internal constructor(name: String, val arguments: Map<String, Any> = mapOf()): KibbleType(name) {
+/**
+ * Represents an annotation in kotlin source code.
+ *
+ * @property arguments the values passed to the annotation
+ */
+class KibbleAnnotation internal constructor(name: String, val arguments: Map<String, Any> = mapOf()) : KibbleType(name), KibbleElement {
 
     companion object {
-        fun from(file: KibbleFile, annotation: KtAnnotationEntry): KibbleAnnotation {
+        internal fun from(file: KibbleFile, annotation: KtAnnotationEntry): KibbleAnnotation {
             val arguments = annotation.allChildren
                     .filterIsInstance(KtValueArgumentList::class.java)
                     .firstOrNull()
@@ -32,14 +38,21 @@ class KibbleAnnotation internal constructor(name: String, val arguments: Map<Str
     }
 
 
-    override fun toString(): String {
+    /**
+     * @return the source form of this annotation
+     */
+    override fun toString() = toSource().toString()
+
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         var string = name
         if (arguments.isNotEmpty()) {
-            string += arguments.entries.joinToString(prefix = "(", postfix = ")", transform = {
-                if (it.key == "value") it.value.toString() else "${it.key} = ${it.value}"
-            })
+            string += arguments.entries.joinToString(prefix = "(", postfix = ")",
+                    transform = {
+                        if (it.key == "value") it.value.toString() else "${it.key} = ${it.value}"
+                    })
         }
-        return "@$string"
+        writer.writeln(string)
+        return writer
     }
 
     /**

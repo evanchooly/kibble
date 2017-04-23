@@ -5,7 +5,13 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleObject(override val file: KibbleFile, val name: String?, val companion: Boolean = false)
+/**
+ * Defines an object type
+ *
+ * @property name the object name
+ * @property companion true if this object is a companion object
+ */
+class KibbleObject internal constructor(override val file: KibbleFile, val name: String?, val companion: Boolean = false)
     : Annotatable, ClassOrObjectHolder, Extendable, FunctionHolder, KibbleElement, PropertyHolder, Visible {
 
     override var superTypes = listOf<KibbleType>()
@@ -43,7 +49,7 @@ class KibbleObject(override val file: KibbleFile, val name: String?, val compani
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(file, name, type = type, body = body).also {
+        return KibbleFunction(name, type = type, body = body).also {
             functions += it
         }
     }
@@ -59,9 +65,14 @@ class KibbleObject(override val file: KibbleFile, val name: String?, val compani
         }
     }
 
-
+    /**
+     * @return the string/source form of this type
+     */
     override fun toString() = toSource().toString()
 
+    /**
+     * @return the string/source form of this type
+     */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         annotations.forEach { writer.writeln(it.toString(), level) }
         writer.write(visibility.toString(), level)
@@ -92,6 +103,9 @@ class KibbleObject(override val file: KibbleFile, val name: String?, val compani
         return writer
     }
 
+    /**
+     * @return true if `other` is equal to this
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
@@ -113,6 +127,9 @@ class KibbleObject(override val file: KibbleFile, val name: String?, val compani
         return true
     }
 
+    /**
+     * @return the hash code
+     */
     override fun hashCode(): Int {
         var result = name?.hashCode() ?: 0
         result = 31 * result + companion.hashCode()

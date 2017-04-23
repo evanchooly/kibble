@@ -7,6 +7,13 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
+/**
+ * Represents an annotation in kotlin source code.
+ *
+ * @property name the class name
+ * @property constructor the primary constructor for this class
+ * @property secondaries the secondary constructors this class
+ */
 class KibbleClass internal constructor(override var file: KibbleFile,
                                        var name: String = "",
                                        override var modality: Modality = FINAL,
@@ -47,8 +54,13 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         }
     }
 
+    /**
+     * Adds a secondary constructor to this class
+     *
+     * @return the new constructor
+     */
     fun addSecondaryConstructor(): SecondaryConstructor {
-        return SecondaryConstructor(this).also {
+        return SecondaryConstructor().also {
             secondaries += it
         }
     }
@@ -84,6 +96,9 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         }
     }
 
+    /**
+     * @return the string form of this class
+     */
     override fun toString(): String {
         return "class $name"
     }

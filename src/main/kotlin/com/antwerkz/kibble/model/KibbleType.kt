@@ -15,6 +15,11 @@ import org.jetbrains.kotlin.psi.KtUserType
 open class KibbleType internal constructor(val name: String, val parameters: List<KibbleType> = listOf<KibbleType>(),
                                            val nullable: Boolean = false) {
     companion object {
+        /**
+         * Creates a KibbleType from ths string
+         *
+         * @return the new KibbleType
+         */
         fun from(type: String): KibbleType {
              return Kibble.parseSource("val temp: $type").properties[0].type!!
         }
@@ -49,11 +54,17 @@ open class KibbleType internal constructor(val name: String, val parameters: Lis
     val fullName: String
         get() = toString()
 
+    /**
+     * @return the string/source form of this type
+     */
     override fun toString(): String {
         return name + (if (parameters.isNotEmpty()) parameters.joinToString(prefix = "<", postfix = ">") else "") +
                 if (nullable) "?" else ""
     }
 
+    /**
+     * @return true if `other` is equal to this
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
@@ -67,6 +78,9 @@ open class KibbleType internal constructor(val name: String, val parameters: Lis
         return true
     }
 
+    /**
+     * @return the hashcode for this type
+     */
     override fun hashCode(): Int {
         var result = name.hashCode()
         result = 31 * result + parameters.hashCode()

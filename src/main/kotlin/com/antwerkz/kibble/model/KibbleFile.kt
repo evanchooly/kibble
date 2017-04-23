@@ -4,8 +4,15 @@ import com.antwerkz.kibble.SourceWriter
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 
-class KibbleFile(val name: String? = null, override var pkgName: String? = null) :
-        KibbleElement, FunctionHolder, PropertyHolder, Packaged, ClassOrObjectHolder {
+/**
+ * Defines a kotlin source file model
+ *
+ * @property name the name of the physical kotlin file
+ * @property pkgName the package name
+ * @property imports the imports defined in the file
+ */
+class KibbleFile(val name: String? = null, var pkgName: String? = null) :
+        KibbleElement, FunctionHolder, PropertyHolder, ClassOrObjectHolder {
 
     val imports = mutableSetOf<KibbleImport>()
     override val classes = mutableListOf<KibbleClass>()
@@ -14,7 +21,6 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     override val properties = mutableListOf<KibbleProperty>()
 
     internal constructor(kt: KtFile) : this(kt.name, kt.packageDirective?.fqName.toString()) {
-        sourcePath = kt.virtualFile.canonicalPath
         kt.importDirectives.forEach {
             imports += KibbleImport(it)
         }
@@ -27,9 +33,6 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
 
         pkgName = kt.packageDirective?.children?.firstOrNull()?.text
     }
-
-    var sourcePath: String? = null
-        private set
 
     override fun addClass(name: String): KibbleClass {
         return KibbleClass(this, name).also {
@@ -64,18 +67,41 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         return property
     }
 
+    /**
+     * Adds an import to this file
+     *
+     * @param name the type to import
+     * @param alias the alias of the import
+     *
+     * @return the new import
+     */
     fun addImport(name: String, alias: String? = null): KibbleImport {
         return KibbleImport(KibbleType.from(name), alias).also {
             imports += it
         }
     }
 
+    /**
+     * Adds an import to this file
+     *
+     * @param type the type to import
+     * @param alias the alias of the import
+     *
+     * @return the new import
+     */
     fun addImport(type: Class<*>, alias: String? = null): KibbleImport {
         return KibbleImport(KibbleType.from(type.name), alias).also {
             imports += it
         }
     }
 
+    /**
+     * Creates a File reference for this KibbleFile based on the directory given.
+     *
+     * @param directory the output directory
+     *
+     * @return the new File
+     */
     fun outputFile(directory: File): File {
         var fileName = name
         pkgName?.let {
@@ -83,7 +109,6 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         }
         return File(directory, fileName)
     }
-
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         pkgName?.let {
@@ -112,6 +137,9 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         }
     }
 
+    /**
+     * @return the string form of this class
+     */
     override fun toString(): String {
         return outputFile(File(".")).toString()
     }
