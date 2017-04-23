@@ -6,8 +6,7 @@ import org.jetbrains.kotlin.psi.KtUserType
 import org.jetbrains.kotlin.psi.KtValueArgumentList
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
 
-class KibbleAnnotation internal constructor(file: KibbleFile, name: String, val arguments: Map<String, Any> = mapOf()) :
-        KibbleType(file, name = name) {
+class KibbleAnnotation internal constructor(name: String, val arguments: Map<String, Any> = mapOf()): KibbleType(name) {
 
     companion object {
         fun from(file: KibbleFile, annotation: KtAnnotationEntry): KibbleAnnotation {
@@ -26,9 +25,8 @@ class KibbleAnnotation internal constructor(file: KibbleFile, name: String, val 
                         }
                     }?.associateBy({ it.first }, { it.second })
                     ?: mapOf()
-            return KibbleAnnotation(file,
-                    annotation.typeReference?.typeElement?.name
-                            ?: (annotation.typeReference?.typeElement as KtUserType).referencedName ?: "",
+            return KibbleAnnotation(annotation.typeReference?.typeElement?.name
+                    ?: (annotation.typeReference?.typeElement as KtUserType).referencedName ?: "",
                     arguments)
         }
     }

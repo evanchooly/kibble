@@ -23,6 +23,6 @@ internal fun PropertyHolder.extractProperties(file: KibbleFile, declarations: Li
     properties += declarations
             .filterIsInstance<KtProperty>()
             .map {
-                KibbleProperty(file, parent, it)
+                KibbleProperty(file, it)
             }
 }

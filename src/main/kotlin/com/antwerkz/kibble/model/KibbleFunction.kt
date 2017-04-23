@@ -8,7 +8,6 @@ import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
 class KibbleFunction internal constructor(override val file: KibbleFile,
-                                          val parent: KibbleClass? = null,
                                           var name: String? = null,
                                           override var visibility: Visibility = PUBLIC,
                                           override var modality: Modality = FINAL,
@@ -25,11 +24,11 @@ class KibbleFunction internal constructor(override val file: KibbleFile,
             file.pkgName = value
         }
 
-    internal constructor(file: KibbleFile, kt: KtFunction) : this(file, null, kt.name) {
+    internal constructor(file: KibbleFile, kt: KtFunction) : this(file, kt.name) {
         parse(kt)
     }
 
-    internal constructor(parent: KibbleClass, kt: KtFunction) : this(parent.file, parent, kt.name) {
+    internal constructor(parent: KibbleClass, kt: KtFunction) : this(parent.file, kt.name) {
         parse(kt)
     }
 

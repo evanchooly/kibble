@@ -11,18 +11,36 @@ import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import org.jetbrains.kotlin.config.addKotlinSourceRoot
 import java.io.File
 
+/**
+ * This is the primary entry point for parsing existing Kotlin code
+ */
 class Kibble {
     companion object {
+        /**
+         * Parses source found at the given path.
+         *
+         * @return the KibbleFile
+         */
         @JvmStatic
         fun parseFile(file: String): KibbleFile {
             return parse(File(file))[0]
         }
 
+        /**
+         * Parses source found at the given path.
+         *
+         * @return the KibbleFile
+         */
         @JvmStatic
         fun parseFile(file: File): KibbleFile {
             return parse(file.absoluteFile)[0]
         }
 
+        /**
+         * Parses sources found at the given path. This String can represent a source file or a directory to scan for sources
+         *
+         * @return the list of KibbleFiles from sources found at the given path
+         */
         @JvmStatic
         fun parse(path: File): List<KibbleFile> {
             val configuration = CompilerConfiguration()
@@ -37,6 +55,11 @@ class Kibble {
                     .map(::KibbleFile)
         }
 
+        /**
+         * Parses a code snippet in to a Kibble model
+         *
+         * @return a KibbleFile holding the results of the parsed snippet
+         */
         @JvmStatic
         fun parseSource(source: String): KibbleFile {
             val tempFile = File.createTempFile("kibble-", ".kt")

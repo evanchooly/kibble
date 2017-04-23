@@ -4,17 +4,23 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 
-open class Constructor internal constructor(override val file: KibbleFile, val klass: KibbleClass) : Visible, ParameterHolder,
-KibbleElement {
-    internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this(klass.file, klass) {
+/**
+ * Defines a constructor for a Class
+ *
+ * @property visibility the constructor visibility
+ * @property parameters the constructor parameters
+ * @property body the constructor body
+ */
+open class Constructor internal constructor() : Visible, ParameterHolder, KibbleElement {
+    internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this() {
         kt.valueParameters.forEach {
             if (it.hasValOrVar()) {
-                val kibbleProperty = KibbleProperty(klass.file, klass, it)
+                val kibbleProperty = KibbleProperty(klass.file, it)
                 kibbleProperty.constructorParam = true
                 this += kibbleProperty
                 klass.properties += kibbleProperty
             } else {
-                this += KibbleParameter(file, it)
+                this += KibbleParameter(klass.file, it)
             }
         }
         body = kt.bodyExpression?.text ?: ""

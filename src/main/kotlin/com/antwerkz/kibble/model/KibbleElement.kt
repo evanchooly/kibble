@@ -9,5 +9,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 interface KibbleElement {
+    /**
+     * Writes this element to the given SourceWriter
+     *
+     * @param writer the writer to use
+     * @param indent the indentation level to use on the generated code
+     */
     fun toSource(writer: SourceWriter = SourceWriter(), level: Int = 0): SourceWriter
 }

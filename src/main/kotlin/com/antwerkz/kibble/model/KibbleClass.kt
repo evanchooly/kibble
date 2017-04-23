@@ -11,13 +11,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
                                        var name: String = "",
                                        override var modality: Modality = FINAL,
                                        override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder,
-        Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Packaged, Extendable, ClassOrObjectHolder {
-
-    override var pkgName: String?
-        get() = file.pkgName
-        set(value) {
-            file.pkgName = value
-        }
+        Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Extendable, ClassOrObjectHolder {
 
     override var superTypes = listOf<KibbleType>()
     override var superType: KibbleType? = null
@@ -29,7 +23,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
 
-    var constructor = Constructor(file, this)
+    var constructor = Constructor()
         private set
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
 
@@ -66,20 +60,20 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     }
 
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
-        return KibbleObject(file, this, name, isCompanion).also {
+        return KibbleObject(file, name, isCompanion).also {
             objects += it
         }
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(this.file, this, name = name, type = type, body = body).also {
+        return KibbleFunction(this.file, name = name, type = type, body = body).also {
             functions += it
         }
     }
 
     override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
-        return KibbleProperty(file, this, name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
+        return KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
             it.visibility = visibility
             it.mutability = mutability
             it.constructorParam = constructorParam
@@ -108,11 +102,14 @@ class KibbleClass internal constructor(override var file: KibbleFile,
             writer.write(superTypes.joinToString(prefix = ", "))
         }
         val nonParamProps = properties.filter { !it.constructorParam }
-        if (!nonParamProps.isEmpty() || !functions.isEmpty() || !classes.isEmpty()) {
+        if (!nonParamProps.isEmpty() || !functions.isEmpty() || !classes.isEmpty() || !objects.isEmpty()
+                || !secondaries.isEmpty()) {
             writer.writeln(" {")
+            secondaries.forEach { it.toSource(writer, level + 1) }
             nonParamProps.forEach { it.toSource(writer, level + 1) }
 
             functions.forEach { it.toSource(writer, level + 1) }
+            objects.forEach { it.toSource(writer, level + 1) }
             classes.forEach { it.toSource(writer, level + 1) }
 
             writer.write("}", level)

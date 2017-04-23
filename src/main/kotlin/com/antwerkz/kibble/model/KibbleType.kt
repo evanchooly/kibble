@@ -5,7 +5,14 @@ import org.jetbrains.kotlin.psi.KtNullableType
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.KtUserType
 
-open class KibbleType internal constructor(val file: KibbleFile, val name: String, val parameters: List<KibbleType> = listOf<KibbleType>(),
+/**
+ * Specifies the type information of a property or parameter
+ *
+ * @property name the name of the type
+ * @property parameters the parameterized types of this type
+ * @property nullable does this type support null values?
+ */
+open class KibbleType internal constructor(val name: String, val parameters: List<KibbleType> = listOf<KibbleType>(),
                                            val nullable: Boolean = false) {
     companion object {
         fun from(type: String): KibbleType {
@@ -32,10 +39,13 @@ open class KibbleType internal constructor(val file: KibbleFile, val name: Strin
                     (typeElement.referencedName ?: "")
             val parameters = typeElement.typeArguments.map { from(file, it.typeReference)!! }
 
-            return KibbleType(file, name, parameters, nullable)
+            return KibbleType(name, parameters, nullable)
         }
     }
 
+    /**
+     * Gives the fully qualified name of this type complete with generic type parameters
+     */
     val fullName: String
         get() = toString()
 

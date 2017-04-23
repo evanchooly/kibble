@@ -5,7 +5,7 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleObject(override val file: KibbleFile, val parent: KibbleClass? = null, val name: String?, val companion: Boolean = false)
+class KibbleObject(override val file: KibbleFile, val name: String?, val companion: Boolean = false)
     : Annotatable, ClassOrObjectHolder, Extendable, FunctionHolder, KibbleElement, PropertyHolder, Visible {
 
     override var superTypes = listOf<KibbleType>()
@@ -19,8 +19,7 @@ class KibbleObject(override val file: KibbleFile, val parent: KibbleClass? = nul
     override val classes = mutableListOf<KibbleClass>()
     override val objects = mutableListOf<KibbleObject>()
 
-    internal constructor(file: KibbleFile, parent: KibbleClass? = null, kt: KtObjectDeclaration)
-            : this(file, parent, kt.name, kt.isCompanion()) {
+    internal constructor(file: KibbleFile, kt: KtObjectDeclaration): this(file, kt.name, kt.isCompanion()) {
         Extendable.extractSuperInformation(this, kt)
         visibility = Visible.apply(kt.visibilityModifier())
 
@@ -44,7 +43,7 @@ class KibbleObject(override val file: KibbleFile, val parent: KibbleClass? = nul
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(file, name = name, type = type, body = body).also {
+        return KibbleFunction(file, name, type = type, body = body).also {
             functions += it
         }
     }
@@ -54,8 +53,7 @@ class KibbleObject(override val file: KibbleFile, val parent: KibbleClass? = nul
         if (constructorParam) {
             throw IllegalArgumentException("Object properties can not also be constructor parameters")
         }
-        return KibbleProperty(file, name = name, type = type?.let { KibbleType.from(type) }, initializer = initializer,
-                modality = modality, overriding = overriding, lateInit = lateInit).also {
+        return KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
             it.visibility = visibility
             properties += it
         }
@@ -71,6 +69,9 @@ class KibbleObject(override val file: KibbleFile, val parent: KibbleClass? = nul
             writer.write("companion ")
         }
         writer.write("object")
+        name?.let {
+            writer.write(" $it")
+        }
         superType?.let {
             writer.write(": $it")
             writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))

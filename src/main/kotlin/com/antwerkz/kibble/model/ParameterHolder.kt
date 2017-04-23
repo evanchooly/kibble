@@ -1,7 +1,6 @@
 package com.antwerkz.kibble.model
 
 interface ParameterHolder {
-    val file: KibbleFile
     val parameters: MutableList<KibbleParameter>
 
     fun addParameter(name: String, type: String): KibbleParameter {

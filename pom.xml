@@ -135,46 +135,30 @@
                     <execution>
                         <phase>prepare-package</phase>
                         <goals>
-                            <goal>javadocJar</goal>
+                            <goal>dokka</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
-            <!--
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-shade-plugin</artifactId>
-                            <version>3.0.0</version>
-                            <executions>
-                                <execution>
-                                    <phase>package</phase>
-                                    <goals>
-                                        <goal>shade</goal>
-                                    </goals>
-                                    <configuration>
-                                        <filters>
-                                            <filter>
-                                                <artifact>org.jetbrains.kotlin:kotlin-compiler-embeddable</artifact>
-            &lt;!&ndash;
-                                                <includes>
-                                                    <include>org/jetbrains/kotlin/config/**</include>
-                                                    <include>org/jetbrains/kotlin/com/intellij/**</include>
-                                                    <include>org/jetbrains/kotlin/cli/common/**</include>
-                                                </includes>
-            &ndash;&gt;
-                                            </filter>
-                                        </filters>
-                                        <relocations>
-                                            <relocation>
-                                                <pattern>org.jetbrains.kotlin</pattern>
-                                                <shadedPattern>org.shaded.org.jetbrains.kotlin</shadedPattern>
-                                            </relocation>
-                                        </relocations>
-                                    </configuration>
-                                </execution>
-                            </executions>
-                        </plugin>
-            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
+                            <includes>
+                                <include>target/dokka</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>

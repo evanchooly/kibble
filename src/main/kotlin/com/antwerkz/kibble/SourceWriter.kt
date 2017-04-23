@@ -4,33 +4,46 @@ import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 
+/**
+ * This is used to convert a Kibble model to its string form.
+ *
+ * @property
+ */
 class SourceWriter {
-    val stringWriter = StringWriter()
-    val writer = PrintWriter(stringWriter)
+    private val stringWriter = StringWriter()
+    private val writer = PrintWriter(stringWriter)
 
-    @Deprecated("use the write() methods")
-    fun writeIndent(count: Int) {
-        (1..count).forEach { writer.write("    ") }
-    }
-
-    fun write(content: String, level: Int = 0) {
+    internal fun write(content: String, level: Int = 0) {
         (1..level).forEach { writer.write("    ") }
         writer.print(content)
     }
 
-    fun writeln(content: String = "", level: Int = 0) {
+    internal fun writeln(content: String = "", level: Int = 0) {
         (1..level).forEach { writer.write("    ") }
         writer.println(content)
     }
 
+    /**
+     * Dumps the content of this SourceWriter to a file
+     *
+     * @param the file to use
+     */
     fun toFile(file: File) {
         file.writeText(toString())
     }
 
+    /**
+     * Dumps the content of this SourceWriter to standard out
+     */
     fun toConsole() {
         println(toString())
     }
 
+    /**
+     * Returns the source written to this SourceWriter
+     *
+     * @return the source
+     */
     override fun toString(): String {
         return stringWriter.toString()
     }

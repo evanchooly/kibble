@@ -11,15 +11,18 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
-class KibbleProperty internal constructor(val file: KibbleFile,
-                                          val parent: KibbleClass? = null,
-                                          name: String,
-                                          type: KibbleType?,
-                                          initializer: String? = null,
-                                          override var modality: Modality = FINAL,
-                                          override var overriding: Boolean = false,
-                                          var lateInit: Boolean = false,
-                                          var constructorParam: Boolean = false)
+/**
+ * Defines a property on a file, class, or object
+ *
+ * @property name the name of the property
+ * @property type the type of the property
+ * @property initializer any initialization expression for the property
+ * @property lateInit true if the property should have the {@code lateinit} modifier
+ * @property constructorParam true if the property should be listed as a constructor parameter
+ */
+class KibbleProperty internal constructor(name: String, type: KibbleType?, initializer: String? = null,
+                                          override var modality: Modality = FINAL, override var overriding: Boolean = false,
+                                          var lateInit: Boolean = false, var constructorParam: Boolean = false)
     : KibbleParameter(name, type, initializer), Visible, Mutable, Modal<KibbleProperty>, Overridable, Annotatable {
 
     init {
@@ -27,8 +30,8 @@ class KibbleProperty internal constructor(val file: KibbleFile,
         mutability = VAL
     }
 
-    internal constructor(file: KibbleFile, parent: KibbleClass? = null, kt: KtParameter) : this(file, parent, kt.name!!,
-            KibbleType.from(file, kt.typeReference), kt.defaultValue?.text) {
+    internal constructor(file: KibbleFile, kt: KtParameter) : this(kt.name!!, KibbleType.from(file, kt.typeReference),
+            kt.defaultValue?.text) {
 
         extractAnnotations(file, kt.annotationEntries)
         modality = Modal.apply(kt.modalityModifier())
@@ -36,8 +39,8 @@ class KibbleProperty internal constructor(val file: KibbleFile,
         mutability = Mutable.apply(kt.valOrVarKeyword)
     }
 
-    internal constructor(file: KibbleFile, parent: KibbleClass? = null, kt: KtProperty) : this(file, parent, kt.name!!,
-            KibbleType.from(file, kt.typeReference), kt.initializer?.text) {
+    internal constructor(file: KibbleFile, kt: KtProperty) : this(kt.name!!, KibbleType.from(file, kt.typeReference),
+            kt.initializer?.text) {
 
         extractAnnotations(file, kt.annotationEntries)
         modality = Modal.apply(kt.modalityModifier())

@@ -1,15 +1,20 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import org.intellij.lang.annotations.Language
 import org.testng.Assert
 import org.testng.annotations.Test
 
 class KibbleClassTest {
     @Test
     fun nested() {
-        val source = """
-class Temp {
-    class Nested {
+        @Language("kotlin")
+        val source = """class Temp {
+    object temp
+    class Nested(val foo: Bob): Foo("bar"), Interface {
+
+        constructor(): this(blarg, "nargle")
+
         val property: String
 
         fun something(): Int {
@@ -17,21 +22,32 @@ class Temp {
         }
     }
 }""".trim()
-        var kibbleClass = Kibble.parseSource(source).classes[0]
+        val parsed = Kibble.parseSource(source)
+        var kibbleClass = parsed.classes[0]
 
         Assert.assertEquals(kibbleClass.classes.size, 1)
         Assert.assertEquals(kibbleClass.classes[0].name, "Nested")
         Assert.assertEquals(kibbleClass.toSource().toString().trim(), source.trim())
 
-        kibbleClass = KibbleFile()
-                .addClass("Temp")
+        val kibbleFile = KibbleFile()
+        kibbleClass = kibbleFile.addClass("Temp")
         val nested = kibbleClass.addClass("Nested")
+        nested.superType = KibbleType.from("Foo")
+        nested.superCallArgs = listOf("\"bar\"")
+        nested.superTypes += KibbleType.from("Interface")
+
+        nested.addSecondaryConstructor()
+
+        nested.addProperty("foo", "Bob", constructorParam = true)
         nested.addProperty("property", "String")
         nested.addFunction("something", "Int", "return 4")
+        val obj = kibbleClass.addObject("temp")
 
         Assert.assertEquals(kibbleClass.classes.size, 1)
         Assert.assertEquals(kibbleClass.classes[0].name, "Nested")
-        Assert.assertEquals(kibbleClass.toSource().toString().trim(), source.trim())
+
+        Assert.assertEquals(kibbleClass.objects[0].name, "temp")
+        Assert.assertEquals(kibbleFile.toSource().toString().trim(), source.trim())
     }
 
     @Test
@@ -60,6 +76,6 @@ open class Person : AbstractKotlinPerson {
         Assert.assertTrue(file.classes[0].superTypes.isEmpty())
         Assert.assertNull(file.classes[1].superType)
         Assert.assertEquals(file.classes[1].superTypes.size, 1)
-        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType(file, name="AbstractKotlinPerson"))
+        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType(name="AbstractKotlinPerson"))
     }
 }

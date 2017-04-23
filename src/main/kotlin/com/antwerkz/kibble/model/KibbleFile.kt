@@ -2,18 +2,10 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtFunction
-import org.jetbrains.kotlin.psi.KtProperty
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.io.File
 
 class KibbleFile(val name: String? = null, override var pkgName: String? = null) :
         KibbleElement, FunctionHolder, PropertyHolder, Packaged, ClassOrObjectHolder {
-
-    companion object {
-        val LOG: Logger = LoggerFactory.getLogger(KibbleFile::class.java)
-    }
 
     val imports = mutableSetOf<KibbleImport>()
     override val classes = mutableListOf<KibbleClass>()
@@ -53,7 +45,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(this, null, name, type = type, body = body).also {
+        return KibbleFunction(this, name, type = type, body = body).also {
             functions += it
         }
     }
@@ -63,8 +55,8 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         if (constructorParam) {
             throw IllegalArgumentException("File level properties can not also be constructor parameters")
         }
-        val property = KibbleProperty(this, name = name, type = type?.let { KibbleType.from(type) }, initializer = initializer,
-                modality = modality, overriding = overriding, lateInit = lateInit)
+        val property = KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer,
+                modality, overriding, lateInit)
 
         property.visibility = visibility
         property.mutability = mutability
