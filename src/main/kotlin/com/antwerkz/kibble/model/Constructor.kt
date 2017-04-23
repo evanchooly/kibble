@@ -14,21 +14,19 @@ import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 open class Constructor internal constructor() : Visible, ParameterHolder, KibbleElement {
     internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this() {
         kt.valueParameters.forEach {
+            val kibbleProperty = KibbleProperty(klass.file, it)
             if (it.hasValOrVar()) {
-                val kibbleProperty = KibbleProperty(klass.file, it)
                 kibbleProperty.constructorParam = true
-                this += kibbleProperty
                 klass.properties += kibbleProperty
-            } else {
-                this += KibbleParameter(klass.file, it)
             }
+            parameters += kibbleProperty
         }
         body = kt.bodyExpression?.text ?: ""
     }
 
     override var visibility: Visibility = PUBLIC
     override val parameters = mutableListOf<KibbleParameter>()
-    var body: String = ""
+    var body: String? = null
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         if (parameters.size != 0) {

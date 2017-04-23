@@ -11,9 +11,8 @@ class KibbleClassTest {
         @Language("kotlin")
         val source = """class Temp {
     object temp
-    class Nested(val foo: Bob): Foo("bar"), Interface {
-
-        constructor(): this(blarg, "nargle")
+    class Nested(val foo: Bob) : Foo("bar"), Interface {
+        constructor() : this(blarg, "nargle")
 
         val property: String
 
@@ -27,16 +26,16 @@ class KibbleClassTest {
 
         Assert.assertEquals(kibbleClass.classes.size, 1)
         Assert.assertEquals(kibbleClass.classes[0].name, "Nested")
-        Assert.assertEquals(kibbleClass.toSource().toString().trim(), source.trim())
 
         val kibbleFile = KibbleFile()
         kibbleClass = kibbleFile.addClass("Temp")
         val nested = kibbleClass.addClass("Nested")
+
         nested.superType = KibbleType.from("Foo")
         nested.superCallArgs = listOf("\"bar\"")
         nested.superTypes += KibbleType.from("Interface")
 
-        nested.addSecondaryConstructor()
+        nested.addSecondaryConstructor().delegationArguments += listOf("blarg", "\"nargle\"")
 
         nested.addProperty("foo", "Bob", constructorParam = true)
         nested.addProperty("property", "String")
@@ -76,6 +75,6 @@ open class Person : AbstractKotlinPerson {
         Assert.assertTrue(file.classes[0].superTypes.isEmpty())
         Assert.assertNull(file.classes[1].superType)
         Assert.assertEquals(file.classes[1].superTypes.size, 1)
-        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType(name="AbstractKotlinPerson"))
+        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType(name = "AbstractKotlinPerson"))
     }
 }

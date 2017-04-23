@@ -36,7 +36,7 @@ class KibbleFunction internal constructor(var name: String? = null,
 
     private fun parse(file: KibbleFile, kt: KtFunction) {
         kt.valueParameters.forEach {
-            this += KibbleParameter(file, it)
+            parameters += KibbleParameter(file, it)
         }
         this.body = (kt.bodyExpression?.text ?: "")
                 .drop(1)

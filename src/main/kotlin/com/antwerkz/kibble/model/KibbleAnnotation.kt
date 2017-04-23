@@ -44,14 +44,14 @@ class KibbleAnnotation internal constructor(name: String, val arguments: Map<Str
     override fun toString() = toSource().toString()
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        var string = name
+        var string = "@$name"
         if (arguments.isNotEmpty()) {
             string += arguments.entries.joinToString(prefix = "(", postfix = ")",
                     transform = {
                         if (it.key == "value") it.value.toString() else "${it.key} = ${it.value}"
                     })
         }
-        writer.writeln(string)
+        writer.write(string)
         return writer
     }
 

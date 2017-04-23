@@ -56,7 +56,7 @@ return "hi"""")
         try {
             file.toSource().toFile(tempFile)
 
-            Assert.assertEquals(tempFile.readText().trim().split("\n"), File(path).readText().trim().split("\n"))
+            Assert.assertEquals(tempFile.readText(), File(path).readText())
             tempFile.delete()
         } finally {
         }

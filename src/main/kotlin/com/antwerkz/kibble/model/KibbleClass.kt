@@ -78,7 +78,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(this.file, name = name, type = type, body = body).also {
+        return KibbleFunction(name = name, type = type, body = body).also {
             functions += it
         }
     }
@@ -110,7 +110,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
 
         constructor.toSource(writer, level)
         superType?.let {
-            writer.write(": $it")
+            writer.write(" : $it")
             writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))
         }
         if (!superTypes.isEmpty()) {

@@ -48,7 +48,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null) :
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(this, name, type = type, body = body).also {
+        return KibbleFunction(name, type = type, body = body).also {
             functions += it
         }
     }
