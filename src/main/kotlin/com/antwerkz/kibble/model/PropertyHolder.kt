@@ -38,6 +38,12 @@ interface PropertyHolder {
                     lateInit: Boolean = false,
                     constructorParam: Boolean = false): KibbleProperty
 
+    /**
+     * Gets a property by name if it exists
+     *
+     * @param prop the property name
+     * @return the property
+     */
     fun getProperty(prop: String): KibbleProperty? {
         return properties.firstOrNull { it.name == prop }
     }

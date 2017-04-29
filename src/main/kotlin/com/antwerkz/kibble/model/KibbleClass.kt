@@ -76,6 +76,11 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         }
     }
 
+    /**
+     * Adds (or gets if it already exists) a companion object to this class
+     *
+     * @return the companion object
+     */
     fun addCompanionObject(): KibbleObject {
         return companion() ?: KibbleObject(file, companion = true).also {
             objects.add(it)
@@ -133,9 +138,9 @@ class KibbleClass internal constructor(override var file: KibbleFile,
             secondaries.forEach { it.toSource(writer, level + 1) }
             nonParamProps.forEach { it.toSource(writer, level + 1) }
 
-            functions.forEach { it.toSource(writer, level + 1) }
             objects.forEach { it.toSource(writer, level + 1) }
             classes.forEach { it.toSource(writer, level + 1) }
+            functions.forEach { it.toSource(writer, level + 1) }
 
             writer.write("}", level)
         }
@@ -143,6 +148,11 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         return writer
     }
 
+    /**
+     * Gets the companion object if it exists
+     *
+     * @return the companion object
+     */
     fun companion(): KibbleObject? {
         return objects.firstOrNull { it.companion }
     }
