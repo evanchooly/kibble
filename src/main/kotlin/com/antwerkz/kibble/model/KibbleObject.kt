@@ -11,7 +11,7 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property name the object name
  * @property companion true if this object is a companion object
  */
-class KibbleObject internal constructor(override val file: KibbleFile, val name: String?, val companion: Boolean = false)
+class KibbleObject internal constructor(override val file: KibbleFile, val name: String? = null, val companion: Boolean = false)
     : Annotatable, ClassOrObjectHolder, Extendable, FunctionHolder, KibbleElement, PropertyHolder, Visible {
 
     override var superTypes = listOf<KibbleType>()

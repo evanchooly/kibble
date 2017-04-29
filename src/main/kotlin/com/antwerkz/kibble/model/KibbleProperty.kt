@@ -70,7 +70,7 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
         }
         writer.write(mutability.toString())
         writer.write(name)
-        type.let { writer.write(": $it") }
+        type?.let { writer.write(": $it") }
         initializer?.let { writer.write(" = $it") }
         writer.writeln()
 

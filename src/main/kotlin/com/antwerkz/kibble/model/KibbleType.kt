@@ -21,7 +21,7 @@ open class KibbleType internal constructor(val name: String, val parameters: Lis
          * @return the new KibbleType
          */
         fun from(type: String): KibbleType {
-             return Kibble.parseSource("val temp: $type").properties[0].type!!
+            return Kibble.parseSource("val temp: $type").properties[0].type!!
         }
 
         internal fun from(file: KibbleFile, typeReference: KtTypeReference?): KibbleType? {

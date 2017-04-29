@@ -18,8 +18,13 @@ class KibbleClass internal constructor(override var file: KibbleFile,
                                        var name: String = "",
                                        override var modality: Modality = FINAL,
                                        override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder,
-        Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Extendable, ClassOrObjectHolder {
+        Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Extendable, ClassOrObjectHolder, Packaged {
 
+    override var pkgName: String?
+        get() = file.pkgName
+        set(value) {
+            file.pkgName = value
+        }
     override var superTypes = listOf<KibbleType>()
     override var superType: KibbleType? = null
     override var superCallArgs = listOf<String>()
@@ -50,7 +55,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         kt.getBody()?.let {
             extractClassesObjects(file, it.declarations)
             extractFunctions(file, it.declarations)
-            extractProperties(file, it.declarations, this)
+            extractProperties(file, it.declarations)
         }
     }
 
@@ -71,6 +76,11 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         }
     }
 
+    fun addCompanionObject(): KibbleObject {
+        return companion() ?: KibbleObject(file, companion = true).also {
+            objects.add(it)
+        }
+    }
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
         return KibbleObject(file, name, isCompanion).also {
             objects += it
@@ -131,5 +141,9 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         }
         writer.writeln()
         return writer
+    }
+
+    fun companion(): KibbleObject? {
+        return objects.firstOrNull { it.companion }
     }
 }

@@ -37,9 +37,13 @@ interface PropertyHolder {
                     mutability: Mutability = VAL,
                     lateInit: Boolean = false,
                     constructorParam: Boolean = false): KibbleProperty
+
+    fun getProperty(prop: String): KibbleProperty? {
+        return properties.firstOrNull { it.name == prop }
+    }
 }
 
-internal fun PropertyHolder.extractProperties(file: KibbleFile, declarations: List<KtDeclaration>, parent: KibbleClass? = null) {
+internal fun PropertyHolder.extractProperties(file: KibbleFile, declarations: List<KtDeclaration>) {
     properties += declarations
             .filterIsInstance<KtProperty>()
             .map {

@@ -24,7 +24,6 @@ interface Extendable {
                         extendable.superType = KibbleType.from(extendable.file, it.typeReference)
                         extendable.superCallArgs = it.getValueArgumentsInParentheses()
                                 .map { it.getArgumentExpression()!!.text }
-
                     }
 
             extendable.superTypes = entries

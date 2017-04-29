@@ -15,7 +15,7 @@ interface ParameterHolder {
      * @param type the parameter type
      * @param initializer the parameter initializer
      */
-    fun addParameter(name: String, type: String?, initializer: String?): KibbleParameter {
+    fun addParameter(name: String, type: String?, initializer: String? = null): KibbleParameter {
         val param = KibbleParameter(name, type?.let { KibbleType.from(type) }, initializer)
         parameters += param
         return param

@@ -11,8 +11,8 @@ import java.io.File
  * @property pkgName the package name
  * @property imports the imports defined in the file
  */
-class KibbleFile(val name: String? = null, var pkgName: String? = null) :
-        KibbleElement, FunctionHolder, PropertyHolder, ClassOrObjectHolder {
+class KibbleFile(val name: String? = null, override var pkgName: String? = null) :
+        KibbleElement, PropertyHolder, Packaged, ClassOrObjectHolder {
 
     val imports = mutableSetOf<KibbleImport>()
     override val classes = mutableListOf<KibbleClass>()

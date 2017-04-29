@@ -6,10 +6,11 @@ import org.testng.Assert
 import org.testng.annotations.Test
 
 class KibbleClassTest {
-    @Test
-    fun nested() {
-        @Language("kotlin")
-        val source = """class Temp {
+    @Language("kotlin")
+    val source = """class Temp {
+    companion object {
+        val prop = 42
+    }
     object temp
     class Nested(val foo: Bob) : Foo("bar"), Interface {
         constructor() : this(blarg, "nargle")
@@ -21,8 +22,10 @@ class KibbleClassTest {
         }
     }
 }""".trim()
-        val parsed = Kibble.parseSource(source)
-        var kibbleClass = parsed.classes[0]
+
+    @Test
+    fun nested() {
+        var kibbleClass = Kibble.parseSource(source).classes[0]
 
         Assert.assertEquals(kibbleClass.classes.size, 1)
         Assert.assertEquals(kibbleClass.classes[0].name, "Nested")
@@ -40,13 +43,33 @@ class KibbleClassTest {
         nested.addProperty("foo", "Bob", constructorParam = true)
         nested.addProperty("property", "String")
         nested.addFunction("something", "Int", "return 4")
-        val obj = kibbleClass.addObject("temp")
+
+        val companion = kibbleClass.addCompanionObject()
+        companion.addProperty("prop", initializer = "42")
+        kibbleClass.addObject("temp")
 
         Assert.assertEquals(kibbleClass.classes.size, 1)
         Assert.assertEquals(kibbleClass.classes[0].name, "Nested")
 
-        Assert.assertEquals(kibbleClass.objects[0].name, "temp")
+        Assert.assertTrue(kibbleClass.objects[0].companion)
+        Assert.assertEquals(kibbleClass.objects[1].name, "temp")
         Assert.assertEquals(kibbleFile.toSource().toString().trim(), source.trim())
+    }
+
+    @Test
+    fun members() {
+        val kibbleClass = Kibble.parseSource(source).classes[0]
+
+        var obj = kibbleClass.companion()
+        Assert.assertNotNull(obj, "Should find a companion object")
+        Assert.assertNotNull(obj?.getProperty("prop"), "Should find a property named 'prop'")
+
+        obj = kibbleClass.getObject("temp")
+        Assert.assertNotNull(obj, "Should find an object named 'temp'")
+
+        val kibble = kibbleClass.getClass("Nested")
+        Assert.assertNotNull(kibble, "Should find an class named 'Nested'")
+        Assert.assertNotNull(kibble?.getProperty("property"), "Should find a property named 'property'")
     }
 
     @Test
