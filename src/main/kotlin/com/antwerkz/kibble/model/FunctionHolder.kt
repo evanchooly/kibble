@@ -21,6 +21,10 @@ interface FunctionHolder {
      * @return the new function
      */
     fun addFunction(name: String? = null, type: String = "Unit", body: String = ""): KibbleFunction
+
+    fun getFunctions(name: String): List<KibbleFunction> {
+        return functions.filter { it.name == name }
+    }
 }
 
 internal fun FunctionHolder.extractFunctions(file: KibbleFile, declarations: List<KtDeclaration>) {

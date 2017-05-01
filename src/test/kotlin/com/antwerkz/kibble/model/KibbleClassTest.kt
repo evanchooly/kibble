@@ -15,6 +15,10 @@ class KibbleClassTest {
     class Nested(val foo: Bob) : Foo("bar"), Interface {
         constructor() : this(blarg, "nargle")
 
+        init {
+            println()
+        }
+
         val property: String
 
         fun something(): Int {
@@ -40,6 +44,7 @@ class KibbleClassTest {
 
         nested.addSecondaryConstructor().delegationArguments += listOf("blarg", "\"nargle\"")
 
+        nested.initBlock = """println()"""
         nested.addProperty("foo", "Bob", constructorParam = true)
         nested.addProperty("property", "String")
         nested.addFunction("something", "Int", "return 4")
@@ -67,9 +72,9 @@ class KibbleClassTest {
         obj = kibbleClass.getObject("temp")
         Assert.assertNotNull(obj, "Should find an object named 'temp'")
 
-        val kibble = kibbleClass.getClass("Nested")
-        Assert.assertNotNull(kibble, "Should find an class named 'Nested'")
-        Assert.assertNotNull(kibble?.getProperty("property"), "Should find a property named 'property'")
+        val kibble = kibbleClass.getClass("Nested") as KibbleClass
+        Assert.assertNotNull(kibble.getProperty("property"), "Should find a property named 'property'")
+        Assert.assertEquals(kibble.getFunctions("something").size, 1, "Should find one function named 'something'")
     }
 
     @Test

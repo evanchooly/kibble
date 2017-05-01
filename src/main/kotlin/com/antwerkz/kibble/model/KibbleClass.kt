@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * Represents an annotation in kotlin source code.
  *
  * @property name the class name
+ * @property initBlock any custom init block for this class
  * @property constructor the primary constructor for this class
  * @property secondaries the secondary constructors this class
  */
@@ -34,6 +35,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     override val objects: MutableList<KibbleObject> = mutableListOf()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
+    var initBlock: String? = null
 
     var constructor = Constructor()
         private set
@@ -86,6 +88,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
             objects.add(it)
         }
     }
+
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
         return KibbleObject(file, name, isCompanion).also {
             objects += it
@@ -132,18 +135,26 @@ class KibbleClass internal constructor(override var file: KibbleFile,
             writer.write(superTypes.joinToString(prefix = ", "))
         }
         val nonParamProps = properties.filter { !it.constructorParam }
-        if (!nonParamProps.isEmpty() || !functions.isEmpty() || !classes.isEmpty() || !objects.isEmpty()
-                || !secondaries.isEmpty()) {
-            writer.writeln(" {")
-            secondaries.forEach { it.toSource(writer, level + 1) }
-            nonParamProps.forEach { it.toSource(writer, level + 1) }
 
-            objects.forEach { it.toSource(writer, level + 1) }
-            classes.forEach { it.toSource(writer, level + 1) }
-            functions.forEach { it.toSource(writer, level + 1) }
+        writer.writeln(" {")
 
-            writer.write("}", level)
+        secondaries.forEach { it.toSource(writer, level + 1) }
+        initBlock?.let {
+            writer.writeln("init {", level + 1)
+            it.trimIndent().split("\n").forEach {
+                writer.writeln(it, level + 2)
+            }
+            writer.writeln("}", level + 1)
+            writer.writeln()
         }
+        nonParamProps.forEach { it.toSource(writer, level + 1) }
+
+        objects.forEach { it.toSource(writer, level + 1) }
+        classes.forEach { it.toSource(writer, level + 1) }
+        functions.forEach { it.toSource(writer, level + 1) }
+
+        writer.write("}", level)
+
         writer.writeln()
         return writer
     }

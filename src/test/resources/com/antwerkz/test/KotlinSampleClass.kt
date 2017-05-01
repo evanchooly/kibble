@@ -25,4 +25,5 @@ internal abstract class KotlinSampleClass(val cost: Double, ignored: Int) : Pare
     }
 }
 
-open class ParentClass(val blurb: Int)
+open class ParentClass(val blurb: Int) {
+}
