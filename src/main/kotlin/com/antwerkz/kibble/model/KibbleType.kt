@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.psi.KtUserType
  * @property nullable does this type support null values?
  */
 open class KibbleType internal constructor(val name: String, val parameters: List<KibbleType> = listOf<KibbleType>(),
-                                           val nullable: Boolean = false) {
+                                           val nullable: Boolean = false)/*: GenericCapable*/ {
     companion object {
         /**
          * Creates a KibbleType from ths string
@@ -24,17 +24,12 @@ open class KibbleType internal constructor(val name: String, val parameters: Lis
             return Kibble.parseSource("val temp: $type").properties[0].type!!
         }
 
-        internal fun from(file: KibbleFile, typeReference: KtTypeReference?): KibbleType? {
-            val typeElement = typeReference?.typeElement
-            return typeElement?.let {
-                when (typeElement) {
-                    is KtUserType -> {
-                        extractType(file, typeElement)
-                    }
-                    is KtNullableType -> {
-                        extractType(file, typeElement.innerType as KtUserType, true)
-                    }
-                    else -> throw IllegalArgumentException("unknown type $typeElement")
+        internal fun from(file: KibbleFile, kt: KtTypeReference?): KibbleType? {
+            return kt?.typeElement?.let {
+                when (it) {
+                    is KtUserType -> extractType(file, it)
+                    is KtNullableType -> extractType(file, it.innerType as KtUserType, true)
+                    else -> throw IllegalArgumentException("unknown type $it")
                 }
             }
         }
@@ -89,3 +84,4 @@ open class KibbleType internal constructor(val name: String, val parameters: Lis
     }
 
 }
+

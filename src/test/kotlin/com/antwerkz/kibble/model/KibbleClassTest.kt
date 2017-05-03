@@ -1,6 +1,8 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import com.antwerkz.kibble.model.ParameterModifier.IN
+import com.antwerkz.kibble.model.ParameterModifier.OUT
 import org.intellij.lang.annotations.Language
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -104,5 +106,46 @@ open class Person : AbstractKotlinPerson {
         Assert.assertNull(file.classes[1].superType)
         Assert.assertEquals(file.classes[1].superTypes.size, 1)
         Assert.assertEquals(file.classes[1].superTypes[0], KibbleType(name = "AbstractKotlinPerson"))
+    }
+
+    @Test
+    fun generics() {
+        val source = """class Generic<out T> {
+}
+"""
+        val kibbleClass = Kibble.parseSource(source).classes[0]
+        println("kibbleClass = ${kibbleClass}")
+        Assert.assertEquals(kibbleClass.toSource().toString(), source)
+
+        var generic = KibbleFile().addClass("Generic")
+        generic.typeParameters += TypeParameter("T", OUT)
+        Assert.assertEquals(generic.toSource().toString(), source)
+
+        generic = KibbleFile().addClass("Generic")
+        generic.typeParameters += TypeParameter("T", IN)
+        Assert.assertEquals(generic.toSource().toString(), """class Generic<in T> {
+}
+""")
+
+        generic = KibbleFile().addClass("Generic")
+        generic.typeParameters += TypeParameter("K")
+        generic.typeParameters += TypeParameter("V")
+        Assert.assertEquals(generic.toSource().toString(), """class Generic<K, V> {
+}
+""")
+
+        generic = KibbleFile().addClass("Generic")
+        generic.typeParameters += TypeParameter("K", OUT)
+        generic.typeParameters += TypeParameter("V", IN)
+        Assert.assertEquals(generic.toSource().toString(), """class Generic<out K, in V> {
+}
+""")
+
+        generic = KibbleFile().addClass("Generic")
+        generic.typeParameters += TypeParameter("K", OUT)
+        generic.typeParameters += TypeParameter("V", IN)
+        Assert.assertEquals(generic.toSource().toString(), """class Generic<out K, in V> {
+}
+""")
     }
 }

@@ -116,7 +116,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
             writer.writeln()
         }
 
-        writeBlock(writer, level, false, imports)
+        writeBlock(writer, level, false, imports.sortedBy { it.type.name })
         writeBlock(writer, level, false, properties)
         writeBlock(writer, level, true, classes)
         writeBlock(writer, level, true, functions)

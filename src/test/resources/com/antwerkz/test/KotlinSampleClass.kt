@@ -1,9 +1,9 @@
 package com.antwerkz.test
 
-import org.jetbrains.kotlin.javax.inject.Singleton
 import java.util.ArrayList
-import javax.annotation.Generated
 import java.util.HashMap as HMap
+import javax.annotation.Generated
+import org.jetbrains.kotlin.javax.inject.Singleton
 
 @Singleton
 @Generated("I'm the value", date = "123455", comments = "Fingers crossed")

@@ -3,7 +3,9 @@ package com.antwerkz.kibble.model
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
+import org.jetbrains.kotlin.com.intellij.psi.impl.source.tree.LeafPsiElement
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
@@ -29,6 +31,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     override var superTypes = listOf<KibbleType>()
     override var superType: KibbleType? = null
     override var superCallArgs = listOf<String>()
+    var typeParameters = listOf<TypeParameter>()
 
     override var annotations = mutableListOf<KibbleAnnotation>()
     override val classes: MutableList<KibbleClass> = mutableListOf()
@@ -46,6 +49,16 @@ class KibbleClass internal constructor(override var file: KibbleFile,
 
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
+
+        typeParameters = kt.typeParameters.map {
+            val modifier: ParameterModifier? = it.modifierList
+                    ?.allChildren
+                    ?.filterIsInstance<LeafPsiElement>()
+                    ?.map { ParameterModifier.valueOf(it.text.toUpperCase()) }
+                    ?.firstOrNull()
+            TypeParameter(it.name!!, modifier)
+        }
+                .toMutableList()
 
         kt.primaryConstructor?.let {
             constructor = Constructor(this, it)
@@ -125,6 +138,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         annotations.forEach { writer.writeln(it.toString(), level) }
         writer.write("$visibility${modality}class ", level)
         writer.write(name)
+        writer.write(typeParameters.joinToString(", ", prefix = "<", postfix = ">"))
 
         constructor.toSource(writer, level)
         superType?.let {
