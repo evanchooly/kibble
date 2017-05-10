@@ -21,14 +21,14 @@ interface Extendable {
             entries.filterIsInstance(KtSuperTypeCallEntry::class.java)
                     .firstOrNull()
                     ?.let {
-                        extendable.superType = KibbleType.from(extendable.file, it.typeReference)
+                        extendable.superType = KibbleType.from(it.typeReference)
                         extendable.superCallArgs = it.getValueArgumentsInParentheses()
                                 .map { it.getArgumentExpression()!!.text }
                     }
 
             extendable.superTypes = entries
                     .filterIsInstance(KtSuperTypeEntry::class.java)
-                    .map { KibbleType.from(extendable.file, it.typeReference)!! }
+                    .map { KibbleType.from(it.typeReference)!! }
         }
     }
 
