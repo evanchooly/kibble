@@ -12,7 +12,7 @@ class KibbleTypeTest {
 
         Assert.assertEquals(type?.fullName, "com.foo.bar.Type")
         Assert.assertEquals(type?.name, "com.foo.bar.Type")
-        Assert.assertTrue(type?.parameters?.isEmpty() ?: false)
+        Assert.assertTrue(type?.typeParameters?.isEmpty() ?: false)
     }
 
     fun generics() {
@@ -23,9 +23,9 @@ class KibbleTypeTest {
         Assert.assertEquals(type?.fullName, string)
         Assert.assertEquals(type?.name, "com.foo.bar.SomeType")
         Assert.assertTrue(type?.nullable ?: false)
-        Assert.assertEquals(type?.parameters?.size, 2)
-        Assert.assertEquals(type?.parameters?.get(0)?.name, "kotlin.String")
-        Assert.assertEquals(type?.parameters?.get(1)?.name, "kotlin.Double")
+        Assert.assertEquals(type?.typeParameters?.size, 2)
+        Assert.assertEquals(type?.typeParameters?.get(0)?.name, "kotlin.String")
+        Assert.assertEquals(type?.typeParameters?.get(1)?.name, "kotlin.Double")
     }
 
     fun fullyQualified() {

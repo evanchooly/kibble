@@ -32,7 +32,7 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
         extractAnnotations(file, kt.annotationEntries)
         kt.getBody()?.declarations?.let {
             extractClassesObjects(file, it)
-            extractFunctions(file, it)
+            extractFunctions(it)
             extractProperties(file, it)
         }
     }

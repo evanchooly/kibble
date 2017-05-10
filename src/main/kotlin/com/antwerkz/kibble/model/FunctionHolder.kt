@@ -27,10 +27,10 @@ interface FunctionHolder {
     }
 }
 
-internal fun FunctionHolder.extractFunctions(file: KibbleFile, declarations: List<KtDeclaration>) {
+internal fun FunctionHolder.extractFunctions(declarations: List<KtDeclaration>) {
     functions += declarations
             .filterIsInstance<KtFunction>()
             .map {
-                KibbleFunction(file, it)
+                KibbleFunction(it)
             }
 }

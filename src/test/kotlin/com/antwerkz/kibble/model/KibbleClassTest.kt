@@ -109,12 +109,20 @@ open class Person : AbstractKotlinPerson {
     }
 
     @Test
+    fun noGenerics() {
+        val source = """class NoGeneric {
+}
+"""
+        val kibbleClass = Kibble.parseSource(source).classes[0]
+        Assert.assertEquals(kibbleClass.toSource().toString(), source)
+    }
+
+    @Test
     fun generics() {
         val source = """class Generic<out T> {
 }
 """
         val kibbleClass = Kibble.parseSource(source).classes[0]
-        println("kibbleClass = ${kibbleClass}")
         Assert.assertEquals(kibbleClass.toSource().toString(), source)
 
         var generic = KibbleFile().addClass("Generic")
@@ -148,4 +156,14 @@ open class Person : AbstractKotlinPerson {
 }
 """)
     }
+
+    @Test
+      fun nestedGenerics() {
+        @Language("kotlin")
+          val source = """class Generic<out T: Comparable<T>> {
+}
+"""
+          val kibbleClass = Kibble.parseSource(source).classes[0]
+          Assert.assertEquals(kibbleClass.toSource().toString(), source)
+}
 }

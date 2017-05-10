@@ -9,11 +9,12 @@ import org.jetbrains.kotlin.psi.KtUserType
  * Specifies the type information of a property or parameter
  *
  * @property name the name of the type
- * @property parameters the parameterized types of this type
+ * @property typeParameters the parameterized types of this type
  * @property nullable does this type support null values?
  */
-open class KibbleType internal constructor(val name: String, val parameters: List<KibbleType> = listOf<KibbleType>(),
-                                           val nullable: Boolean = false)/*: GenericCapable*/ {
+open class KibbleType internal constructor(val name: String,
+                                           override var typeParameters: List<TypeParameter> = listOf<TypeParameter>(),
+                                           val nullable: Boolean = false): GenericCapable {
     companion object {
         /**
          * Creates a KibbleType from ths string
@@ -24,21 +25,20 @@ open class KibbleType internal constructor(val name: String, val parameters: Lis
             return Kibble.parseSource("val temp: $type").properties[0].type!!
         }
 
-        internal fun from(file: KibbleFile, kt: KtTypeReference?): KibbleType? {
+        internal fun from(kt: KtTypeReference?): KibbleType? {
             return kt?.typeElement?.let {
                 when (it) {
-                    is KtUserType -> extractType(file, it)
-                    is KtNullableType -> extractType(file, it.innerType as KtUserType, true)
+                    is KtUserType -> extractType(it)
+                    is KtNullableType -> extractType(it.innerType as KtUserType, true)
                     else -> throw IllegalArgumentException("unknown type $it")
                 }
             }
         }
 
-        private fun extractType(file: KibbleFile, typeElement: KtUserType, nullable: Boolean = false): KibbleType {
+        private fun extractType(typeElement: KtUserType, nullable: Boolean = false): KibbleType {
             val name = (typeElement.qualifier?.text?.let { "$it." } ?: "") +
                     (typeElement.referencedName ?: "")
-            val parameters = typeElement.typeArguments.map { from(file, it.typeReference)!! }
-
+            val parameters = GenericCapable.extractFromTypeProjections(typeElement.typeArguments)
             return KibbleType(name, parameters, nullable)
         }
     }
@@ -53,7 +53,7 @@ open class KibbleType internal constructor(val name: String, val parameters: Lis
      * @return the string/source form of this type
      */
     override fun toString(): String {
-        return name + (if (parameters.isNotEmpty()) parameters.joinToString(prefix = "<", postfix = ">") else "") +
+        return name + (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "") +
                 if (nullable) "?" else ""
     }
 
@@ -67,7 +67,7 @@ open class KibbleType internal constructor(val name: String, val parameters: Lis
         other as KibbleType
 
         if (name != other.name) return false
-        if (parameters != other.parameters) return false
+        if (typeParameters != other.typeParameters) return false
         if (nullable != other.nullable) return false
 
         return true
@@ -78,7 +78,7 @@ open class KibbleType internal constructor(val name: String, val parameters: Lis
      */
     override fun hashCode(): Int {
         var result = name.hashCode()
-        result = 31 * result + parameters.hashCode()
+        result = 31 * result + typeParameters.hashCode()
         result = 31 * result + nullable.hashCode()
         return result
     }

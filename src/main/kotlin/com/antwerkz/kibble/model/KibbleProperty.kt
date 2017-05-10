@@ -31,7 +31,7 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
         mutability = VAL
     }
 
-    internal constructor(file: KibbleFile, kt: KtParameter) : this(kt.name!!, KibbleType.from(file, kt.typeReference),
+    internal constructor(file: KibbleFile, kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference),
             kt.defaultValue?.text) {
 
         extractAnnotations(file, kt.annotationEntries)
@@ -40,7 +40,7 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
         mutability = Mutable.apply(kt.valOrVarKeyword)
     }
 
-    internal constructor(file: KibbleFile, kt: KtProperty) : this(kt.name!!, KibbleType.from(file, kt.typeReference),
+    internal constructor(file: KibbleFile, kt: KtProperty) : this(kt.name!!, KibbleType.from(kt.typeReference),
             kt.initializer?.text) {
 
         extractAnnotations(file, kt.annotationEntries)

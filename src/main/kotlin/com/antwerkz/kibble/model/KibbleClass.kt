@@ -3,9 +3,7 @@ package com.antwerkz.kibble.model
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.com.intellij.psi.impl.source.tree.LeafPsiElement
 import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
@@ -20,7 +18,7 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 class KibbleClass internal constructor(override var file: KibbleFile,
                                        var name: String = "",
                                        override var modality: Modality = FINAL,
-                                       override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder,
+                                       override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder, GenericCapable,
         Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Extendable, ClassOrObjectHolder, Packaged {
 
     override var pkgName: String?
@@ -31,7 +29,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     override var superTypes = listOf<KibbleType>()
     override var superType: KibbleType? = null
     override var superCallArgs = listOf<String>()
-    var typeParameters = listOf<TypeParameter>()
+    override var typeParameters = listOf<TypeParameter>()
 
     override var annotations = mutableListOf<KibbleAnnotation>()
     override val classes: MutableList<KibbleClass> = mutableListOf()
@@ -50,26 +48,18 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
 
-        typeParameters = kt.typeParameters.map {
-            val modifier: ParameterModifier? = it.modifierList
-                    ?.allChildren
-                    ?.filterIsInstance<LeafPsiElement>()
-                    ?.map { ParameterModifier.valueOf(it.text.toUpperCase()) }
-                    ?.firstOrNull()
-            TypeParameter(it.name!!, modifier)
-        }
-                .toMutableList()
+        typeParameters = GenericCapable.extractFromTypeParameters(kt.typeParameters)
 
         kt.primaryConstructor?.let {
             constructor = Constructor(this, it)
         }
         kt.secondaryConstructors.forEach {
-            secondaries += SecondaryConstructor(this, it)
+            secondaries += SecondaryConstructor(it)
         }
         extractAnnotations(file, kt.annotationEntries)
         kt.getBody()?.let {
             extractClassesObjects(file, it.declarations)
-            extractFunctions(file, it.declarations)
+            extractFunctions(it.declarations)
             extractProperties(file, it.declarations)
         }
     }
@@ -138,7 +128,9 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         annotations.forEach { writer.writeln(it.toString(), level) }
         writer.write("$visibility${modality}class ", level)
         writer.write(name)
-        writer.write(typeParameters.joinToString(", ", prefix = "<", postfix = ">"))
+        if (!typeParameters.isEmpty()) {
+            writer.write(typeParameters.joinToString(", ", prefix = "<", postfix = ">"))
+        }
 
         constructor.toSource(writer, level)
         superType?.let {

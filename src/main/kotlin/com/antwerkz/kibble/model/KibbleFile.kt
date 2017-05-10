@@ -27,7 +27,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
 
         kt.declarations.let {
             extractClassesObjects(this, it)
-            extractFunctions(this, it)
+            extractFunctions(it)
             extractProperties(this, it)
         }
 

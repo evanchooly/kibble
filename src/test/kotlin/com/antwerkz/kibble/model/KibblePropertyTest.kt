@@ -1,10 +1,12 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import org.intellij.lang.annotations.Language
 import org.testng.Assert
 import org.testng.annotations.Test
 
 class KibblePropertyTest {
+
     @Test
     fun lateinit() {
         val file = Kibble.parseSource("""
@@ -29,5 +31,15 @@ class KibblePropertyTest {
         Assert.assertEquals(prop.name, "foo")
         Assert.assertNull(prop.type)
         Assert.assertFalse(prop.lateInit)
+    }
+
+    @Test
+    fun generics() {
+        @Language("kotlin")
+        val source = """val foo: Prop<T>
+"""
+        val prop = Kibble.parseSource(source).properties[0]
+        Assert.assertEquals(prop.toSource().toString(), source)
+
     }
 }

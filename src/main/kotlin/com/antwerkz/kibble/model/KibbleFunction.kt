@@ -26,17 +26,13 @@ class KibbleFunction internal constructor(var name: String? = null,
 
     override val parameters = mutableListOf<KibbleParameter>()
 
-    internal constructor(file: KibbleFile, kt: KtFunction) : this(kt.name) {
-        parse(file, kt)
+    internal constructor(kt: KtFunction) : this(kt.name) {
+        parse(kt)
     }
 
-    internal constructor(parent: KibbleClass, kt: KtFunction) : this(kt.name) {
-        parse(parent.file, kt)
-    }
-
-    private fun parse(file: KibbleFile, kt: KtFunction) {
+    private fun parse(kt: KtFunction) {
         kt.valueParameters.forEach {
-            parameters += KibbleParameter(file, it)
+            parameters += KibbleParameter(it)
         }
         this.body = (kt.bodyExpression?.text ?: "")
                 .drop(1)

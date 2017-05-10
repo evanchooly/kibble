@@ -14,10 +14,11 @@ import org.jetbrains.kotlin.psi.KtParameter
  * @property initializer the parameter initializer
  */
 open class KibbleParameter internal constructor(val name: String, val type: KibbleType?, var initializer: String? = null) : KibbleElement,
-        Mutable, Visible {
+       GenericCapable, Mutable, Visible {
 
-    internal constructor(file: KibbleFile, kt: KtParameter) : this(kt.name!!, KibbleType.from(file, kt.typeReference)) {
+    internal constructor(kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference)) {
         mutability = Mutable.apply(kt.valOrVarKeyword)
+        typeParameters += GenericCapable.extractFromTypeParameters(kt.typeParameters)
     }
 
     override var mutability: Mutability = NEITHER
@@ -28,6 +29,7 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
                 mutability = VAL
             }
         }
+    override var typeParameters = listOf<TypeParameter>()
 
     /**
      * @return the string/source form of this type
