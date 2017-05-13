@@ -36,10 +36,13 @@ class KibblePropertyTest {
     @Test
     fun generics() {
         @Language("kotlin")
-        val source = """val foo: Prop<T>
+        var source = """val foo: Prop<T>
 """
-        val prop = Kibble.parseSource(source).properties[0]
-        Assert.assertEquals(prop.toSource().toString(), source)
+        Assert.assertEquals(Kibble.parseSource(source).properties[0].toSource().toString(), source)
+
+        source = """val foo: Prop<*>
+"""
+        Assert.assertEquals(Kibble.parseSource(source).properties[0].toSource().toString(), source)
 
     }
 }

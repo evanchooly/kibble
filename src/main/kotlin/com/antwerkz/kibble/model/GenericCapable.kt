@@ -21,7 +21,7 @@ interface GenericCapable {
 
         internal fun extractFromTypeProjections(parameters: List<KtTypeProjection>): List<TypeParameter> {
             val map: List<TypeParameter> = parameters.map {
-                TypeParameter(it.typeReference?.text ?: "")
+                TypeParameter(it.text)
             }
             return map
         }
