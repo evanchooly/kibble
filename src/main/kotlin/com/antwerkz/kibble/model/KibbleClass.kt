@@ -144,6 +144,9 @@ class KibbleClass internal constructor(override var file: KibbleFile,
 
         writer.writeln(" {")
 
+        objects.filter { it.companion }
+                .forEach { it.toSource(writer, level + 1) }
+
         secondaries.forEach { it.toSource(writer, level + 1) }
         initBlock?.let {
             writer.writeln("init {", level + 1)
@@ -155,7 +158,8 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         }
         nonParamProps.forEach { it.toSource(writer, level + 1) }
 
-        objects.forEach { it.toSource(writer, level + 1) }
+        objects.filter { !it.companion }
+                .forEach { it.toSource(writer, level + 1) }
         classes.forEach { it.toSource(writer, level + 1) }
         functions.forEach { it.toSource(writer, level + 1) }
 

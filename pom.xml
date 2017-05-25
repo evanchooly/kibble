@@ -30,6 +30,7 @@
         <dokka.version>0.9.13</dokka.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <downloadSources>true</downloadSources>
     </properties>
 
     <dependencies>
