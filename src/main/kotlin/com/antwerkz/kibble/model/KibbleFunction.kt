@@ -21,6 +21,7 @@ class KibbleFunction internal constructor(var name: String? = null,
                                           override var modality: Modality = FINAL,
                                           var type: String = "Unit",
                                           var body: String = "",
+                                          var bodyBlock: Boolean = true,
                                           override var overriding: Boolean = false)
     : Visible, Modal<KibbleFunction>, ParameterHolder, KibbleElement, Overridable {
 
@@ -34,10 +35,14 @@ class KibbleFunction internal constructor(var name: String? = null,
         kt.valueParameters.forEach {
             parameters += KibbleParameter(it)
         }
-        this.body = (kt.bodyExpression?.text ?: "")
-                .drop(1)
-                .dropLast(1)
-                .trimIndent()
+        this.body = kt.bodyExpression?.text ?: ""
+        this.bodyBlock = kt.hasBlockBody()
+        if (bodyBlock) {
+            this.body = (kt.bodyExpression?.text ?: "")
+                    .drop(1)
+                    .dropLast(1)
+                    .trimIndent()
+        }
         this.type = kt.typeReference?.text ?: ""
 
         kt.modifierList
@@ -56,23 +61,27 @@ class KibbleFunction internal constructor(var name: String? = null,
      * @return the string/source form of this type
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.writeln()
         writer.write("", level)
-        val returnType = if (type != "" && type != "Unit") ": $type " else " "
+        val returnType = if (type != "" && type != "Unit") ": $type " else ""
         if (overriding) {
             writer.write("override ")
         }
-        val bodyText = (if (body.trim().startsWith("{")) body else "{\n$body\n}").trim()
-        writer.write("${visibility}fun $modality$name(${parameters.joinToString(", ")})$returnType")
-        val split = bodyText.split("\n")
-        val size = split.size
-        split.forEachIndexed { i, s ->
-            if (i > 0) {
-                if (!s.startsWith(" ")) {
-                    writer.write("", level + (if (i < size - 1) 1 else 0))
+        val paramList = parameters.joinToString(", ")
+        writer.write("${visibility}fun $modality$name($paramList)$returnType")
+        if (bodyBlock) {
+            val bodyText = (if (body.trim().startsWith("{")) body else " {\n$body\n}").trim()
+            val split = bodyText.split("\n")
+            val size = split.size
+            split.forEachIndexed { i, s ->
+                if (i > 0) {
+                    if (!s.startsWith(" ")) {
+                        writer.write("", level + (if (i < size - 1) 1 else 0))
+                    }
                 }
+                writer.writeln(s)
             }
-            writer.writeln(s)
+        } else {
+            writer.write(" = $body")
         }
         return writer
     }
