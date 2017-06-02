@@ -42,7 +42,14 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
      * @return the string/source form of this type
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.write("$visibility${mutability}$name: $type", level)
+        writer.write("$visibility${mutability}")
+        name.let { writer.write(name) }
+        type?.let {
+            writer.write(": $it")
+        }
+        initializer?.let {
+            writer.write(" = $it")
+        }
 
         return writer
     }
@@ -69,7 +76,7 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
      * @return the hash code
      */
     override fun hashCode(): Int {
-        var result = name.hashCode()
+        var result = name?.hashCode() ?: 0
         result = 31 * result + (type?.hashCode() ?: 0)
         result = 31 * result + (initializer?.hashCode() ?: 0)
         result = 31 * result + mutability.hashCode()

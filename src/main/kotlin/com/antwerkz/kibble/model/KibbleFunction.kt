@@ -35,7 +35,7 @@ class KibbleFunction internal constructor(var name: String? = null,
         kt.valueParameters.forEach {
             parameters += KibbleParameter(it)
         }
-        this.body = kt.bodyExpression?.text ?: ""
+        this.body = kt.bodyExpression?.text?.trim() ?: ""
         this.bodyBlock = kt.hasBlockBody()
         if (bodyBlock) {
             this.body = (kt.bodyExpression?.text ?: "")
@@ -62,24 +62,19 @@ class KibbleFunction internal constructor(var name: String? = null,
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.write("", level)
-        val returnType = if (type != "" && type != "Unit") ": $type " else ""
+        val returnType = if (type != "" && type != "Unit") ": $type" else ""
         if (overriding) {
             writer.write("override ")
         }
         val paramList = parameters.joinToString(", ")
         writer.write("${visibility}fun $modality$name($paramList)$returnType")
         if (bodyBlock) {
-            val bodyText = (if (body.trim().startsWith("{")) body else " {\n$body\n}").trim()
-            val split = bodyText.split("\n")
-            val size = split.size
-            split.forEachIndexed { i, s ->
-                if (i > 0) {
-                    if (!s.startsWith(" ")) {
-                        writer.write("", level + (if (i < size - 1) 1 else 0))
-                    }
-                }
-                writer.writeln(s)
+            writer.writeln(" {")
+            body.trimIndent()
+                    .split("\n").forEach { s ->
+                writer.writeln(s, level + 1)
             }
+            writer.writeln("}", level)
         } else {
             writer.write(" = $body")
         }

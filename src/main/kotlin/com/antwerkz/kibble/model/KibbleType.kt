@@ -1,7 +1,10 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import com.antwerkz.kibble.SourceWriter
+import org.jetbrains.kotlin.psi.KtFunctionType
 import org.jetbrains.kotlin.psi.KtNullableType
+import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.KtUserType
 
@@ -14,7 +17,7 @@ import org.jetbrains.kotlin.psi.KtUserType
  */
 open class KibbleType internal constructor(val name: String,
                                            override var typeParameters: List<TypeParameter> = listOf<TypeParameter>(),
-                                           val nullable: Boolean = false): GenericCapable {
+                                           val nullable: Boolean = false) : GenericCapable {
     companion object {
         /**
          * Creates a KibbleType from ths string
@@ -30,12 +33,13 @@ open class KibbleType internal constructor(val name: String,
                 when (it) {
                     is KtUserType -> extractType(it)
                     is KtNullableType -> extractType(it.innerType as KtUserType, true)
+                    is KtFunctionType -> KibbleFunctionType(it)
                     else -> throw IllegalArgumentException("unknown type $it")
                 }
             }
         }
 
-        private fun extractType(typeElement: KtUserType, nullable: Boolean = false): KibbleType {
+        internal fun extractType(typeElement: KtUserType, nullable: Boolean = false): KibbleType {
             val name = (typeElement.qualifier?.text?.let { "$it." } ?: "") +
                     (typeElement.referencedName ?: "")
             val parameters = GenericCapable.extractFromTypeProjections(typeElement.typeArguments)
@@ -81,6 +85,49 @@ open class KibbleType internal constructor(val name: String,
         result = 31 * result + typeParameters.hashCode()
         result = 31 * result + nullable.hashCode()
         return result
+    }
+
+}
+
+class KibbleFunctionType internal constructor(name: String,
+                                              var parameters: List<KibbleFunctionTypeParameter>,
+                                              val type: KibbleType?) : KibbleType(name) {
+
+    internal constructor(kt: KtFunctionType) : this(kt.name ?: "",
+            kt.parameters.map { KibbleFunctionTypeParameter(it) },
+            kt.returnTypeReference?.typeElement?.let { KibbleType.extractType(it as KtUserType) })
+
+    override fun toString(): String {
+        var string = parameters.joinToString(", ", prefix = "(", postfix = ")")
+        type?.let {
+            if (type.toString() != "Unit") {
+                string += " -> $type"
+            }
+        }
+        return string
+    }
+}
+
+internal class KibbleFunctionTypeParameter(val type: KibbleType?): KibbleElement {
+    var typeParameters = listOf<TypeParameter>()
+
+    internal constructor(kt: KtParameter) : this(KibbleType.from(kt.typeReference)) {
+        typeParameters += GenericCapable.extractFromTypeParameters(kt.typeParameters)
+    }
+
+    /**
+     * @return the string/source form of this type
+     */
+    override fun toString(): String {
+        return toSource().toString()
+    }
+
+    /**
+     * @return the string/source form of this type
+     */
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
+        writer.write("$type")
+        return writer
     }
 
 }

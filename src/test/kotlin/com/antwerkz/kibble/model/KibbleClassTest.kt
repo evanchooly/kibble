@@ -22,7 +22,6 @@ class KibbleClassTest {
         }
 
         val property: String
-
         fun something(): Int {
             return 4
         }

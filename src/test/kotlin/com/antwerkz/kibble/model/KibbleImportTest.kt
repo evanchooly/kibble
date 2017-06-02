@@ -28,9 +28,8 @@ class KibbleImportTest {
 
 
         Assert.assertEquals(
-                file
-                        .toSource()
-                        .toString(),
-                "import com.foo.Bar\n\n")
+                file.toSource()
+                        .toString().trim(),
+                "import com.foo.Bar")
     }
 }

@@ -69,8 +69,13 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
             writer.write("lateinit ")
         }
         writer.write(mutability.toString())
-        writer.write(name)
-        type?.let { writer.write(": $it") }
+        name?.let { writer.write(name) }
+        type?.let {
+            if (name != null) {
+                writer.write(": ")
+            }
+            writer.write(it.toString())
+        }
         initializer?.let { writer.write(" = $it") }
         writer.writeln()
 
