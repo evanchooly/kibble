@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -27,7 +28,7 @@
         <slf4j.version>1.7.25</slf4j.version>
         <testng.version>6.11</testng.version>
         <jacoco.version>0.7.7.201606060606</jacoco.version>
-        <dokka.version>0.9.13</dokka.version>
+        <dokka.version>0.9.14</dokka.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <downloadSources>true</downloadSources>
@@ -68,6 +69,13 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+<!--
+        <dependency>
+            <groupId>org.jetbrains.dokka</groupId>
+            <artifactId>dokka-fatjar</artifactId>
+            <version>${dokka.version}</version>
+        </dependency>
+-->
     </dependencies>
 
     <repositories>

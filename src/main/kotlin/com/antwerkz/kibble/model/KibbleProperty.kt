@@ -1,5 +1,6 @@
 package com.antwerkz.kibble.model
 
+import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability.VAL
@@ -43,6 +44,7 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
     internal constructor(file: KibbleFile, kt: KtProperty) : this(kt.name!!, KibbleType.from(kt.typeReference),
             kt.initializer?.text) {
 
+//        Kibble.createResolutionFacade(kt.)
         extractAnnotations(file, kt.annotationEntries)
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
@@ -69,12 +71,9 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
             writer.write("lateinit ")
         }
         writer.write(mutability.toString())
-        name?.let { writer.write(name) }
+        name.let { writer.write(name) }
         type?.let {
-            if (name != null) {
-                writer.write(": ")
-            }
-            writer.write(it.toString())
+            writer.write(": $it")
         }
         initializer?.let { writer.write(" = $it") }
         writer.writeln()

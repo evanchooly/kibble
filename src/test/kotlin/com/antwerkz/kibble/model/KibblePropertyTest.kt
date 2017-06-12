@@ -43,6 +43,15 @@ class KibblePropertyTest {
         source = """val foo: Prop<*>
 """
         Assert.assertEquals(Kibble.parseSource(source).properties[0].toSource().toString(), source)
+    }
+    @Test
+    fun inference() {
+        @Language("kotlin")
+        var source = """val foo = mutableListOf<String>()"""
+        Assert.assertEquals(Kibble.parseSource(source).properties[0].toSource().toString(), source)
 
+        source = """val foo: Prop<*>
+"""
+        Assert.assertEquals(Kibble.parseSource(source).properties[0].toSource().toString(), source)
     }
 }
