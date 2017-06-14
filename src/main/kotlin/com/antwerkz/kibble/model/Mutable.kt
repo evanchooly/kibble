@@ -1,7 +1,7 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.model.Mutability.NEITHER
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElement
 
 /**
  * Specifies the mutability of the decorated type

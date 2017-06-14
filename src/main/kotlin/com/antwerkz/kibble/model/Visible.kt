@@ -5,7 +5,7 @@ import com.antwerkz.kibble.model.Visibility.PRIVATE
 import com.antwerkz.kibble.model.Visibility.PROTECTED
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import com.antwerkz.kibble.model.Visibility.valueOf
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElement
 
 /**
  * Represents the visibility of an element

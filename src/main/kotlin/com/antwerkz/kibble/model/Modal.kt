@@ -1,7 +1,7 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.model.Modality.FINAL
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElement
 
 /**
  * Represents the mode of an element

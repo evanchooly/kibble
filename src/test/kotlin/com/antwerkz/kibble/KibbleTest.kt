@@ -4,10 +4,10 @@ import com.antwerkz.kibble.model.KibbleFile
 import com.antwerkz.kibble.model.KibbleParameter
 import com.antwerkz.kibble.model.KibbleType
 import com.antwerkz.kibble.model.Visibility
-import org.jetbrains.kotlin.javax.inject.Singleton
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
+import javax.inject.Singleton
 
 class KibbleTest {
     companion object {

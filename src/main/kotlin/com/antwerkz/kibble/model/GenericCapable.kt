@@ -1,6 +1,6 @@
 package com.antwerkz.kibble.model
 
-import org.jetbrains.kotlin.com.intellij.psi.impl.source.tree.LeafPsiElement
+import com.intellij.psi.impl.source.tree.LeafPsiElement
 import org.jetbrains.kotlin.psi.KtTypeParameter
 import org.jetbrains.kotlin.psi.KtTypeProjection
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
