@@ -6,11 +6,14 @@ import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability.VAL
 import com.antwerkz.kibble.model.Mutability.VAR
 import com.antwerkz.kibble.model.Visibility.PUBLIC
+import org.jetbrains.kotlin.caches.resolve.KotlinCacheService
+import org.jetbrains.kotlin.idea.caches.resolve.getResolutionFacade
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
+import org.jetbrains.kotlin.resolve.calls.callUtil.getCalleeExpressionIfAny
 
 /**
  * Defines a property on a file, class, or object
@@ -44,7 +47,10 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
     internal constructor(file: KibbleFile, kt: KtProperty) : this(kt.name!!, KibbleType.from(kt.typeReference),
             kt.initializer?.text) {
 
-//        Kibble.createResolutionFacade(kt.)
+//        kt.initializer.getCalleeExpressionIfAny()?.let {
+//            KotlinCacheService.getInstance(kt.project).getResolutionFacade(listOf(it))
+//        }
+        val inferred = kt.initializer?.let { Kibble.inferType(it) }
         extractAnnotations(file, kt.annotationEntries)
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
