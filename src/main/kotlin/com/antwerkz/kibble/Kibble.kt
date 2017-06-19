@@ -99,8 +99,8 @@ object Kibble {
 //        return KotlinCoreEnvironment(parentDisposable, appEnv, configuration)
         val env = KotlinCoreEnvironment.createForProduction(Disposable { }, configuration, listOf())
 //        env.project.
-        val picoContainer = env.application.getPicoContainer()
-        picoContainer.registerComponentInstance(ResolveElementCache::class.java)
+//        val picoContainer = env.application.getPicoContainer()
+//        picoContainer.registerComponentInstance(ResolveElementCache::class.java)
         return env
     }
 
@@ -228,7 +228,12 @@ class KibbleResolutionFacade(override val project: Project,
     }
 
     override fun <T : Any> getFrontendService(element: PsiElement, serviceClass: Class<T>): T {
-        return project.getComponent(serviceClass)
+        return try {
+           project.getComponent(serviceClass)
+        } catch(e: Exception) {
+            println("serviceClass = ${serviceClass}")
+            throw e
+        }
     }
 
     override fun <T : Any> getFrontendService(serviceClass: Class<T>): T {
