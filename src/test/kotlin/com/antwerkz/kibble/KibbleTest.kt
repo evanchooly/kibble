@@ -38,7 +38,7 @@ return "hi"""")
         Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
         Assert.assertEquals(klass.constructor.parameters.size, 2, klass.constructor.parameters.toString())
         Assert.assertEquals(klass.properties[0].name, "cost")
-        Assert.assertEquals(klass.properties[0].type, KibbleType(name = "Double"))
+        Assert.assertEquals(klass.properties[0].type.toString(), "Double")
         Assert.assertEquals(klass.functions.size, 2)
 
         Assert.assertEquals(klass.functions[0].name, "output")
@@ -53,13 +53,10 @@ return "hi"""")
         val file = Kibble.parseFile(path)
 
         val tempFile = File("kibble-test.kt")
-        try {
-            file.toSource().toFile(tempFile)
+        file.toSource().toFile(tempFile)
 
-            Assert.assertEquals(tempFile.readText(), File(path).readText())
-            tempFile.delete()
-        } finally {
-        }
+        Assert.assertEquals(tempFile.readText(), File(path).readText())
+        tempFile.delete()
     }
 
     @Test

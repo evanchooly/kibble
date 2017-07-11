@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 class KibbleAnnotation internal constructor(name: String, val arguments: Map<String, Any> = mapOf()) : KibbleType(name), KibbleElement {
 
     companion object {
-        internal fun from(file: KibbleFile, annotation: KtAnnotationEntry): KibbleAnnotation {
+        internal fun from(annotation: KtAnnotationEntry): KibbleAnnotation {
             val arguments = annotation.allChildren
                     .filterIsInstance(KtValueArgumentList::class.java)
                     .firstOrNull()
@@ -25,7 +25,7 @@ class KibbleAnnotation internal constructor(name: String, val arguments: Map<Str
                         val expression = it.getArgumentExpression()
                         name to when (expression) {
                             is KtAnnotatedExpression -> {
-                                from(file, expression.allChildren.filterIsInstance(KtAnnotationEntry::class.java).first())
+                                from(expression.allChildren.filterIsInstance(KtAnnotationEntry::class.java).first())
                             }
                             else -> expression?.text ?: ""
                         }

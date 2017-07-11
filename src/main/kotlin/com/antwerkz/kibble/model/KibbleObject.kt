@@ -29,7 +29,7 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
         Extendable.extractSuperInformation(this, kt)
         visibility = Visible.apply(kt.visibilityModifier())
 
-        extractAnnotations(file, kt.annotationEntries)
+        extractAnnotations(kt.annotationEntries)
         kt.getBody()?.declarations?.let {
             extractClassesObjects(file, it)
             extractFunctions(it)

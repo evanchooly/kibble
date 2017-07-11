@@ -143,4 +143,17 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     override fun toString(): String {
         return outputFile(File(".")).toString()
     }
+
+    fun resolve(type: KibbleType): KibbleType? {
+        println("type = ${type}")
+        var resolved: KibbleType? = imports.firstOrNull { type == it.type } ?.type
+
+        if (resolved == null) {
+            classes.firstOrNull { type.name == it.name }?. let {
+                resolved = type
+            }
+        }
+
+        return resolved
+    }
 }

@@ -28,6 +28,6 @@ interface Annotatable {
     }
 }
 
-internal fun Annotatable.extractAnnotations(file: KibbleFile, entries: List<KtAnnotationEntry>) {
-    annotations.addAll(entries.map { from(file, it) })
+internal fun Annotatable.extractAnnotations(entries: List<KtAnnotationEntry>) {
+    annotations.addAll(entries.map { from(it) })
 }

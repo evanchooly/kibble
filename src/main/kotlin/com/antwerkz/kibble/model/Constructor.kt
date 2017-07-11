@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 open class Constructor internal constructor() : Visible, ParameterHolder, KibbleElement {
     internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this() {
         kt.valueParameters.forEach {
-            val kibbleProperty = KibbleProperty(klass.file, it)
+            val kibbleProperty = KibbleProperty(it)
             if (it.hasValOrVar()) {
                 kibbleProperty.constructorParam = true
                 klass.properties += kibbleProperty
