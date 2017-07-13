@@ -50,6 +50,21 @@ open class KibbleType internal constructor(val name: String,
      */
     val fullName: String
         get() = toString()
+    /**
+     * Gives only the class name portion of any FQCN
+     */
+    val className: String by lazy {
+        name.dropWhile { !it.isUpperCase() }
+    }
+    /**
+     * Gives the package component of any FQCN or null if it doesn't have a package specified
+     */
+    val pkgName: String? by lazy {
+        val name = name.split(".")
+                .dropLastWhile { it[0].isUpperCase() }
+                .joinToString(".")
+        if (name == "") null else name
+    }
 
     /**
      * @return the string/source form of this type

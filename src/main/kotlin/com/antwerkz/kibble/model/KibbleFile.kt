@@ -144,16 +144,19 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         return outputFile(File(".")).toString()
     }
 
-    fun resolve(type: KibbleType): KibbleType? {
-        println("type = ${type}")
-        var resolved: KibbleType? = imports.firstOrNull { type == it.type } ?.type
+    fun resolve(type: KibbleType): KibbleType {
+        var resolved: KibbleType? = imports.firstOrNull { type == it.type }?.type
 
         if (resolved == null) {
-            classes.firstOrNull { type.name == it.name }?. let {
-                resolved = type
+            resolved = imports.firstOrNull { it.type.className == type.name || it.alias == name }?.type
+        }
+
+        if (resolved == null) {
+            classes.firstOrNull { type.name == it.name }?.let {
+                resolved = KibbleType.from("$pkgName.${it.name}")
             }
         }
 
-        return resolved
+        return resolved ?: type
     }
 }
