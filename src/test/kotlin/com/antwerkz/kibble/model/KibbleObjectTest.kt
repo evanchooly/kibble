@@ -7,7 +7,7 @@ import org.testng.annotations.Test
 class KibbleObjectTest {
     @Test
     fun objects() {
-        val file = Kibble.parseFile("src/test/resources/com/antwerkz/test/SampleKibbleObject.kt")
+        val file = Kibble.parse("src/test/resources/com/antwerkz/test/SampleKibbleObject.kt")
 
         val objects = file.classes[0].objects.iterator()
 

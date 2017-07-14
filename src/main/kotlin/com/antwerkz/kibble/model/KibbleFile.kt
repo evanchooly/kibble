@@ -1,5 +1,6 @@
 package com.antwerkz.kibble.model
 
+import com.antwerkz.kibble.KibbleContext
 import com.antwerkz.kibble.SourceWriter
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
@@ -11,7 +12,8 @@ import java.io.File
  * @property pkgName the package name
  * @property imports the imports defined in the file
  */
-class KibbleFile(val name: String? = null, override var pkgName: String? = null) :
+class KibbleFile(val name: String? = null, override var pkgName: String? = null,
+                 val context: KibbleContext = KibbleContext()) :
         KibbleElement, PropertyHolder, Packaged, ClassOrObjectHolder {
 
     val imports = mutableSetOf<KibbleImport>()
@@ -20,7 +22,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
 
-    internal constructor(kt: KtFile) : this(kt.name, kt.packageDirective?.fqName.toString()) {
+    internal constructor(kt: KtFile, context: KibbleContext) : this(kt.name, kt.packageDirective?.fqName.toString(), context) {
         kt.importDirectives.forEach {
             imports += KibbleImport(it)
         }
@@ -32,6 +34,10 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
         }
 
         pkgName = kt.packageDirective?.children?.firstOrNull()?.text
+    }
+
+    init {
+        context.register(this)
     }
 
     override fun addClass(name: String): KibbleClass {
@@ -155,6 +161,9 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null)
             classes.firstOrNull { type.name == it.name }?.let {
                 resolved = KibbleType.from("$pkgName.${it.name}")
             }
+        }
+        if (resolved == null) {
+            resolved = context.resolve(this, type)
         }
 
         return resolved ?: type

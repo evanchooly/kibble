@@ -16,7 +16,7 @@ class KibbleTest {
 
     @Test
     fun standalone() {
-        val file = Kibble.parseFile("src/test/resources/com/antwerkz/test/standalone.kt")
+        val file = Kibble.parse("src/test/resources/com/antwerkz/test/standalone.kt")
 
         Assert.assertEquals(file.functions.size, 1)
         Assert.assertEquals(file.functions[0].visibility, Visibility.INTERNAL)
@@ -27,7 +27,7 @@ return "hi"""")
 
     @Test
     fun sampleClass() {
-        val file = Kibble.parseFile(path)
+        val file = Kibble.parse(path)
 
         Assert.assertEquals(file.imports.size, 4)
         Assert.assertEquals(file.classes.size, 2)
@@ -50,7 +50,7 @@ return "hi"""")
 
     @Test
     fun writeSource() {
-        val file = Kibble.parseFile(path)
+        val file = Kibble.parse(path)
 
         val tempFile = File("kibble-test.kt")
         file.toSource().toFile(tempFile)

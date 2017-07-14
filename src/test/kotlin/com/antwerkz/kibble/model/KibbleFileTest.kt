@@ -44,18 +44,21 @@ import com.zorg.Flur
 
 class Main {
     val s: Second = Second()
-    val t: Third = HI
+    val t: Third = Third.HI
     val b: Bar = Bar()
     val f: com.zorg.Flur = com.zorg.Flur()
 }
 
-class Second
+class Second""".trim()
+
+        @Language("kotlin")
+        val source2 = """package com.antwerkz.testing
 
 enum class Third {
     HI
-}""".trim()
-
+}"""
         val file = Kibble.parseSource(source)
+        val file2 = Kibble.parseSource(source2, file.context)
         val props = file.classes[0].properties.iterator()
 
         check(file, props.next(), "Second", "com.antwerkz.testing.Second")
@@ -65,8 +68,9 @@ enum class Third {
 
     }
 
-    private fun check(file: KibbleFile, f: KibbleProperty, name: String, resolvedName: String) {
-        Assert.assertEquals(name, f.type?.name)
-        Assert.assertEquals(resolvedName, file.resolve(f.type!!).name)
+    private fun check(file: KibbleFile, property: KibbleProperty, expectedName: String, expectedResolved: String) {
+        val type = property.type!!
+        Assert.assertEquals(type.name, expectedName)
+        Assert.assertEquals(file.resolve(type).name, expectedResolved)
     }
 }
