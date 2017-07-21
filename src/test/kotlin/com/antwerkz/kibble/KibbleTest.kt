@@ -42,7 +42,7 @@ return "hi"""")
         Assert.assertEquals(klass.functions.size, 2)
 
         Assert.assertEquals(klass.functions[0].name, "output")
-        Assert.assertEquals(klass.functions[0].parameters, listOf(KibbleParameter("count", KibbleType(name = "Long"))))
+        Assert.assertEquals(klass.functions[0].parameters, listOf(KibbleParameter("count", KibbleType(value = "Long"))))
 
         Assert.assertEquals(klass.functions[1].name, "toString")
         Assert.assertEquals(klass.functions[1].parameters, listOf<KibbleParameter>())

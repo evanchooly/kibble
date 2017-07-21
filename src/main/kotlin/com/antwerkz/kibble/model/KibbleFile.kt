@@ -122,7 +122,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
             writer.writeln()
         }
 
-        writeBlock(writer, level, false, imports.sortedBy { it.type.name })
+        writeBlock(writer, level, false, imports.sortedBy { it.type.fqcn })
         writeBlock(writer, level, false, properties)
         writeBlock(writer, level, true, classes)
         writeBlock(writer, level, true, functions)
@@ -154,12 +154,12 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         var resolved: KibbleType? = imports.firstOrNull { type == it.type }?.type
 
         if (resolved == null) {
-            resolved = imports.firstOrNull { it.type.className == type.name || it.alias == name }?.type
+            resolved = imports.firstOrNull { it.type.className == type.fqcn || it.alias == name }?.type
         }
 
         if (resolved == null) {
-            classes.firstOrNull { type.name == it.name }?.let {
-                resolved = KibbleType.from("$pkgName.${it.name}")
+            classes.firstOrNull { type.className == it.name }?.let {
+                resolved = KibbleType.resolve(type, pkgName)
             }
         }
         if (resolved == null) {

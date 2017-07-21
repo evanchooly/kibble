@@ -26,10 +26,8 @@ fun body() {
 
     @Test
     fun functionParameter() {
-        @Language("kotlin")
-        val source = """fun bloop(message: String, converter: (String, List<Double>) -> String): String { }"""
-        val file = Kibble.parseSource(source)
-        val bloop = file.functions[0]
+        val bloop = Kibble.parseSource("""fun bloop(message: String, converter: (String, List<Double>) -> String): String { }""")
+                .functions[0]
         Assert.assertEquals(bloop.parameters[0].name, "message")
         Assert.assertEquals(bloop.parameters[0].type.toString(), "String")
 

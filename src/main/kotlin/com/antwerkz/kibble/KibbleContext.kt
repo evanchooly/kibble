@@ -13,7 +13,7 @@ class KibbleContext {
     fun resolve(file: KibbleFile, type: KibbleType): KibbleType? {
         val let = lookup(file.pkgName).flatMap { it.classes }
                 .firstOrNull { it.name == type.className }?.let {
-            KibbleType.from("${file.pkgName}.${it.name}")
+            KibbleType.resolve(type, file.pkgName)
         }
         return let
     }

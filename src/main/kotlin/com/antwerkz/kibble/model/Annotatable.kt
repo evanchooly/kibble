@@ -23,7 +23,7 @@ interface Annotatable {
      */
     fun getAnnotation(annotation: Class<out Annotation>): KibbleAnnotation? {
         return annotations.firstOrNull {
-            it.name == annotation.simpleName || it.name == annotation.name
+            it.type.className == annotation.simpleName || it.type.className == annotation.name
         }
     }
 }

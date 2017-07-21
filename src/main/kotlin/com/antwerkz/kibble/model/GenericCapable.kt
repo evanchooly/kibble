@@ -27,7 +27,8 @@ interface GenericCapable {
         }
 
     }
-    var typeParameters: List<TypeParameter>
+
+    val typeParameters: List<TypeParameter>
 }
 
 /**

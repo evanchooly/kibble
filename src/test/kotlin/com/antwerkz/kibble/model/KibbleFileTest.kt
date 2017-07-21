@@ -47,6 +47,7 @@ class Main {
     val t: Third = Third.HI
     val b: Bar = Bar()
     val f: com.zorg.Flur = com.zorg.Flur()
+    val g: Generic<Int>
 }
 
 class Second""".trim()
@@ -56,7 +57,9 @@ class Second""".trim()
 
 enum class Third {
     HI
-}"""
+}
+
+class Generic<T>"""
         val file = Kibble.parseSource(source)
         val file2 = Kibble.parseSource(source2, file.context)
         val props = file.classes[0].properties.iterator()
@@ -65,6 +68,7 @@ enum class Third {
         check(file, props.next(), "Third", "com.antwerkz.testing.Third")
         check(file, props.next(), "Bar", "com.foo.Bar")
         check(file, props.next(), "com.zorg.Flur", "com.zorg.Flur")
+        check(file, props.next(), "Generic<Int>", "com.antwerkz.testing.Generic<Int>")
 
     }
 

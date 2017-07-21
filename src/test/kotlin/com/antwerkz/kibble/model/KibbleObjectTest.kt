@@ -16,7 +16,7 @@ class KibbleObjectTest {
         Assert.assertTrue(kibbleObject.isPrivate())
         Assert.assertNull(kibbleObject.superType)
         Assert.assertTrue(kibbleObject.superCallArgs.isEmpty())
-        Assert.assertEquals(kibbleObject.superTypes[0].name, "Runnable")
+        Assert.assertEquals(kibbleObject.superTypes[0].className, "Runnable")
         val functions = kibbleObject.functions.iterator()
 
         var function = functions.next()

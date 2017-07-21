@@ -10,9 +10,11 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 /**
  * Represents an annotation in kotlin source code.
  *
+ * @property type the annotation type
  * @property arguments the values passed to the annotation
  */
-class KibbleAnnotation internal constructor(name: String, val arguments: Map<String, Any> = mapOf()) : KibbleType(name), KibbleElement {
+class KibbleAnnotation internal constructor(val type: KibbleType, val arguments: Map<String, Any> = mapOf())
+    : KibbleElement {
 
     companion object {
         internal fun from(annotation: KtAnnotationEntry): KibbleAnnotation {
@@ -24,19 +26,17 @@ class KibbleAnnotation internal constructor(name: String, val arguments: Map<Str
                         val name = it.getArgumentName()?.text ?: "value"
                         val expression = it.getArgumentExpression()
                         name to when (expression) {
-                            is KtAnnotatedExpression -> {
-                                from(expression.allChildren.filterIsInstance(KtAnnotationEntry::class.java).first())
-                            }
+                            is KtAnnotatedExpression -> from(expression.allChildren.filterIsInstance(KtAnnotationEntry::class.java).first())
                             else -> expression?.text ?: ""
                         }
                     }?.associateBy({ it.first }, { it.second })
                     ?: mapOf()
-            return KibbleAnnotation(annotation.typeReference?.typeElement?.name
-                    ?: (annotation.typeReference?.typeElement as KtUserType).referencedName ?: "",
-                    arguments)
+            val type = annotation.typeReference?.typeElement?.name?.let {
+                KibbleType(it)
+            } ?: KibbleType((annotation.typeReference?.typeElement as KtUserType).referencedName!!)
+            return KibbleAnnotation(type, arguments)
         }
     }
-
 
     /**
      * @return the source form of this annotation
@@ -44,7 +44,7 @@ class KibbleAnnotation internal constructor(name: String, val arguments: Map<Str
     override fun toString() = toSource().toString()
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        var string = "@$name"
+        var string = "@${type.fqcn}"
         if (arguments.isNotEmpty()) {
             string += arguments.entries.joinToString(prefix = "(", postfix = ")",
                     transform = {
