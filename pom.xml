@@ -28,6 +28,7 @@
         <testng.version>6.11</testng.version>
         <jacoco.version>0.7.7.201606060606</jacoco.version>
         <dokka.version>0.9.13</dokka.version>
+        <uast.version>1.0.12</uast.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <downloadSources>true</downloadSources>
@@ -68,6 +69,13 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.uast</groupId>
+            <artifactId>uast-common</artifactId>
+            <version>${uast.version}</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -78,6 +86,11 @@
             <id>bintray-evanchooly-maven</id>
             <name>bintray</name>
             <url>http://dl.bintray.com/evanchooly/maven</url>
+        </repository>
+        <repository>
+            <id>uast</id>
+            <name>uast</name>
+            <url>http://dl.bintray.com/kotlin/uast</url>
         </repository>
     </repositories>
 
