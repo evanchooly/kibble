@@ -61,7 +61,7 @@ enum class Third {
 
 class Generic<T>"""
         val file = Kibble.parseSource(source)
-        val file2 = Kibble.parseSource(source2, file.context)
+        Kibble.parseSource(source2, file.context)
         val props = file.classes[0].properties.iterator()
 
         check(file, props.next(), "Second", "com.antwerkz.testing.Second")

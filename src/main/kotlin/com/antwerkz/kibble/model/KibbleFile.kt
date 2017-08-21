@@ -21,8 +21,11 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
+    var sourceTimestamp = 0L
+        private set
 
     internal constructor(kt: KtFile, context: KibbleContext) : this(kt.name, kt.packageDirective?.fqName.toString(), context) {
+        sourceTimestamp = kt.originalFile.modificationStamp
         kt.importDirectives.forEach {
             imports += KibbleImport(it)
         }
@@ -81,10 +84,8 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
      *
      * @return the new import
      */
-    fun addImport(name: String, alias: String? = null): KibbleImport {
-        return KibbleImport(KibbleType.from(name), alias).also {
-            imports += it
-        }
+    fun addImport(name: String, alias: String? = null): KibbleImport? {
+        return addImport(KibbleType.from(name), alias)
     }
 
     /**
@@ -95,10 +96,13 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
      *
      * @return the new import
      */
-    fun addImport(type: Class<*>, alias: String? = null): KibbleImport {
-        return KibbleImport(KibbleType.from(type.name), alias).also {
-            imports += it
-        }
+    fun addImport(type: Class<*>, alias: String? = null): KibbleImport? {
+        return addImport(KibbleType.from(type.name), alias)
+    }
+
+    private fun addImport(type: KibbleType, alias: String?): KibbleImport? {
+        val kibbleImport = KibbleImport(type, alias)
+        return if(imports.add(kibbleImport)) kibbleImport else null
     }
 
     /**
@@ -167,5 +171,20 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         }
 
         return resolved ?: type
+    }
+
+    fun resolve(type: String): KibbleType {
+        var resolved: KibbleType? = imports.firstOrNull { it.type.fqcn == type || it.alias == name }?.type
+
+        if (resolved == null) {
+            classes.firstOrNull { type == it.name }?.let {
+                resolved = KibbleType("$pkgName.$type")
+            }
+        }
+        if (resolved == null) {
+            resolved = context.resolve(this, type)
+        }
+
+        return resolved ?: KibbleType(type)
     }
 }

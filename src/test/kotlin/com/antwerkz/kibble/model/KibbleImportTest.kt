@@ -20,16 +20,29 @@ class KibbleImportTest {
                 "import com.foo.Bar as Harry\n")
     }
 
+
     @Test
-    fun duplicates() {
-        val file = KibbleFile()
-        file.addImport("com.foo.Bar")
-        file.addImport("com.foo.Bar")
+    fun duplicateImport() {
+        val file = KibbleFile("Foo.kt")
+        tryImport(file, "com.foo.Bar")
+        tryImport(file, "com.foo.Bar", "Second")
+        tryImport(file, String::class.java)
+        tryImport(file, String::class.java, "Second")
+    }
 
+    private fun tryImport(file: KibbleFile, type: String, alias: String? = null) {
+        Assert.assertNotNull(file.addImport(type, alias))
+        Assert.assertNull(file.addImport(type, alias))
+        alias?.let {
+            Assert.assertNull(file.addImport(type, alias))
+        }
+    }
 
-        Assert.assertEquals(
-                file.toSource()
-                        .toString().trim(),
-                "import com.foo.Bar")
+    private fun tryImport(file: KibbleFile, type: Class<*>, alias: String? = null) {
+        Assert.assertNotNull(file.addImport(type, alias))
+        Assert.assertNull(file.addImport(type, alias))
+        alias?.let {
+            Assert.assertNull(file.addImport(type, alias))
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.antwerkz.kibble
 
+import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFile
 import com.antwerkz.kibble.model.KibbleType
 
@@ -16,5 +17,17 @@ class KibbleContext {
             KibbleType.resolve(type, file.pkgName)
         }
         return let
+    }
+
+    fun resolve(file: KibbleFile, type: String): KibbleType? {
+        return lookup(file.pkgName).flatMap { it.classes }
+                .firstOrNull { it.name == type }?.let {
+            KibbleType("${file.pkgName}.$type")
+        }
+    }
+
+    fun findClass(type: KibbleType): KibbleClass? {
+        return lookup(type.pkgName).flatMap { it.classes }
+                .firstOrNull { it.name == type.className }
     }
 }
