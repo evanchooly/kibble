@@ -43,17 +43,9 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
     }
 
     /**
-     * Gives the expression of this type for use in the source complete with type parameters
+     * Gives the fully qualified class name for this type
      */
-    val fqcn: String by lazy {
-        val list = mutableListOf<String>()
-        if (!imported && pkgName != null) {
-            list.add(pkgName)
-        }
-        list.add(className)
-
-        (pkgName?.let { "${pkgName}." } ?: "") + className
-    }
+    val fqcn: String by lazy { (pkgName?.let { "${pkgName}." } ?: "") + className }
 
 
     companion object {
@@ -89,14 +81,15 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
                     (typeElement.referencedName ?: "")
             val parameters = GenericCapable.extractFromTypeProjections(typeElement.typeArguments)
             val raw = value.substringBefore("<")
-            val pkg = raw.split(".")
-                    .dropLastWhile { it != "" && it[0].isUpperCase() }
-                    .joinToString(".")
-            val pkgName = if (pkg == "") null else pkg
+            var pkgName = if (raw.contains(".")) {
+                raw.split(".")
+                        .dropLastWhile { it[0].isUpperCase() }
+                        .filter { it != "" }
+                        .joinToString(".")
+            } else null
+            if (pkgName == "") pkgName = null
 
-            val className = raw.split(".")
-                    .dropWhile { it != "" && !it[0].isUpperCase() }
-                    .joinToString(".")
+            val className = pkgName?.let { raw.substring(it.length + 1) }  ?: raw
 
             return KibbleType(className, pkgName, parameters, nullable)
         }

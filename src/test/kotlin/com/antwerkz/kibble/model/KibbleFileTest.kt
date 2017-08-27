@@ -1,7 +1,5 @@
 package com.antwerkz.kibble.model
 
-import com.antwerkz.kibble.Kibble
-import org.intellij.lang.annotations.Language
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
@@ -19,6 +17,7 @@ class KibbleFileTest {
 
         file.addImport("typeName", "aliasName")
         file.addImport(String::class.java, "anotherAlias")
+        assertImport(file, "java.lang", "String", "anotherAlias")
         Assert.assertEquals("""package com.antwerkz.kibble
 
 import java.lang.String as anotherAlias
@@ -83,19 +82,39 @@ class Generic<T>"""
     @Test
     fun normalize() {
         val file = KibbleFile("test.kt")
-        val list = file.normalize(KibbleType.from("java.util.List"))
-        val set = file.normalize(KibbleType.from("java.util.Set"))
-        val list2 = file.normalize(KibbleType.from("java.util.List"))
-        val plainList = file.normalize(KibbleType.from("List"))
 
-        Assert.assertEquals(list.value, "List")
-        Assert.assertEquals(list2.value, "List")
-        Assert.assertEquals(plainList.value, "List")
-        Assert.assertEquals(set.value, "Set")
+        Assert.assertEquals(file.normalize(KibbleType.from("java.util.List")).value, "List")
+        Assert.assertNotNull(file.imports.firstOrNull { "List" == it.type.alias || "List" == it.type.className })
+        assertImport(file, "java.util", "List")
+
+        Assert.assertEquals(file.normalize(KibbleType.from("java.util.List")).value, "List")
+        assertImport(file, "java.util", "List")
+
+        Assert.assertEquals(file.normalize(KibbleType.from("List")).value, "List")
+        assertImport(file, "java.util", "List")
+
+        Assert.assertEquals(file.normalize(KibbleType.from("java.util.Set")).value, "Set")
+        assertImport(file, "java.util", "Set")
 
         file.addImport(java.awt.List::class.java, "awtList")
-        val awt = file.normalize(KibbleType.from("java.awt.List"))
-        Assert.assertEquals(awt.value, "awtList")
+        assertImport(file, "java.awt", "List", "awtList")
+
+        Assert.assertEquals(file.normalize(KibbleType.from("java.awt.List")).value, "awtList")
+        Assert.assertEquals(file.normalize(KibbleType.from("awtList")).value, "awtList")
+
+        Assert.assertEquals(file.normalize(KibbleType.from("Map.Entry")).value, "Map.Entry")
     }
 
+
+    fun assertImport(file: KibbleFile, pkgName: String, className: String, alias: String? = null) {
+        Assert.assertEquals(file.imports.filter {
+            it.type.pkgName == pkgName && it.type.className == className
+        }.size, 1)
+
+        alias?.let {
+            Assert.assertEquals(file.imports.filter {
+                it.type.alias == alias
+            }.size, 1)
+        }
+    }
 }

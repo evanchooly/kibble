@@ -182,7 +182,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         val simpleMatch = imports.firstOrNull { proposed.className == it.type.alias || proposed.className == it.type.className }
         val fullMatch = imports.firstOrNull { proposed.pkgName == it.type.pkgName && proposed.className == it.type.className }
 
-        var resolved = if (proposed.pkgName == null) simpleMatch else fullMatch
+        val resolved = if (proposed.pkgName == null) simpleMatch else fullMatch
 
         val foundInPackage = if (resolved == null) {
             classes.filter { proposed.className == it.name }
@@ -206,7 +206,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         return normalized ?: proposed
     }
 
-/*
+    /*
     fun resolve(type: String): KibbleType {
         var resolved: KibbleType? = imports.firstOrNull { it.type.fqcn == type || it.alias == name }?.type
 
