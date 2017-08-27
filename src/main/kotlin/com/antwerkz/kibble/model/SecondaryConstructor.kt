@@ -9,10 +9,10 @@ import org.jetbrains.kotlin.psi.ValueArgument
  *
  * @property delegationArguments the arguments to pass to the delegation constructor call
  */
-class SecondaryConstructor internal constructor() : Constructor() {
-    internal constructor(kt: KtSecondaryConstructor) : this() {
+class SecondaryConstructor internal constructor(file: KibbleFile) : Constructor(file) {
+    internal constructor(file: KibbleFile, kt: KtSecondaryConstructor) : this(file) {
         kt.valueParameters.forEach {
-            parameters += KibbleParameter(it)
+            parameters += KibbleParameter(file, it)
         }
         body = kt.bodyExpression?.text
         val valueArguments: MutableList<out ValueArgument> = kt.getDelegationCall().valueArguments

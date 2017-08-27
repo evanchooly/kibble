@@ -34,6 +34,7 @@ import typeName as aliasName""", file.toSource().toString().trim())
         Assert.assertEquals(file.outputFile(File("/tmp/")), File("/tmp/com/antwerkz/kibble/Foo.kt"))
     }
 
+/*
     @Test
     fun resolve() {
         @Language("kotlin")
@@ -74,7 +75,27 @@ class Generic<T>"""
 
     private fun check(file: KibbleFile, property: KibbleProperty, expectedName: String, expectedResolved: String) {
         val type = property.type!!
-        Assert.assertEquals(type.name, expectedName)
-        Assert.assertEquals(file.resolve(type).name, expectedResolved)
+        Assert.assertEquals(type.value, expectedName)
+        Assert.assertEquals(file.resolve(type).value, expectedResolved)
     }
+*/
+
+    @Test
+    fun normalize() {
+        val file = KibbleFile("test.kt")
+        val list = file.normalize(KibbleType.from("java.util.List"))
+        val set = file.normalize(KibbleType.from("java.util.Set"))
+        val list2 = file.normalize(KibbleType.from("java.util.List"))
+        val plainList = file.normalize(KibbleType.from("List"))
+
+        Assert.assertEquals(list.value, "List")
+        Assert.assertEquals(list2.value, "List")
+        Assert.assertEquals(plainList.value, "List")
+        Assert.assertEquals(set.value, "Set")
+
+        file.addImport(java.awt.List::class.java, "awtList")
+        val awt = file.normalize(KibbleType.from("java.awt.List"))
+        Assert.assertEquals(awt.value, "awtList")
+    }
+
 }

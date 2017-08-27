@@ -38,7 +38,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     override val properties = mutableListOf<KibbleProperty>()
     var initBlock: String? = null
 
-    var constructor = Constructor()
+    var constructor = Constructor(file)
         private set
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
 
@@ -51,10 +51,10 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         typeParameters = GenericCapable.extractFromTypeParameters(kt.typeParameters)
 
         kt.primaryConstructor?.let {
-            constructor = Constructor(this, it)
+            constructor = Constructor(file, this, it)
         }
         kt.secondaryConstructors.forEach {
-            secondaries += SecondaryConstructor(it)
+            secondaries += SecondaryConstructor(file, it)
         }
         extractAnnotations(kt.annotationEntries)
         kt.getBody()?.let {
@@ -70,7 +70,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
      * @return the new constructor
      */
     fun addSecondaryConstructor(): SecondaryConstructor {
-        return SecondaryConstructor().also {
+        return SecondaryConstructor(file).also {
             secondaries += it
         }
     }
@@ -99,14 +99,14 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(name = name, type = type, body = body).also {
+        return KibbleFunction(file, name = name, type = type, body = body).also {
             functions += it
         }
     }
 
     override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
-        return KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
+        return KibbleProperty(file, name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
             it.visibility = visibility
             it.mutability = mutability
             it.constructorParam = constructorParam

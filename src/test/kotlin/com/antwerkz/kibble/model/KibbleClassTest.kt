@@ -104,7 +104,7 @@ open class Person : AbstractKotlinPerson {
         Assert.assertTrue(file.classes[0].superTypes.isEmpty())
         Assert.assertNull(file.classes[1].superType)
         Assert.assertEquals(file.classes[1].superTypes.size, 1)
-        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType(value = "AbstractKotlinPerson"))
+        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType("AbstractKotlinPerson"))
     }
 
     @Test

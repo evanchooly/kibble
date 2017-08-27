@@ -16,7 +16,7 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property body the function body
  * @property overriding true if this function overrides a function in a parent type
  */
-class KibbleFunction internal constructor(var name: String? = null,
+class KibbleFunction internal constructor(override val file: KibbleFile, var name: String? = null,
                                           override var visibility: Visibility = PUBLIC,
                                           override var modality: Modality = FINAL,
                                           var type: String = "Unit",
@@ -27,13 +27,13 @@ class KibbleFunction internal constructor(var name: String? = null,
 
     override val parameters = mutableListOf<KibbleParameter>()
 
-    internal constructor(kt: KtFunction) : this(kt.name) {
-        parse(kt)
+    internal constructor(file: KibbleFile, kt: KtFunction) : this(file, kt.name) {
+        parse(file, kt)
     }
 
-    private fun parse(kt: KtFunction) {
+    private fun parse(file: KibbleFile, kt: KtFunction) {
         kt.valueParameters.forEach {
-            parameters += KibbleParameter(it)
+            parameters += KibbleParameter(file, it)
         }
         this.body = kt.bodyExpression?.text?.trim() ?: ""
         this.bodyBlock = kt.hasBlockBody()

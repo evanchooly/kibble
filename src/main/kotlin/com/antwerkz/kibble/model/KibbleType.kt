@@ -9,49 +9,30 @@ import org.jetbrains.kotlin.psi.KtUserType
 /**
  * Specifies the type information of a property or parameter
  *
- * @param value the type
+ * @property className the class name of this type
+ * @property pkgName the package name of this type
  * @property typeParameters the type parameters of this type
  * @property nullable does this type support null values?
  */
-open class KibbleType internal constructor(value: String, override val typeParameters: List<TypeParameter> = listOf<TypeParameter>(),
-                                           val nullable: Boolean = false) : GenericCapable {
+open class KibbleType internal constructor(val className: String, val pkgName: String? = null ,
+                                           override val typeParameters: List<TypeParameter> = listOf<TypeParameter>(),
+                                           val nullable: Boolean = false, private val imported: Boolean = false) : GenericCapable {
+
+    internal constructor(type: KibbleType, imported: Boolean) : this(type.className, type.pkgName, type.typeParameters,
+            imported = imported)
 
     /**
-     * Gives the fully qualified name of this type complete with generic type parameters
+     * Gives the full expression of this type complete with type parameters
      */
-    val name: String
-
-    /**
-     * Gives only the class name portion of any FQCN
-     */
-    val className: String
-
-    /**
-     * Gives the package component of any FQCN or null if it doesn't have a package specified
-     */
-    val pkgName: String?
-
-    /**
-     * Gives the FQCN (sans type parameters) or the class name if it doesn't have a package specified
-     */
-    val fqcn: String
-
-    init {
-        val raw = value.substringBefore("<")
-        val name = raw.split(".")
-                .dropLastWhile { it != "" && it[0].isUpperCase() }
-                .joinToString(".")
-        pkgName = if (name == "") null else name
-
-        className = raw.split(".")
-                .dropWhile { it != "" && !it[0].isUpperCase() }
-                .joinToString(".")
-
-        this.name = raw + (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "") +
-                if (nullable) "?" else ""
-
-        fqcn = pkgName?.let { "$pkgName.$className"} ?: className
+    val value: String by lazy {
+        val base = if (!imported && pkgName != null) {
+            pkgName.let { "$pkgName.$className" }
+        } else {
+            className
+        }
+        base + (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "") + if (nullable) "?" else ""
     }
+
 
     companion object {
         /**
@@ -63,10 +44,11 @@ open class KibbleType internal constructor(value: String, override val typeParam
             return Kibble.parseSource("val temp: $type").properties[0].type!!
         }
 
+/*
         fun resolve(type: KibbleType, pkgName: String?): KibbleType {
-            return KibbleType(pkgName?.let { "$pkgName.${type.className}" } ?: type.className,
-                    type.typeParameters, type.nullable)
+            return KibbleType(type.className, pkgName, type.typeParameters, type.nullable)
         }
+*/
 
         internal fun from(kt: KtTypeReference?): KibbleType? {
             return kt?.typeElement.let {
@@ -80,19 +62,27 @@ open class KibbleType internal constructor(value: String, override val typeParam
         }
 
         internal fun extractType(typeElement: KtUserType, nullable: Boolean = false): KibbleType {
-            val name = (typeElement.qualifier?.text?.let { "$it." } ?: "") +
+            val value = (typeElement.qualifier?.text?.let { "$it." } ?: "") +
                     (typeElement.referencedName ?: "")
             val parameters = GenericCapable.extractFromTypeProjections(typeElement.typeArguments)
-            return KibbleType(name, parameters, nullable)
+            val raw = value.substringBefore("<")
+            val pkg = raw.split(".")
+                    .dropLastWhile { it != "" && it[0].isUpperCase() }
+                    .joinToString(".")
+            val pkgName = if (pkg == "") null else pkg
+
+            val className = raw.split(".")
+                    .dropWhile { it != "" && !it[0].isUpperCase() }
+                    .joinToString(".")
+
+            return KibbleType(className, pkgName, parameters, nullable)
         }
     }
 
     /**
      * @return the string/source form of this type
      */
-    override fun toString(): String {
-        return name
-    }
+    override fun toString() = value
 
     /**
      * @return true if `other` is equal to this
@@ -103,7 +93,7 @@ open class KibbleType internal constructor(value: String, override val typeParam
 
         other as KibbleType
 
-        if (name != other.name) return false
+        if (value != other.value) return false
         if (typeParameters != other.typeParameters) return false
         if (nullable != other.nullable) return false
 
@@ -114,7 +104,7 @@ open class KibbleType internal constructor(value: String, override val typeParam
      * @return the hashcode for this type
      */
     override fun hashCode(): Int {
-        var result = name.hashCode()
+        var result = value.hashCode()
         result = 31 * result + nullable.hashCode()
         return result
     }

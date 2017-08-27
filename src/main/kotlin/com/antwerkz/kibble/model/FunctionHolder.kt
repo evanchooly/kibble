@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.psi.KtFunction
  */
 interface FunctionHolder {
     val functions: MutableList<KibbleFunction>
-
+    val file: KibbleFile
     /**
      * Adds a new function to this type
      *
@@ -31,6 +31,6 @@ internal fun FunctionHolder.extractFunctions(declarations: List<KtDeclaration>) 
     functions += declarations
             .filterIsInstance<KtFunction>()
             .map {
-                KibbleFunction(it)
+                KibbleFunction(file, it)
             }
 }

@@ -11,10 +11,10 @@ import org.jetbrains.kotlin.psi.KtPrimaryConstructor
  * @property parameters the constructor parameters
  * @property body the constructor body
  */
-open class Constructor internal constructor() : Visible, ParameterHolder, KibbleElement {
-    internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this() {
+open class Constructor internal constructor(override val file: KibbleFile) : Visible, ParameterHolder, KibbleElement {
+    internal constructor(file: KibbleFile, klass: KibbleClass, kt: KtPrimaryConstructor) : this(file) {
         kt.valueParameters.forEach {
-            val kibbleProperty = KibbleProperty(it)
+            val kibbleProperty = KibbleProperty(file, it)
             if (it.hasValOrVar()) {
                 kibbleProperty.constructorParam = true
                 klass.properties += kibbleProperty

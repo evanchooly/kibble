@@ -21,17 +21,17 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property overriding true if this property is overriding a property in a parent type
  * @property constructorParam true if the property should be listed as a constructor parameter
  */
-class KibbleProperty internal constructor(name: String, type: KibbleType?, initializer: String? = null,
+class KibbleProperty internal constructor(file: KibbleFile, name: String, type: KibbleType?, initializer: String? = null,
                                           override var modality: Modality = FINAL, override var overriding: Boolean = false,
                                           var lateInit: Boolean = false, var constructorParam: Boolean = false)
-    : KibbleParameter(name, type, initializer), Visible, Mutable, Modal<KibbleProperty>, Overridable, Annotatable {
+    : KibbleParameter(file, name, type, initializer), Visible, Mutable, Modal<KibbleProperty>, Overridable, Annotatable {
 
     init {
         visibility = PUBLIC
         mutability = VAL
     }
 
-    internal constructor(kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference),
+    internal constructor(file: KibbleFile, kt: KtParameter) : this(file, kt.name!!, KibbleType.from(kt.typeReference),
             kt.defaultValue?.text) {
 
         extractAnnotations(kt.annotationEntries)
@@ -40,7 +40,7 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
         mutability = Mutable.apply(kt.valOrVarKeyword)
     }
 
-    internal constructor(kt: KtProperty) : this(kt.name!!, KibbleType.from(kt.typeReference),
+    internal constructor(file: KibbleFile, kt: KtProperty) : this(file, kt.name!!, KibbleType.from(kt.typeReference),
             kt.initializer?.text) {
 
         extractAnnotations(kt.annotationEntries)

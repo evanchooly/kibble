@@ -10,7 +10,7 @@ class KibbleTypeTest {
         val file = Kibble.parseSource("val foo: com.foo.bar.Type")
         val type = file.properties[0].type
 
-        Assert.assertEquals(type?.name, "com.foo.bar.Type")
+        Assert.assertEquals(type?.value, "com.foo.bar.Type")
         Assert.assertTrue(type?.typeParameters?.isEmpty() ?: false)
     }
 
@@ -20,14 +20,13 @@ class KibbleTypeTest {
                 .properties[0]
                 .type!!
 
-        Assert.assertEquals(type.name, string)
-        Assert.assertEquals(type.fqcn, string.substringBefore("<"))
+        Assert.assertEquals(type.value, string)
         Assert.assertEquals(type.className, "SomeType")
         Assert.assertEquals(type.pkgName, "com.foo.bar")
         Assert.assertTrue(type.nullable)
         Assert.assertEquals(type.typeParameters.size, 2)
-        Assert.assertEquals(type.typeParameters.get(0).name, "kotlin.String")
-        Assert.assertEquals(type.typeParameters.get(1).name, "kotlin.Double")
+        Assert.assertEquals(type.typeParameters[0].name, "kotlin.String")
+        Assert.assertEquals(type.typeParameters[1].name, "kotlin.Double")
     }
 
     fun fullyQualified() {
@@ -35,15 +34,14 @@ class KibbleTypeTest {
         val decimal = KibbleType.from("BigDecimal")
         val integer = KibbleType.from("BigInteger")
         val dateTime = KibbleType.from("java.time.LocalDateTime")
-        val list = KibbleType("java.util.List", listOf(TypeParameter("String")))
+        val list = KibbleType("List", "java.util", listOf(TypeParameter("String")))
 
-        Assert.assertEquals(qualified.name, "java.math.BigDecimal")
-        Assert.assertEquals(decimal.name, "BigDecimal")
-        Assert.assertEquals(integer.name, "BigInteger")
-        Assert.assertEquals(dateTime.name, "java.time.LocalDateTime")
-        Assert.assertEquals(dateTime.name, "java.time.LocalDateTime")
-        Assert.assertEquals(list.fqcn, "java.util.List")
-        Assert.assertEquals(list.name, "java.util.List<String>")
+        Assert.assertEquals(qualified.value, "java.math.BigDecimal")
+        Assert.assertEquals(decimal.value, "BigDecimal")
+        Assert.assertEquals(integer.value, "BigInteger")
+        Assert.assertEquals(dateTime.value, "java.time.LocalDateTime")
+        Assert.assertEquals(dateTime.value, "java.time.LocalDateTime")
+        Assert.assertEquals(list.value, "java.util.List<String>")
     }
 
     fun components() {

@@ -32,7 +32,7 @@ class KibbleAnnotation internal constructor(val type: KibbleType, val arguments:
                     }?.associateBy({ it.first }, { it.second })
                     ?: mapOf()
             val type = annotation.typeReference?.typeElement?.name?.let {
-                KibbleType(it)
+                KibbleType.from(it)
             } ?: KibbleType((annotation.typeReference?.typeElement as KtUserType).referencedName!!)
             return KibbleAnnotation(type, arguments)
         }
@@ -44,7 +44,7 @@ class KibbleAnnotation internal constructor(val type: KibbleType, val arguments:
     override fun toString() = toSource().toString()
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        var string = "@${type.fqcn}"
+        var string = "@${type.value}"
         if (arguments.isNotEmpty()) {
             string += arguments.entries.joinToString(prefix = "(", postfix = ")",
                     transform = {

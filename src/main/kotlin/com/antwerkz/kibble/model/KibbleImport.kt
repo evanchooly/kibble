@@ -22,7 +22,7 @@ data class KibbleImport internal constructor(val type: KibbleType, val alias: St
      * @return the string/source form of this type
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.write("import ${type.name}")
+        writer.write("import ${type.value}")
         alias?.let { writer.write(" as $alias") }
         writer.writeln()
 

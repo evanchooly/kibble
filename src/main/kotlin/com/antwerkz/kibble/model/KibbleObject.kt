@@ -49,7 +49,7 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(name, type = type, body = body).also {
+        return KibbleFunction(file, name, type = type, body = body).also {
             functions += it
         }
     }
@@ -59,7 +59,7 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
         if (constructorParam) {
             throw IllegalArgumentException("Object properties can not also be constructor parameters")
         }
-        return KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
+        return KibbleProperty(file, name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
             it.visibility = visibility
             properties += it
         }

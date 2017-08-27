@@ -21,6 +21,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
+    override val file: KibbleFile = this
     var sourceTimestamp = 0L
         private set
 
@@ -57,7 +58,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(name, type = type, body = body).also {
+        return KibbleFunction(this, name, type = type, body = body).also {
             functions += it
         }
     }
@@ -67,7 +68,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         if (constructorParam) {
             throw IllegalArgumentException("File level properties can not also be constructor parameters")
         }
-        val property = KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer,
+        val property = KibbleProperty(this, name, type?.let { KibbleType.from(type) }, initializer,
                 modality, overriding, lateInit)
 
         property.visibility = visibility
@@ -100,8 +101,8 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         return addImport(KibbleType.from(type.name), alias)
     }
 
-    private fun addImport(type: KibbleType, alias: String?): KibbleImport? {
-        val kibbleImport = KibbleImport(type, alias)
+    private fun addImport(type: KibbleType, alias: String? = null): KibbleImport? {
+        val kibbleImport = KibbleImport(KibbleType(type.className, type.pkgName), alias)
         return if(imports.add(kibbleImport)) kibbleImport else null
     }
 
@@ -126,7 +127,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
             writer.writeln()
         }
 
-        writeBlock(writer, level, false, imports.sortedBy { it.type.fqcn })
+        writeBlock(writer, level, false, imports.sortedBy { it.type.value })
         writeBlock(writer, level, false, properties)
         writeBlock(writer, level, true, classes)
         writeBlock(writer, level, true, functions)
@@ -154,6 +155,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         return outputFile(File(".")).toString()
     }
 
+/*
     fun resolve(type: KibbleType): KibbleType {
         var resolved: KibbleType? = imports.firstOrNull { type == it.type }?.type
 
@@ -172,7 +174,39 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
 
         return resolved ?: type
     }
+*/
 
+    fun normalize(proposed: KibbleType): KibbleType {
+        var normalized: KibbleType? = null
+
+        val simpleMatch = imports.firstOrNull { proposed.className == it.alias || proposed.className == it.type.className }
+        val fullMatch = imports.firstOrNull { proposed.pkgName == it.type.pkgName && proposed.className == it.type.className }
+
+        var resolved = if (proposed.pkgName == null) simpleMatch else fullMatch
+
+        val foundInPackage = if (resolved == null) {
+            classes.filter { proposed.className == it.name }
+                    .map { KibbleType(proposed.className, file.pkgName, proposed.typeParameters, proposed.nullable) }
+                    .firstOrNull() // ?:  find in context
+        } else null
+
+        if (resolved == null) {
+            if (foundInPackage == null && proposed.pkgName != null) {
+                normalized = if (simpleMatch == null) {
+                    addImport(proposed)
+                    KibbleType(proposed.className, proposed.pkgName, proposed.typeParameters, proposed.nullable, true)
+                } else throw IllegalArgumentException("Type name conflicts found trying to import:  '${proposed.value}' conflicts with " +
+                        "existing import '$simpleMatch'")
+            }
+        } else {
+            normalized = KibbleType(resolved.alias ?: resolved.type.className, resolved.type.pkgName,
+                    typeParameters = proposed.typeParameters, nullable = proposed.nullable, imported = true)
+        }
+
+        return normalized ?: proposed
+    }
+
+/*
     fun resolve(type: String): KibbleType {
         var resolved: KibbleType? = imports.firstOrNull { it.type.fqcn == type || it.alias == name }?.type
 
@@ -187,4 +221,5 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
 
         return resolved ?: KibbleType(type)
     }
+*/
 }
