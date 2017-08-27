@@ -56,4 +56,12 @@ class KibbleTypeTest {
         Assert.assertEquals(int.className, "Int")
         Assert.assertNull(int.pkgName)
     }
+
+    fun values() {
+        val type = KibbleType("Class", "this.is.the.package", listOf(TypeParameter("K"), TypeParameter("V")), true,
+                "Different", imported = true)
+
+        Assert.assertEquals(type.fqcn, "this.is.the.package.Class")
+        Assert.assertEquals(type.value, "Different<K, V>?")
+    }
 }

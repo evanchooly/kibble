@@ -13,24 +13,46 @@ import org.jetbrains.kotlin.psi.KtUserType
  * @property pkgName the package name of this type
  * @property typeParameters the type parameters of this type
  * @property nullable does this type support null values?
+ * @property alias the type name alias
+ * @property imported true if this type has been imported.  if true, only the className/alias will be used when generating the source code
  */
 open class KibbleType internal constructor(val className: String, val pkgName: String? = null ,
                                            override val typeParameters: List<TypeParameter> = listOf<TypeParameter>(),
-                                           val nullable: Boolean = false, private val imported: Boolean = false) : GenericCapable {
+                                           val nullable: Boolean = false, val alias: String? = null,
+                                           private val imported: Boolean = false) : GenericCapable {
 
     internal constructor(type: KibbleType, imported: Boolean) : this(type.className, type.pkgName, type.typeParameters,
             imported = imported)
 
+    internal constructor(type: KibbleType, alias: String) : this(type.className, type.pkgName, type.typeParameters, type.nullable, alias)
+
     /**
-     * Gives the full expression of this type complete with type parameters
+     * Gives the expression of this type for use in the source complete with type parameters
      */
     val value: String by lazy {
-        val base = if (!imported && pkgName != null) {
-            pkgName.let { "$pkgName.$className" }
-        } else {
-            className
+        val list = mutableListOf<String>()
+        if (!imported && pkgName != null) {
+            list.add(pkgName)
         }
-        base + (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "") + if (nullable) "?" else ""
+        list.add(alias ?: className)
+        var base = list.joinToString(".") +
+                (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "")
+        if (nullable) base += "?"
+
+        base
+    }
+
+    /**
+     * Gives the expression of this type for use in the source complete with type parameters
+     */
+    val fqcn: String by lazy {
+        val list = mutableListOf<String>()
+        if (!imported && pkgName != null) {
+            list.add(pkgName)
+        }
+        list.add(className)
+
+        (pkgName?.let { "${pkgName}." } ?: "") + className
     }
 
 
@@ -40,8 +62,9 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
          *
          * @return the new KibbleType
          */
-        fun from(type: String): KibbleType {
-            return Kibble.parseSource("val temp: $type").properties[0].type!!
+        fun from(type: String, alias: String? = null): KibbleType {
+            val parsed = Kibble.parseSource("val temp: $type").properties[0].type!!
+            return alias?.let { KibbleType(parsed, alias) } ?: parsed
         }
 
 /*

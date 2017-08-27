@@ -7,11 +7,10 @@ import org.jetbrains.kotlin.psi.KtImportDirective
  * Defines an import directive in a file
  *
  * @property type the imported typed
- * @property alias the import alias
  */
-data class KibbleImport internal constructor(val type: KibbleType, val alias: String? = null) : KibbleElement {
+data class KibbleImport internal constructor(val type: KibbleType) : KibbleElement {
 
-    internal constructor(kt: KtImportDirective) : this(KibbleType.from(kt.importedFqName!!.asString()), kt.aliasName)
+    internal constructor(kt: KtImportDirective) : this(KibbleType.from(kt.importedFqName!!.asString(), kt.aliasName))
 
     /**
      * @return the string/source form of this type
@@ -22,8 +21,8 @@ data class KibbleImport internal constructor(val type: KibbleType, val alias: St
      * @return the string/source form of this type
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.write("import ${type.value}")
-        alias?.let { writer.write(" as $alias") }
+        writer.write("import ${type.fqcn}")
+        type.alias?.let { writer.write(" as ${type.alias}") }
         writer.writeln()
 
         return writer

@@ -14,7 +14,7 @@ class KibbleImportTest {
 
 
         Assert.assertEquals(
-                KibbleImport(KibbleType("com.foo.Bar"), "Harry")
+                KibbleImport(KibbleType("com.foo.Bar", "Harry"))
                         .toSource()
                         .toString(),
                 "import com.foo.Bar as Harry\n")
