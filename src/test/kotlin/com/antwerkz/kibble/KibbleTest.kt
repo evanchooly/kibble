@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.javax.inject.Singleton
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
+import javax.annotation.Generated
 
 class KibbleTest {
     companion object {
@@ -29,12 +30,12 @@ return "hi"""")
     fun sampleClass() {
         val file = Kibble.parse(path)
 
-        Assert.assertEquals(file.imports.size, 4)
+        Assert.assertEquals(file.imports.size, 3)
         Assert.assertEquals(file.classes.size, 2)
         val klass = file.classes[0]
 
         Assert.assertTrue(klass.isInternal())
-        Assert.assertTrue(klass.hasAnnotation(Singleton::class.java))
+        Assert.assertTrue(klass.hasAnnotation(Generated::class.java))
         Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
         Assert.assertEquals(klass.constructor.parameters.size, 2, klass.constructor.parameters.toString())
         Assert.assertEquals(klass.properties[0].name, "cost")

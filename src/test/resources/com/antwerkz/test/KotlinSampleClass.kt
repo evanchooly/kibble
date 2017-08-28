@@ -3,9 +3,7 @@ package com.antwerkz.test
 import java.util.ArrayList
 import java.util.HashMap as HMap
 import javax.annotation.Generated
-import org.jetbrains.kotlin.javax.inject.Singleton
 
-@Singleton
 @Generated("I'm the value", date = "123455", comments = "Fingers crossed")
 internal abstract class KotlinSampleClass(val cost: Double, ignored: Int) : ParentClass(21), Cloneable {
     var name: String? = null

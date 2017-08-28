@@ -18,10 +18,11 @@ class KibbleFileTest {
         file.addImport("typeName", "aliasName")
         file.addImport(String::class.java, "anotherAlias")
         assertImport(file, "java.lang", "String", "anotherAlias")
-        Assert.assertEquals("""package com.antwerkz.kibble
+        Assert.assertEquals(file.toSource().toString().trim(),
+                """package com.antwerkz.kibble
 
 import java.lang.String as anotherAlias
-import typeName as aliasName""", file.toSource().toString().trim())
+import typeName as aliasName""")
     }
 
     @Test

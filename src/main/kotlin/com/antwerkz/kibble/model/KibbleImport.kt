@@ -8,9 +8,13 @@ import org.jetbrains.kotlin.psi.KtImportDirective
  *
  * @property type the imported typed
  */
-data class KibbleImport internal constructor(val type: KibbleType) : KibbleElement {
+data class KibbleImport internal constructor(val type: KibbleType) : KibbleElement, Comparable<KibbleImport> {
 
     internal constructor(kt: KtImportDirective) : this(KibbleType.from(kt.importedFqName!!.asString(), kt.aliasName))
+
+    override fun compareTo(other: KibbleImport): Int {
+        return type.compareTo(other.type)
+    }
 
     /**
      * @return the string/source form of this type

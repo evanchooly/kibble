@@ -5,16 +5,33 @@ import org.testng.annotations.Test
 
 class KibbleImportTest {
     @Test
+    fun sorting() {
+        val list = sortedSetOf(
+                KibbleImport(KibbleType("Hudson", "org.jelly", alias = "Jenkins")),
+                KibbleImport(KibbleType("JTable", "javax.swing")),
+                KibbleImport(KibbleType("quixote", alias = "Jim")),
+                KibbleImport(KibbleType("Bob", "org.apocalypse")),
+                KibbleImport(KibbleType("String", "java.lang"))
+        ).toList()
+        Assert.assertEquals(list, listOf(
+                KibbleImport(KibbleType("String", "java.lang")),
+                KibbleImport(KibbleType("JTable", "javax.swing")),
+                KibbleImport(KibbleType("Bob", "org.apocalypse")),
+                KibbleImport(KibbleType("Hudson", "org.jelly", alias = "Jenkins")),
+                KibbleImport(KibbleType("quixote", alias = "Jim"))))
+    }
+
+    @Test
     fun aliases() {
         Assert.assertEquals(
-                KibbleImport(KibbleType("com.foo.Bar"))
+                KibbleImport(KibbleType("Bar", "com.foo"))
                         .toSource()
                         .toString(),
                 "import com.foo.Bar\n")
 
 
         Assert.assertEquals(
-                KibbleImport(KibbleType("com.foo.Bar", "Harry"))
+                KibbleImport(KibbleType("Bar", "com.foo", alias = "Harry"))
                         .toSource()
                         .toString(),
                 "import com.foo.Bar as Harry\n")

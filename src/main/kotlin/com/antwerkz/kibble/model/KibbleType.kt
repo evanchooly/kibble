@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.psi.KtUserType
 open class KibbleType internal constructor(val className: String, val pkgName: String? = null ,
                                            override val typeParameters: List<TypeParameter> = listOf<TypeParameter>(),
                                            val nullable: Boolean = false, val alias: String? = null,
-                                           private val imported: Boolean = false) : GenericCapable {
+                                           private val imported: Boolean = false) : GenericCapable, Comparable<KibbleType> {
 
     internal constructor(type: KibbleType, imported: Boolean) : this(type.className, type.pkgName, type.typeParameters,
             imported = imported)
@@ -125,4 +125,7 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
         return result
     }
 
+    override fun compareTo(other: KibbleType): Int {
+        return fqcn.compareTo(other.fqcn)
+    }
 }

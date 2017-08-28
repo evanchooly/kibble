@@ -10,7 +10,7 @@ class KibbleTypeTest {
         val file = Kibble.parseSource("val foo: com.foo.bar.Type")
         val type = file.properties[0].type
 
-        Assert.assertEquals(type?.value, "com.foo.bar.Type")
+        Assert.assertEquals(type?.value, "Type")
         Assert.assertTrue(type?.typeParameters?.isEmpty() ?: false)
     }
 
@@ -20,7 +20,7 @@ class KibbleTypeTest {
                 .properties[0]
                 .type!!
 
-        Assert.assertEquals(type.value, string)
+        Assert.assertEquals(type.value, "SomeType<kotlin.String, kotlin.Double>?")
         Assert.assertEquals(type.className, "SomeType")
         Assert.assertEquals(type.pkgName, "com.foo.bar")
         Assert.assertTrue(type.nullable)
@@ -36,11 +36,10 @@ class KibbleTypeTest {
         val dateTime = KibbleType.from("java.time.LocalDateTime")
         val list = KibbleType("List", "java.util", listOf(TypeParameter("String")))
 
-        Assert.assertEquals(qualified.value, "java.math.BigDecimal")
+        Assert.assertEquals(qualified.value, "BigDecimal")
         Assert.assertEquals(decimal.value, "BigDecimal")
         Assert.assertEquals(integer.value, "BigInteger")
-        Assert.assertEquals(dateTime.value, "java.time.LocalDateTime")
-        Assert.assertEquals(dateTime.value, "java.time.LocalDateTime")
+        Assert.assertEquals(dateTime.value, "LocalDateTime")
         Assert.assertEquals(list.value, "java.util.List<String>")
     }
 

@@ -16,7 +16,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
                  val context: KibbleContext = KibbleContext()) :
         KibbleElement, PropertyHolder, Packaged, ClassOrObjectHolder {
 
-    val imports = mutableSetOf<KibbleImport>()
+    val imports = sortedSetOf<KibbleImport>()
     override val classes = mutableListOf<KibbleClass>()
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
