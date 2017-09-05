@@ -25,7 +25,9 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
     override val classes = mutableListOf<KibbleClass>()
     override val objects = mutableListOf<KibbleObject>()
 
-    internal constructor(file: KibbleFile, kt: KtObjectDeclaration): this(file, kt.name, kt.isCompanion()) {
+    internal constructor(file: KibbleFile, kt: KtObjectDeclaration): this(file, kt.name, kt.isCompanion())
+
+    internal fun parse(kt: KtObjectDeclaration, file: KibbleFile) {
         Extendable.extractSuperInformation(this, kt)
         visibility = Visible.apply(kt.visibilityModifier())
 

@@ -52,11 +52,27 @@ interface ClassOrObjectHolder: FunctionHolder {
 }
 
 internal fun ClassOrObjectHolder.extractClassesObjects(file: KibbleFile, declarations: List<KtDeclaration>) {
+    val classList = mutableListOf<Pair<KtClass, KibbleClass>>()
+    val objectList= mutableListOf<Pair<KtObjectDeclaration, KibbleObject>>()
+
     declarations.filterIsInstance<KtClassOrObject>()
             .forEach {
                 when (it) {
-                    is KtClass -> classes += KibbleClass(file, it)
-                    else -> objects += KibbleObject(file, it as KtObjectDeclaration)
+                    is KtClass -> {
+                        classList += Pair(it, KibbleClass(file, it)).also {
+                            classes += it.second
+                        }
+                    }
+                    else -> objectList += Pair(it as KtObjectDeclaration, KibbleObject(file, it)).also {
+                        objects += it.second
+                    }
                 }
             }
+
+    classList.forEach {
+        it.second.parse(it.first, file)
+    }
+    objectList.forEach {
+        it.second.parse(it.first, file)
+    }
 }

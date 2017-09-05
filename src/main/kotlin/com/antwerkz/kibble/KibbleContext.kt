@@ -1,6 +1,7 @@
 package com.antwerkz.kibble
 
 import com.antwerkz.kibble.model.KibbleFile
+import com.antwerkz.kibble.model.KibbleType
 
 class KibbleContext {
     private val files = mutableMapOf<String?, MutableSet<KibbleFile>>()
@@ -9,22 +10,27 @@ class KibbleContext {
 
     fun lookup(pkgName: String?) = files.getOrPut(pkgName, { mutableSetOf() })
 
-/*
     fun resolve(file: KibbleFile, type: KibbleType): KibbleType? {
-        val let = lookup(file.pkgName).flatMap { it.classes }
-                .firstOrNull { it.name == type.className }?.let {
-            KibbleType.resolve(type, file.pkgName)
+        val found = lookup(file.pkgName)
+                .flatMap { it.classes }
+                .firstOrNull { it.name == type.className }
+        val let = found?.let {
+            KibbleType(type.className, file.pkgName, type.typeParameters, type.nullable, type.alias, true)
         }
         return let
     }
 
     fun resolve(file: KibbleFile, type: String): KibbleType? {
-        return lookup(file.pkgName).flatMap { it.classes }
-                .firstOrNull { it.name == type }?.let {
+        val found = lookup(file.pkgName)
+                .flatMap { it.classes }
+                .firstOrNull { it.name == type }
+        return found?.let {
             KibbleType("${file.pkgName}.$type")
+            KibbleType(type, file.pkgName, imported = true)
         }
     }
 
+/*
     fun findClass(type: KibbleType): KibbleClass? {
         return lookup(type.pkgName).flatMap { it.classes }
                 .firstOrNull { it.name == type.className }

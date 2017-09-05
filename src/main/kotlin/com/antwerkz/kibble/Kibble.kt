@@ -67,10 +67,14 @@ class Kibble {
                     PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false))
             paths.forEach { configuration.addKotlinSourceRoot(it.absolutePath) }
 
-            return KotlinCoreEnvironment
+            val map = KotlinCoreEnvironment
                     .createForProduction(Disposable { }, configuration, listOf())
                     .getSourceFiles()
-                    .map { KibbleFile(it, context) }
+                    .map { Pair(it, KibbleFile(it, context)) }
+                    .toMap()
+
+            map.forEach( { it.value.parse(it.key) } )
+            return map.values.toList()
         }
     }
 }

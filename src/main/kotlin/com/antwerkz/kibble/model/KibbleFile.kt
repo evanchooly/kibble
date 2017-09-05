@@ -26,18 +26,19 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         private set
 
     internal constructor(kt: KtFile, context: KibbleContext) : this(kt.name, kt.packageDirective?.fqName.toString(), context) {
+        pkgName = kt.packageDirective?.children?.firstOrNull()?.text
         sourceTimestamp = kt.originalFile.modificationStamp
         kt.importDirectives.forEach {
             imports += KibbleImport(it)
         }
+    }
 
+    internal fun parse(kt: KtFile) {
         kt.declarations.let {
             extractClassesObjects(this, it)
             extractFunctions(it)
             extractProperties(this, it)
         }
-
-        pkgName = kt.packageDirective?.children?.firstOrNull()?.text
     }
 
     init {
@@ -184,23 +185,22 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
 
         val resolved = if (proposed.pkgName == null) simpleMatch else fullMatch
 
-        val foundInPackage = if (resolved == null) {
-            classes.filter { proposed.className == it.name }
-                    .map { KibbleType(proposed.className, file.pkgName, proposed.typeParameters, proposed.nullable) }
-                    .firstOrNull() // ?:  find in context
-        } else null
-
         if (resolved == null) {
-            if (foundInPackage == null && proposed.pkgName != null) {
-                normalized = if (simpleMatch == null) {
+            normalized = classes.filter { proposed.className == it.name }
+                    .map {
+                        KibbleType(proposed.className, file.pkgName, proposed.typeParameters, proposed.nullable, proposed.alias, true)
+                    }
+                    .firstOrNull() ?: context.resolve(this, proposed)
+            if (normalized == null) {
+                if (proposed.pkgName != null) {
                     addImport(proposed)
-                    KibbleType(proposed.className, proposed.pkgName, proposed.typeParameters, proposed.nullable, imported = true)
-                } else throw IllegalArgumentException("Type name conflicts found trying to import:  '${proposed.value}' conflicts with " +
-                        "existing import '$simpleMatch'")
+                    normalized = KibbleType(proposed.className, proposed.pkgName, proposed.typeParameters, proposed.nullable,
+                            proposed.alias, true)
+                }
             }
         } else {
-            normalized = KibbleType(resolved.type.alias ?: resolved.type.className, resolved.type.pkgName,
-                    typeParameters = proposed.typeParameters, nullable = proposed.nullable, imported = true)
+            normalized = KibbleType(resolved.type.className, resolved.type.pkgName,
+                    proposed.typeParameters, proposed.nullable, proposed.alias, true)
         }
 
         return normalized ?: proposed

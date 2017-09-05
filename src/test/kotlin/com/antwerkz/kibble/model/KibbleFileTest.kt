@@ -1,5 +1,7 @@
 package com.antwerkz.kibble.model
 
+import com.antwerkz.kibble.Kibble
+import org.intellij.lang.annotations.Language
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
@@ -34,7 +36,6 @@ import typeName as aliasName""")
         Assert.assertEquals(file.outputFile(File("/tmp/")), File("/tmp/com/antwerkz/kibble/Foo.kt"))
     }
 
-/*
     @Test
     fun resolve() {
         @Language("kotlin")
@@ -61,24 +62,62 @@ enum class Third {
 }
 
 class Generic<T>"""
+
         val file = Kibble.parseSource(source)
         Kibble.parseSource(source2, file.context)
         val props = file.classes[0].properties.iterator()
 
-        check(file, props.next(), "Second", "com.antwerkz.testing.Second")
-        check(file, props.next(), "Third", "com.antwerkz.testing.Third")
-        check(file, props.next(), "Bar", "com.foo.Bar")
-        check(file, props.next(), "com.zorg.Flur", "com.zorg.Flur")
-        check(file, props.next(), "Generic<Int>", "com.antwerkz.testing.Generic<Int>")
+        check(props.next(), "Second", "com.antwerkz.testing.Second")
+        check(props.next(), "Third", "com.antwerkz.testing.Third")
+        check(props.next(), "Bar", "com.foo.Bar")
+        check(props.next(), "com.zorg.Flur", "com.zorg.Flur")
+        check(props.next(), "Generic<Int>", "com.antwerkz.testing.Generic<Int>")
 
     }
 
-    private fun check(file: KibbleFile, property: KibbleProperty, expectedName: String, expectedResolved: String) {
+    @Test
+    fun resolveClassesInFile() {
+        @Language("kotlin")
+        val source = """package com.antwerkz.testing
+
+class Main {
+    val s: Second = Second()
+}
+class Second""".trim()
+
+        val file = Kibble.parseSource(source)
+        val props = file.classes[0].properties.iterator()
+
+        check(props.next(), "Second", "com.antwerkz.testing.Second")
+    }
+
+    @Test
+    fun resolveClassesInAnotherFile() {
+
+        val sourceFile1 = createTempFile("source1", ".kt").also {
+            it.writeText("""package com.antwerkz.testing
+
+class Main {
+    val s: Second = Second()
+}""")
+        }
+        val sourceFile2 = createTempFile("source2", ".kt").also {
+            it.writeText("""package com.antwerkz.testing
+
+class Second""".trim())
+        }
+
+        val files = Kibble.parse(listOf(sourceFile1, sourceFile2))
+        val props = files[0].classes[0].properties.iterator()
+
+        check(props.next(), "Second", "com.antwerkz.testing.Second")
+    }
+
+    private fun check(property: KibbleProperty, expectedName: String, fqcn: String) {
         val type = property.type!!
         Assert.assertEquals(type.value, expectedName)
-        Assert.assertEquals(file.resolve(type).value, expectedResolved)
+        Assert.assertEquals(type.fqcn, fqcn)
     }
-*/
 
     @Test
     fun normalize() {

@@ -42,7 +42,9 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         private set
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
 
-    internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
+    internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "")
+
+    internal fun parse(kt: KtClass, file: KibbleFile) {
         Extendable.extractSuperInformation(this, kt)
 
         modality = Modal.apply(kt.modalityModifier())
