@@ -17,27 +17,34 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         KibbleElement, PropertyHolder, Packaged, ClassOrObjectHolder {
 
     val imports = sortedSetOf<KibbleImport>()
-    override val classes = mutableListOf<KibbleClass>()
-    override val objects = mutableListOf<KibbleObject>()
-    override val functions = mutableListOf<KibbleFunction>()
-    override val properties = mutableListOf<KibbleProperty>()
+
+    override val classes: MutableList<KibbleClass> by lazy {
+        KibbleExtractor.extractClasses(kt?.declarations, file)
+    }
+
+    override val objects: MutableList<KibbleObject> by lazy {
+        KibbleExtractor.extractObjects(kt?.declarations, file)
+    }
+
+    override val functions: MutableList<KibbleFunction> by lazy {
+        KibbleExtractor.extractFunctions(kt?.declarations, file)
+    }
+
+    override val properties: MutableList<KibbleProperty> by lazy {
+        KibbleExtractor.extractProperties(kt?.declarations, file)
+    }
+
     override val file: KibbleFile = this
     var sourceTimestamp = 0L
         private set
+    private var kt: KtFile? = null
 
     internal constructor(kt: KtFile, context: KibbleContext) : this(kt.name, kt.packageDirective?.fqName.toString(), context) {
+        this.kt = kt
         pkgName = kt.packageDirective?.children?.firstOrNull()?.text
         sourceTimestamp = kt.originalFile.modificationStamp
         kt.importDirectives.forEach {
             imports += KibbleImport(it)
-        }
-    }
-
-    internal fun parse(kt: KtFile) {
-        kt.declarations.let {
-            extractClassesObjects(this, it)
-            extractFunctions(it)
-            extractProperties(this, it)
         }
     }
 
@@ -178,7 +185,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
 */
 
     fun normalize(proposed: KibbleType): KibbleType {
-        var normalized: KibbleType? = null
+        var normalized: KibbleType?
 
         val simpleMatch = imports.firstOrNull { proposed.className == it.type.alias || proposed.className == it.type.className }
         val fullMatch = imports.firstOrNull { proposed.pkgName == it.type.pkgName && proposed.className == it.type.className }

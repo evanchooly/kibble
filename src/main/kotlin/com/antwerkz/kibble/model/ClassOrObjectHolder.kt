@@ -1,10 +1,5 @@
 package com.antwerkz.kibble.model
 
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtClassOrObject
-import org.jetbrains.kotlin.psi.KtDeclaration
-import org.jetbrains.kotlin.psi.KtObjectDeclaration
-
 /**
  * Represents a type that can hold a Class or an object
  *
@@ -48,31 +43,5 @@ interface ClassOrObjectHolder: FunctionHolder {
      */
     fun getClass(className: String): KibbleClass? {
         return classes.firstOrNull { it.name == className }
-    }
-}
-
-internal fun ClassOrObjectHolder.extractClassesObjects(file: KibbleFile, declarations: List<KtDeclaration>) {
-    val classList = mutableListOf<Pair<KtClass, KibbleClass>>()
-    val objectList= mutableListOf<Pair<KtObjectDeclaration, KibbleObject>>()
-
-    declarations.filterIsInstance<KtClassOrObject>()
-            .forEach {
-                when (it) {
-                    is KtClass -> {
-                        classList += Pair(it, KibbleClass(file, it)).also {
-                            classes += it.second
-                        }
-                    }
-                    else -> objectList += Pair(it as KtObjectDeclaration, KibbleObject(file, it)).also {
-                        objects += it.second
-                    }
-                }
-            }
-
-    classList.forEach {
-        it.second.parse(it.first, file)
-    }
-    objectList.forEach {
-        it.second.parse(it.first, file)
     }
 }

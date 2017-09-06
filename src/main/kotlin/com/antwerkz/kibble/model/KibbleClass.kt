@@ -21,6 +21,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
                                        override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder, GenericCapable,
         Visible, Modal<KibbleClass>, Annotatable, PropertyHolder, Extendable, ClassOrObjectHolder, Packaged {
 
+    private var kt: KtClass? = null
     override var pkgName: String?
         get() = file.pkgName
         set(value) {
@@ -32,19 +33,30 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     override var typeParameters = listOf<TypeParameter>()
 
     override var annotations = mutableListOf<KibbleAnnotation>()
-    override val classes: MutableList<KibbleClass> = mutableListOf()
-    override val objects: MutableList<KibbleObject> = mutableListOf()
-    override val functions = mutableListOf<KibbleFunction>()
-    override val properties = mutableListOf<KibbleProperty>()
+    override val classes: MutableList<KibbleClass> by lazy {
+        KibbleExtractor.extractClasses(kt?.declarations, file)
+    }
+
+    override val objects: MutableList<KibbleObject> by lazy {
+        KibbleExtractor.extractObjects(kt?.declarations, file)
+    }
+
+    override val functions: MutableList<KibbleFunction> by lazy {
+        KibbleExtractor.extractFunctions(kt?.declarations, file)
+    }
+
+    override val properties: MutableList<KibbleProperty> by lazy {
+        KibbleExtractor.extractProperties(kt?.declarations, file)
+    }
+
     var initBlock: String? = null
 
     var constructor = Constructor(file)
         private set
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
 
-    internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "")
-
-    internal fun parse(kt: KtClass, file: KibbleFile) {
+    internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
+        this.kt = kt
         Extendable.extractSuperInformation(this, kt)
 
         modality = Modal.apply(kt.modalityModifier())
@@ -59,11 +71,6 @@ class KibbleClass internal constructor(override var file: KibbleFile,
             secondaries += SecondaryConstructor(file, it)
         }
         extractAnnotations(kt.annotationEntries)
-        kt.getBody()?.let {
-            extractClassesObjects(file, it.declarations)
-            extractFunctions(it.declarations)
-            extractProperties(file, it.declarations)
-        }
     }
 
     /**

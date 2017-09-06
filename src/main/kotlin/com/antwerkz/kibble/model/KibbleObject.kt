@@ -19,24 +19,31 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
     override var superCallArgs = listOf<String>()
 
     override var visibility: Visibility = PUBLIC
-    override val functions = mutableListOf<KibbleFunction>()
-    override val properties = mutableListOf<KibbleProperty>()
     override var annotations = mutableListOf<KibbleAnnotation>()
-    override val classes = mutableListOf<KibbleClass>()
-    override val objects = mutableListOf<KibbleObject>()
+    override val classes: MutableList<KibbleClass> by lazy {
+        KibbleExtractor.extractClasses(kt?.declarations, file)
+    }
 
-    internal constructor(file: KibbleFile, kt: KtObjectDeclaration): this(file, kt.name, kt.isCompanion())
+    override val objects: MutableList<KibbleObject> by lazy {
+        KibbleExtractor.extractObjects(kt?.declarations, file)
+    }
 
-    internal fun parse(kt: KtObjectDeclaration, file: KibbleFile) {
+    override val functions: MutableList<KibbleFunction> by lazy {
+        KibbleExtractor.extractFunctions(kt?.declarations, file)
+    }
+
+    override val properties: MutableList<KibbleProperty> by lazy {
+        KibbleExtractor.extractProperties(kt?.declarations, file)
+    }
+
+    private var kt: KtObjectDeclaration? = null
+
+    internal constructor(file: KibbleFile, kt: KtObjectDeclaration): this(file, kt.name, kt.isCompanion()) {
+        this.kt = kt
         Extendable.extractSuperInformation(this, kt)
         visibility = Visible.apply(kt.visibilityModifier())
 
         extractAnnotations(kt.annotationEntries)
-        kt.getBody()?.declarations?.let {
-            extractClassesObjects(file, it)
-            extractFunctions(it)
-            extractProperties(file, it)
-        }
     }
 
     override fun addClass(name: String): KibbleClass {
@@ -44,6 +51,7 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
             classes += it
         }
     }
+
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
         return KibbleObject(file, name = name, companion = isCompanion).also {
             objects += it
