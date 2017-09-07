@@ -5,6 +5,7 @@ import org.intellij.lang.annotations.Language
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
+import java.sql.ResultSet
 
 class KibbleFileTest {
     @Test(expectedExceptions = arrayOf(IllegalArgumentException::class))
@@ -17,14 +18,30 @@ class KibbleFileTest {
         val file = KibbleFile()
         file.pkgName = "com.antwerkz.kibble"
 
-        file.addImport("typeName", "aliasName")
+        file.addImport(ResultSet::class.java, "aliasName")
         file.addImport(String::class.java, "anotherAlias")
         assertImport(file, "java.lang", "String", "anotherAlias")
         Assert.assertEquals(file.toSource().toString().trim(),
                 """package com.antwerkz.kibble
 
 import java.lang.String as anotherAlias
-import typeName as aliasName""")
+import java.sql.ResultSet as aliasName""")
+    }
+
+    @Test
+    fun importOrdering() {
+        val file = KibbleFile()
+
+        file.addImport("java.util.ArrayList")
+        file.addImport("javax.annotation.Generated")
+        file.addImport("java.util.HashMap", "HMap")
+
+        val iterator = file.imports.iterator()
+        Assert.assertEquals(iterator.next().type.fqcn, "java.util.ArrayList")
+        val next = iterator.next()
+        Assert.assertEquals(next.type.fqcn, "java.util.HashMap")
+        Assert.assertEquals(next.type.alias, "HMap")
+        Assert.assertEquals(iterator.next().type.fqcn, "javax.annotation.Generated")
     }
 
     @Test
@@ -70,8 +87,8 @@ class Generic<T>"""
         check(props.next(), "Second", "com.antwerkz.testing.Second")
         check(props.next(), "Third", "com.antwerkz.testing.Third")
         check(props.next(), "Bar", "com.foo.Bar")
-        check(props.next(), "com.zorg.Flur", "com.zorg.Flur")
-        check(props.next(), "Generic<Int>", "com.antwerkz.testing.Generic<Int>")
+        check(props.next(), "Flur", "com.zorg.Flur")
+        check(props.next(), "Generic<Int>", "com.antwerkz.testing.Generic")
 
     }
 

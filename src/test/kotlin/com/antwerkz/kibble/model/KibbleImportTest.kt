@@ -40,26 +40,30 @@ class KibbleImportTest {
 
     @Test
     fun duplicateImport() {
-        val file = KibbleFile("Foo.kt")
-        tryImport(file, "com.foo.Bar")
-        tryImport(file, "com.foo.Bar", "Second")
-        tryImport(file, String::class.java)
-        tryImport(file, String::class.java, "Second")
+        tryImport(KibbleFile("Foo.kt"), "com.foo.Bar")
+        tryImport(KibbleFile("Foo.kt"), "com.foo.Bar", "Second")
+        tryImport(KibbleFile("Foo.kt"), String::class.java)
+        tryImport(KibbleFile("Foo.kt"), String::class.java, "Second")
     }
 
     private fun tryImport(file: KibbleFile, type: String, alias: String? = null) {
-        Assert.assertNotNull(file.addImport(type, alias))
-        Assert.assertNull(file.addImport(type, alias))
-        alias?.let {
-            Assert.assertNull(file.addImport(type, alias))
-        }
+        val from = KibbleType.from(type, alias = alias)
+        val fqcn = from.fqcn
+
+        file.addImport(type, alias)
+        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.type.alias == alias}, 1)
+
+        file.addImport(type)
+        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.type.alias == alias}, 1)
     }
 
     private fun tryImport(file: KibbleFile, type: Class<*>, alias: String? = null) {
-        Assert.assertNotNull(file.addImport(type, alias))
-        Assert.assertNull(file.addImport(type, alias))
-        alias?.let {
-            Assert.assertNull(file.addImport(type, alias))
-        }
+        val fqcn = KibbleImport(KibbleType.from(type.name, alias = alias)).type.fqcn
+
+        file.addImport(type, alias)
+        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.type.alias == alias }, 1)
+
+        file.addImport(type, alias)
+        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.type.alias == alias }, 1)
     }
 }

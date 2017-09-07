@@ -21,33 +21,6 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
                                            val nullable: Boolean = false, val alias: String? = null,
                                            private val imported: Boolean = false) : GenericCapable, Comparable<KibbleType> {
 
-    internal constructor(type: KibbleType, imported: Boolean) : this(type.className, type.pkgName, type.typeParameters,
-            imported = imported)
-
-    internal constructor(type: KibbleType, alias: String) : this(type.className, type.pkgName, type.typeParameters, type.nullable, alias)
-
-    /**
-     * Gives the expression of this type for use in the source complete with type parameters
-     */
-    val value: String by lazy {
-        val list = mutableListOf<String>()
-        if (!imported && pkgName != null) {
-            list.add(pkgName)
-        }
-        list.add(alias ?: className)
-        var base = list.joinToString(".") +
-                (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "")
-        if (nullable) base += "?"
-
-        base
-    }
-
-    /**
-     * Gives the fully qualified class name for this type
-     */
-    val fqcn: String by lazy { (pkgName?.let { "${pkgName}." } ?: "") + className }
-
-
     companion object {
         /**
          * Creates a KibbleType from ths string
@@ -95,37 +68,65 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
         }
     }
 
+    internal constructor(type: KibbleType, imported: Boolean) : this(type.className, type.pkgName, type.typeParameters,
+            imported = imported)
+
+    internal constructor(type: KibbleType, alias: String) : this(type.className, type.pkgName, type.typeParameters, type.nullable, alias)
+
+    /**
+     * Gives the expression of this type for use in the source complete with type parameters
+     */
+    val value: String by lazy {
+        val list = mutableListOf<String>()
+        if (!imported && pkgName != null) {
+            list.add(pkgName)
+        }
+        list.add(alias ?: className)
+        var base = list.joinToString(".") +
+                (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "")
+        if (nullable) base += "?"
+
+        base
+    }
+
+
+    /**
+     * Gives the fully qualified class name for this type
+     */
+    val fqcn: String by lazy { (pkgName?.let { "${pkgName}." } ?: "") + className }
+
     /**
      * @return the string/source form of this type
      */
     override fun toString() = value
 
-    /**
-     * @return true if `other` is equal to this
-     */
+    override fun compareTo(other: KibbleType): Int {
+        return fqcn.compareTo(other.fqcn)
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
 
         other as KibbleType
 
-        if (value != other.value) return false
+        if (className != other.className) return false
+        if (pkgName != other.pkgName) return false
         if (typeParameters != other.typeParameters) return false
         if (nullable != other.nullable) return false
+        if (alias != other.alias) return false
+        if (imported != other.imported) return false
 
         return true
     }
 
-    /**
-     * @return the hashcode for this type
-     */
     override fun hashCode(): Int {
-        var result = value.hashCode()
+        var result = className.hashCode()
+        result = 31 * result + (pkgName?.hashCode() ?: 0)
+        result = 31 * result + typeParameters.hashCode()
         result = 31 * result + nullable.hashCode()
+        result = 31 * result + (alias?.hashCode() ?: 0)
+        result = 31 * result + imported.hashCode()
         return result
-    }
-
-    override fun compareTo(other: KibbleType): Int {
-        return fqcn.compareTo(other.fqcn)
     }
 }

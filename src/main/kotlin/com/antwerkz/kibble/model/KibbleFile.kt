@@ -93,8 +93,8 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
      *
      * @return the new import
      */
-    fun addImport(name: String, alias: String? = null): KibbleImport? {
-        return addImport(KibbleType.from(name), alias)
+    fun addImport(name: String, alias: String? = null) {
+        addImport(KibbleType.from(name), alias)
     }
 
     /**
@@ -105,13 +105,12 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
      *
      * @return the new import
      */
-    fun addImport(type: Class<*>, alias: String? = null): KibbleImport? {
-        return addImport(KibbleType.from(type.name), alias)
+    fun addImport(type: Class<*>, alias: String? = null) {
+        addImport(KibbleType.from(type.name), alias)
     }
 
-    private fun addImport(type: KibbleType, alias: String? = null): KibbleImport? {
-        val kibbleImport = KibbleImport(KibbleType(type.className, type.pkgName, alias = alias))
-        return if(imports.add(kibbleImport)) kibbleImport else null
+    private fun addImport(type: KibbleType, alias: String? = null) {
+        imports.add(KibbleImport(KibbleType(type.className, type.pkgName, alias = alias)))
     }
 
     /**
@@ -135,7 +134,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
             writer.writeln()
         }
 
-        writeBlock(writer, level, false, imports.sortedBy { it.type.value })
+        writeBlock(writer, level, false, imports)
         writeBlock(writer, level, false, properties)
         writeBlock(writer, level, true, classes)
         writeBlock(writer, level, true, functions)
@@ -207,7 +206,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
             }
         } else {
             normalized = KibbleType(resolved.type.className, resolved.type.pkgName,
-                    proposed.typeParameters, proposed.nullable, proposed.alias, true)
+                    proposed.typeParameters, proposed.nullable, resolved.type.alias, true)
         }
 
         return normalized ?: proposed

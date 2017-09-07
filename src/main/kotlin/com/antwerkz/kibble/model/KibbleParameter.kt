@@ -21,7 +21,7 @@ open class KibbleParameter internal constructor(file: KibbleFile, val name: Stri
         typeParameters += GenericCapable.extractFromTypeParameters(kt.typeParameters)
     }
 
-    val type: KibbleType?
+    val type: KibbleType? by lazy { proposedType?.let { file.normalize(proposedType) } }
 
     override var mutability: Mutability = NEITHER
     override var visibility: Visibility = NONE
@@ -32,10 +32,6 @@ open class KibbleParameter internal constructor(file: KibbleFile, val name: Stri
             }
         }
     override var typeParameters = listOf<TypeParameter>()
-
-    init {
-        type = proposedType?.let { file.normalize(proposedType) }
-    }
 
     /**
      * @return the string/source form of this type

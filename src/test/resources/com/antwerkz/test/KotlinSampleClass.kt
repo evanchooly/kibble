@@ -9,7 +9,7 @@ internal abstract class KotlinSampleClass(val cost: Double, ignored: Int) : Pare
     var name: String? = null
     protected open val age: Double = -1.0
     val list: List<String> = ArrayList()
-    val map: java.util.HashMap<String, Int> = java.util.HashMap()
+    val map: HMap<String, Int> = java.util.HashMap()
     var time: Int? = null
     @SuppressWarnings("message")
     protected lateinit var random: String

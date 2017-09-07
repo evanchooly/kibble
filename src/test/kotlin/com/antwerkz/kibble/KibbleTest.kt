@@ -4,7 +4,6 @@ import com.antwerkz.kibble.model.KibbleFile
 import com.antwerkz.kibble.model.KibbleParameter
 import com.antwerkz.kibble.model.KibbleType
 import com.antwerkz.kibble.model.Visibility
-import org.jetbrains.kotlin.javax.inject.Singleton
 import org.testng.Assert
 import org.testng.annotations.Test
 import java.io.File
@@ -38,15 +37,20 @@ return "hi"""")
         Assert.assertTrue(klass.hasAnnotation(Generated::class.java))
         Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
         Assert.assertEquals(klass.constructor.parameters.size, 2, klass.constructor.parameters.toString())
-        Assert.assertEquals(klass.properties[0].name, "cost")
-        Assert.assertEquals(klass.properties[0].type.toString(), "Double")
-        Assert.assertEquals(klass.functions.size, 2)
 
-        Assert.assertEquals(klass.functions[0].name, "output")
-        Assert.assertEquals(klass.functions[0].parameters, listOf(KibbleParameter(file,"count", KibbleType("Long"))))
+        listOf("cost", "name", "age", "list", "map", "time", "random").forEach {
+            Assert.assertNotNull(klass.properties.firstOrNull { p -> p.name == it}, "Should find '$it: "
+                    + klass.properties.map { p -> p.name})
+        }
+        listOf("output", "toString").forEach {
+            Assert.assertNotNull(klass.functions.firstOrNull { f -> f.name == it}, "Should find '$it: "
+                    + klass.functions.map { f -> f.name})
+        }
 
-        Assert.assertEquals(klass.functions[1].name, "toString")
-        Assert.assertEquals(klass.functions[1].parameters, listOf<KibbleParameter>())
+        Assert.assertEquals(klass.functions.first { it.name == "output"}.parameters,
+                listOf(KibbleParameter(file,"count", KibbleType("Long"))))
+
+        Assert.assertEquals(klass.functions.first { it.name == "toString" }.parameters, listOf<KibbleParameter>())
     }
 
     @Test
