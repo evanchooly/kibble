@@ -25,8 +25,8 @@ class KibbleTypeTest {
         Assert.assertEquals(type.pkgName, "com.foo.bar")
         Assert.assertTrue(type.nullable)
         Assert.assertEquals(type.typeParameters.size, 2)
-        Assert.assertEquals(type.typeParameters[0].name, "kotlin.String")
-        Assert.assertEquals(type.typeParameters[1].name, "kotlin.Double")
+        Assert.assertEquals(type.typeParameters[0].type, "kotlin.String")
+        Assert.assertEquals(type.typeParameters[1].type, "kotlin.Double")
     }
 
     fun fullyQualified() {
@@ -34,7 +34,7 @@ class KibbleTypeTest {
         val decimal = KibbleType.from("BigDecimal")
         val integer = KibbleType.from("BigInteger")
         val dateTime = KibbleType.from("java.time.LocalDateTime")
-        val list = KibbleType("List", "java.util", listOf(TypeParameter("String")))
+        val list = KibbleType("List", "java.util", listOf(TypeParameter(KibbleType.from("String"))))
 
         Assert.assertEquals(qualified.value, "BigDecimal")
         Assert.assertEquals(decimal.value, "BigDecimal")
@@ -57,8 +57,8 @@ class KibbleTypeTest {
     }
 
     fun values() {
-        val type = KibbleType("Class", "this.is.the.package", listOf(TypeParameter("K"), TypeParameter("V")), true,
-                "Different", imported = true)
+        val type = KibbleType("Class", "this.is.the.package", listOf(TypeParameter(KibbleType.from("K")),
+                TypeParameter(KibbleType.from("V"))), true, "Different", imported = true)
 
         Assert.assertEquals(type.fqcn, "this.is.the.package.Class")
         Assert.assertEquals(type.value, "Different<K, V>?")

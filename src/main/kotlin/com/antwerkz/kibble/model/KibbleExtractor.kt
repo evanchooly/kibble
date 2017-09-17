@@ -13,19 +13,19 @@ internal object KibbleExtractor {
                 ?: listOf()).toMutableList()
     }
 
-    internal fun extractObjects(kt: List<KtDeclaration>?, file: KibbleFile): MutableList<KibbleObject> {
+    internal fun extractObjects(file: KibbleFile, kt: List<KtDeclaration>?): MutableList<KibbleObject> {
         return (kt?.filterIsInstance<KtObjectDeclaration>()
                 ?.map { KibbleObject(file, it) }
                 ?: listOf()).toMutableList()
     }
 
-    internal fun extractFunctions(kt: List<KtDeclaration>?, file: KibbleFile): MutableList<KibbleFunction> {
+    internal fun extractFunctions(file: KibbleFile, kt: List<KtDeclaration>?): MutableList<KibbleFunction> {
         return (kt?.filterIsInstance<KtFunction>()
                 ?.map { KibbleFunction(file, it) }
                 ?: listOf()).toMutableList()
     }
 
-    internal fun extractProperties(kt: List<KtDeclaration>?, file: KibbleFile): MutableList<KibbleProperty> {
+    internal fun extractProperties(file: KibbleFile, kt: List<KtDeclaration>?): MutableList<KibbleProperty> {
         return (kt?.filterIsInstance<KtProperty>()
                 ?.map { KibbleProperty(file, it) }
                 ?: listOf()).toMutableList()

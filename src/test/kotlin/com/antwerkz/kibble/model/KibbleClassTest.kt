@@ -9,7 +9,7 @@ import org.testng.annotations.Test
 
 class KibbleClassTest {
     @Language("kotlin")
-    val source = """class Temp {
+    private val source = """class Temp {
     companion object {
         val prop = 42
     }
@@ -125,32 +125,32 @@ open class Person : AbstractKotlinPerson {
         Assert.assertEquals(kibbleClass.toSource().toString(), source)
 
         var generic = KibbleFile().addClass("Generic")
-        generic.typeParameters += TypeParameter("T", OUT)
+        generic.typeParameters += TypeParameter(KibbleType("T"), OUT)
         Assert.assertEquals(generic.toSource().toString(), source)
 
         generic = KibbleFile().addClass("Generic")
-        generic.typeParameters += TypeParameter("T", IN)
+        generic.typeParameters += TypeParameter(KibbleType.from("T"), IN)
         Assert.assertEquals(generic.toSource().toString(), """class Generic<in T> {
 }
 """)
 
         generic = KibbleFile().addClass("Generic")
-        generic.typeParameters += TypeParameter("K")
-        generic.typeParameters += TypeParameter("V")
+        generic.typeParameters += TypeParameter(KibbleType.from("K"))
+        generic.typeParameters += TypeParameter(KibbleType.from("V"))
         Assert.assertEquals(generic.toSource().toString(), """class Generic<K, V> {
 }
 """)
 
         generic = KibbleFile().addClass("Generic")
-        generic.typeParameters += TypeParameter("K", OUT)
-        generic.typeParameters += TypeParameter("V", IN)
+        generic.typeParameters += TypeParameter(KibbleType.from("K"), OUT)
+        generic.typeParameters += TypeParameter(KibbleType.from("V"), IN)
         Assert.assertEquals(generic.toSource().toString(), """class Generic<out K, in V> {
 }
 """)
 
         generic = KibbleFile().addClass("Generic")
-        generic.typeParameters += TypeParameter("K", OUT)
-        generic.typeParameters += TypeParameter("V", IN)
+        generic.typeParameters += TypeParameter(KibbleType.from("K"), OUT)
+        generic.typeParameters += TypeParameter(KibbleType.from("V"), IN)
         Assert.assertEquals(generic.toSource().toString(), """class Generic<out K, in V> {
 }
 """)
@@ -159,8 +159,7 @@ open class Person : AbstractKotlinPerson {
     @Test
       fun nestedGenerics() {
         @Language("kotlin")
-          val source = """class Generic<out T: Comparable<T>> {
-}
+          val source = """class Generic<out T: Comparable<T>>
 """
           val kibbleClass = Kibble.parseSource(source).classes[0]
           Assert.assertEquals(kibbleClass.toSource().toString(), source)

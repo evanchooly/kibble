@@ -23,15 +23,15 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
     }
 
     override val objects: MutableList<KibbleObject> by lazy {
-        KibbleExtractor.extractObjects(kt?.declarations, file)
+        KibbleExtractor.extractObjects(file, kt?.declarations)
     }
 
     override val functions: MutableList<KibbleFunction> by lazy {
-        KibbleExtractor.extractFunctions(kt?.declarations, file)
+        KibbleExtractor.extractFunctions(file, kt?.declarations)
     }
 
     override val properties: MutableList<KibbleProperty> by lazy {
-        KibbleExtractor.extractProperties(kt?.declarations, file)
+        KibbleExtractor.extractProperties(file, kt?.declarations)
     }
 
     override val file: KibbleFile = this
@@ -44,7 +44,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         pkgName = kt.packageDirective?.children?.firstOrNull()?.text
         sourceTimestamp = kt.originalFile.modificationStamp
         kt.importDirectives.forEach {
-            imports += KibbleImport(it)
+            imports += KibbleImport(this, it)
         }
     }
 
@@ -110,7 +110,9 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
     }
 
     private fun addImport(type: KibbleType, alias: String? = null) {
-        imports.add(KibbleImport(KibbleType(type.className, type.pkgName, alias = alias)))
+        type.pkgName?.let {
+            imports.add(KibbleImport(KibbleType(type.className, type.pkgName, alias = alias)))
+        }
     }
 
     /**

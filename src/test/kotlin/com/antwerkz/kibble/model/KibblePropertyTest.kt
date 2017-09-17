@@ -36,13 +36,25 @@ class KibblePropertyTest {
     @Test
     fun generics() {
         @Language("kotlin")
-        var source = """val foo: Prop<T>
-"""
-        Assert.assertEquals(Kibble.parseSource(source).properties[0].toSource().toString(), source)
+        var source = """val foo: Prop<T>"""
+        Assert.assertEquals(Kibble.parseSource(source).properties[0].toSource().toString().trim(), source)
 
-        source = """val foo: Prop<*>
-"""
-        Assert.assertEquals(Kibble.parseSource(source).properties[0].toSource().toString(), source)
+        @Language("kotlin")
+        val source2 = """val foo: Prop<*>"""
+        Assert.assertEquals(Kibble.parseSource(source2).properties[0].toSource().toString().trim(), source2)
 
+        @Language("kotlin")
+        val fqcn = """import com.foo.Bar
+val list: List<Bar>"""
+        val kibbleFile = Kibble.parseSource(fqcn)
+        val list = kibbleFile.properties[0]
+        Assert.assertEquals(list.type?.className, "List")
+        Assert.assertEquals(list.type?.typeParameters?.size, 1)
+        val typeParameter: TypeParameter = list.type?.typeParameters!![0]
+        Assert.assertEquals(typeParameter.type.fqcn, "com.foo.Bar")
+        Assert.assertEquals(typeParameter.type.pkgName, "com.foo")
+        Assert.assertEquals(typeParameter.type.className, "Bar")
+
+        println("typeParameter = ${typeParameter}")
     }
 }

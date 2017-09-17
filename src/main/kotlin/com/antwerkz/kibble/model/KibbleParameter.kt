@@ -16,9 +16,9 @@ import org.jetbrains.kotlin.psi.KtParameter
 open class KibbleParameter internal constructor(file: KibbleFile, val name: String, proposedType: KibbleType?,
                                                 var initializer: String? = null) : KibbleElement, GenericCapable, Mutable, Visible {
 
-    internal constructor(file: KibbleFile, kt: KtParameter) : this(file, kt.name!!, KibbleType.from(kt.typeReference)) {
+    internal constructor(file: KibbleFile, kt: KtParameter) : this(file, kt.name!!, KibbleType.from(file, kt.typeReference)) {
         mutability = Mutable.apply(kt.valOrVarKeyword)
-        typeParameters += GenericCapable.extractFromTypeParameters(kt.typeParameters)
+        typeParameters += GenericCapable.extractFromTypeParameters(file, kt.typeParameters)
     }
 
     val type: KibbleType? by lazy { proposedType?.let { file.normalize(proposedType) } }

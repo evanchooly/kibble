@@ -15,20 +15,20 @@ import org.jetbrains.kotlin.resolve.calls.callUtil.getValueArgumentsInParenthese
  */
 interface Extendable {
     companion object {
-        internal fun extractSuperInformation(extendable: Extendable, kt: KtClassOrObject) {
+        internal fun extractSuperInformation(file: KibbleFile, extendable: Extendable, kt: KtClassOrObject) {
             val entries = kt.superTypeListEntries
 
             entries.filterIsInstance(KtSuperTypeCallEntry::class.java)
                     .firstOrNull()
                     ?.let {
-                        extendable.superType = KibbleType.from(it.typeReference)
+                        extendable.superType = KibbleType.from(file, it.typeReference)
                         extendable.superCallArgs = it.getValueArgumentsInParentheses()
                                 .map { it.getArgumentExpression()!!.text }
                     }
 
             extendable.superTypes = entries
                     .filterIsInstance(KtSuperTypeEntry::class.java)
-                    .map { KibbleType.from(it.typeReference)!! }
+                    .map { KibbleType.from(file, it.typeReference)!! }
         }
     }
 

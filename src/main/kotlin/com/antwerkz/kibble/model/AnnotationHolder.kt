@@ -8,7 +8,7 @@ import org.jetbrains.kotlin.psi.KtAnnotationEntry
  *
  * @property annotations the list of annotations on this type
  */
-interface Annotatable {
+interface AnnotationHolder {
     var annotations: MutableList<KibbleAnnotation>
 
     /**
@@ -28,6 +28,6 @@ interface Annotatable {
     }
 }
 
-internal fun Annotatable.extractAnnotations(entries: List<KtAnnotationEntry>) {
-    annotations.addAll(entries.map { from(it) })
+internal fun AnnotationHolder.extractAnnotations(file: KibbleFile, entries: List<KtAnnotationEntry>) {
+    annotations.addAll(entries.map { from(file, it) })
 }

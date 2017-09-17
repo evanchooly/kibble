@@ -2,6 +2,7 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
 import org.jetbrains.kotlin.psi.KtFunctionType
+import org.jetbrains.kotlin.psi.KtImportDirective
 import org.jetbrains.kotlin.psi.KtNullableType
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.KtUserType
@@ -16,8 +17,8 @@ import org.jetbrains.kotlin.psi.KtUserType
  * @property alias the type name alias
  * @property imported true if this type has been imported.  if true, only the className/alias will be used when generating the source code
  */
-open class KibbleType internal constructor(val className: String, val pkgName: String? = null ,
-                                           override val typeParameters: List<TypeParameter> = listOf<TypeParameter>(),
+open class KibbleType internal constructor(val className: String, val pkgName: String? = null,
+                                           override val typeParameters: List<TypeParameter> = listOf(),
                                            val nullable: Boolean = false, val alias: String? = null,
                                            private val imported: Boolean = false) : GenericCapable, Comparable<KibbleType> {
 
@@ -28,31 +29,34 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
          * @return the new KibbleType
          */
         fun from(type: String, alias: String? = null): KibbleType {
-            val parsed = Kibble.parseSource("val temp: $type").properties[0].type!!
+            val parsed = if (type.contains(".") || type.contains("<")) {
+                Kibble.parseSource("val temp: $type").properties[0].type!!
+            } else {
+                KibbleType(type)
+            }
             return alias?.let { KibbleType(parsed, alias) } ?: parsed
         }
 
-/*
-        fun resolve(type: KibbleType, pkgName: String?): KibbleType {
-            return KibbleType(type.className, pkgName, type.typeParameters, type.nullable)
-        }
-*/
-
-        internal fun from(kt: KtTypeReference?): KibbleType? {
+        internal fun from(file: KibbleFile, kt: KtTypeReference?): KibbleType? {
             return kt?.typeElement.let {
                 when (it) {
-                    is KtUserType -> extractType(it)
-                    is KtNullableType -> extractType(it.innerType as KtUserType, true)
-                    is KtFunctionType -> KibbleFunctionType(it)
+                    is KtUserType -> extractType(file, it)
+                    is KtNullableType -> extractType(file, it.innerType as KtUserType, true)
+                    is KtFunctionType -> KibbleFunctionType(file, it)
                     else -> it?.let { throw IllegalArgumentException("unknown type $it") }
                 }
             }
         }
 
-        internal fun extractType(typeElement: KtUserType, nullable: Boolean = false): KibbleType {
+        internal fun from(kt: KtImportDirective): KibbleType {
+            val fqName = kt.importedFqName!!
+            return KibbleType(fqName.shortName().identifier, fqName.parent().asString(), alias = kt.aliasName)
+        }
+
+        internal fun extractType(file: KibbleFile, typeElement: KtUserType, nullable: Boolean = false): KibbleType {
             val value = (typeElement.qualifier?.text?.let { "$it." } ?: "") +
                     (typeElement.referencedName ?: "")
-            val parameters = GenericCapable.extractFromTypeProjections(typeElement.typeArguments)
+            val parameters = GenericCapable.extractFromTypeProjections(file, typeElement.typeArguments)
             val raw = value.substringBefore("<")
             var pkgName = if (raw.contains(".")) {
                 raw.split(".")
@@ -62,7 +66,7 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
             } else null
             if (pkgName == "") pkgName = null
 
-            val className = pkgName?.let { raw.substring(it.length + 1) }  ?: raw
+            val className = pkgName?.let { raw.substring(it.length + 1) } ?: raw
 
             return KibbleType(className, pkgName, parameters, nullable)
         }
@@ -93,7 +97,7 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
     /**
      * Gives the fully qualified class name for this type
      */
-    val fqcn: String by lazy { (pkgName?.let { "${pkgName}." } ?: "") + className }
+    val fqcn: String by lazy { (pkgName?.let { "$pkgName." } ?: "") + className }
 
     /**
      * @return the string/source form of this type

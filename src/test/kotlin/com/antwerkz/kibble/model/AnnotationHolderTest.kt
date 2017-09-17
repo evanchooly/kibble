@@ -5,22 +5,22 @@ import org.testng.Assert
 import org.testng.annotations.Test
 
 
-class AnnotatableTest {
-    val annotation = """@SuppressWarnings("deprecation", count=10, foo=@Foo(42))"""
+class AnnotationHolderTest {
     @Test
     fun properties() {
         val property = Kibble.parseSource("""
-        $annotation
+        import java.lang.annotation.Retention
+
+        @Retention
         val name: String""")
                 .properties[0]
-        Assert.assertTrue(property.hasAnnotation(SuppressWarnings::class.java))
-        verify(property.getAnnotation(SuppressWarnings::class.java)!!)
+        Assert.assertTrue(property.hasAnnotation(Retention::class.java))
     }
 
     @Test
     fun classes() {
         val klass = Kibble.parseSource("""
-        $annotation
+        @SuppressWarnings("deprecation", count=10, foo=@Foo(42))
         class Foo """)
                 .classes[0]
         Assert.assertTrue(klass.hasAnnotation(SuppressWarnings::class.java))

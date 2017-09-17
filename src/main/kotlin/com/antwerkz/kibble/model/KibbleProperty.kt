@@ -24,26 +24,26 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 class KibbleProperty internal constructor(file: KibbleFile, name: String, type: KibbleType?, initializer: String? = null,
                                           override var modality: Modality = FINAL, override var overriding: Boolean = false,
                                           var lateInit: Boolean = false, var constructorParam: Boolean = false)
-    : KibbleParameter(file, name, type, initializer), Visible, Mutable, Modal<KibbleProperty>, Overridable, Annotatable {
+    : KibbleParameter(file, name, type, initializer), Visible, Mutable, Modal<KibbleProperty>, Overridable, AnnotationHolder {
 
     init {
         visibility = PUBLIC
         mutability = VAL
     }
 
-    internal constructor(file: KibbleFile, kt: KtParameter) : this(file, kt.name!!, KibbleType.from(kt.typeReference),
+    internal constructor(file: KibbleFile, kt: KtParameter) : this(file, kt.name!!, KibbleType.from(file, kt.typeReference),
             kt.defaultValue?.text) {
 
-        extractAnnotations(kt.annotationEntries)
+        extractAnnotations(file, kt.annotationEntries)
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
         mutability = Mutable.apply(kt.valOrVarKeyword)
     }
 
-    internal constructor(file: KibbleFile, kt: KtProperty) : this(file, kt.name!!, KibbleType.from(kt.typeReference),
+    internal constructor(file: KibbleFile, kt: KtProperty) : this(file, kt.name!!, KibbleType.from(file, kt.typeReference),
             kt.initializer?.text) {
 
-        extractAnnotations(kt.annotationEntries)
+        extractAnnotations(file, kt.annotationEntries)
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
         lateInit = kt.modifierList?.allChildren?.find { it.text == "lateinit" } != null

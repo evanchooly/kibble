@@ -8,9 +8,9 @@ import org.jetbrains.kotlin.psi.KtUserType
 class KibbleFunctionType internal constructor(name: String, var parameters: List<KibbleFunctionTypeParameter>,
                                               val type: KibbleType?) : KibbleType(name) {
 
-    internal constructor(kt: KtFunctionType) : this(kt.name ?: "",
-            kt.parameters.map { KibbleFunctionTypeParameter(it) },
-            kt.returnTypeReference?.typeElement?.let { extractType(it as KtUserType) })
+    internal constructor(file: KibbleFile, kt: KtFunctionType) : this(kt.name ?: "",
+            kt.parameters.map { KibbleFunctionTypeParameter(file, it) },
+            kt.returnTypeReference?.typeElement?.let { extractType(file, it as KtUserType) })
 
     override fun toString(): String {
         var string = parameters.joinToString(", ", prefix = "(", postfix = ")")
@@ -26,8 +26,8 @@ class KibbleFunctionType internal constructor(name: String, var parameters: List
 internal class KibbleFunctionTypeParameter(val type: KibbleType?) : KibbleElement {
     var typeParameters = listOf<TypeParameter>()
 
-    internal constructor(kt: KtParameter) : this(KibbleType.from(kt.typeReference)) {
-        typeParameters += GenericCapable.extractFromTypeParameters(kt.typeParameters)
+    internal constructor(file: KibbleFile, kt: KtParameter) : this(KibbleType.from(file, kt.typeReference)) {
+        typeParameters += GenericCapable.extractFromTypeParameters(file, kt.typeParameters)
     }
 
     /**

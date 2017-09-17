@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property companion true if this object is a companion object
  */
 class KibbleObject internal constructor(override val file: KibbleFile, val name: String? = null, val companion: Boolean = false)
-    : Annotatable, ClassOrObjectHolder, Extendable, FunctionHolder, KibbleElement, PropertyHolder, Visible {
+    : AnnotationHolder, ClassOrObjectHolder, Extendable, FunctionHolder, KibbleElement, PropertyHolder, Visible {
 
     override var superTypes = listOf<KibbleType>()
     override var superType: KibbleType? = null
@@ -25,25 +25,25 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
     }
 
     override val objects: MutableList<KibbleObject> by lazy {
-        KibbleExtractor.extractObjects(kt?.declarations, file)
+        KibbleExtractor.extractObjects(file, kt?.declarations)
     }
 
     override val functions: MutableList<KibbleFunction> by lazy {
-        KibbleExtractor.extractFunctions(kt?.declarations, file)
+        KibbleExtractor.extractFunctions(file, kt?.declarations)
     }
 
     override val properties: MutableList<KibbleProperty> by lazy {
-        KibbleExtractor.extractProperties(kt?.declarations, file)
+        KibbleExtractor.extractProperties(file, kt?.declarations)
     }
 
     private var kt: KtObjectDeclaration? = null
 
     internal constructor(file: KibbleFile, kt: KtObjectDeclaration): this(file, kt.name, kt.isCompanion()) {
         this.kt = kt
-        Extendable.extractSuperInformation(this, kt)
+        Extendable.extractSuperInformation(file,this, kt)
         visibility = Visible.apply(kt.visibilityModifier())
 
-        extractAnnotations(kt.annotationEntries)
+        extractAnnotations(file, kt.annotationEntries)
     }
 
     override fun addClass(name: String): KibbleClass {
