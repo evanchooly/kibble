@@ -16,7 +16,7 @@ class KibbleContext {
                 .flatMap { it.classes }
                 .firstOrNull { it.name == type.className }
         val let = found?.let {
-            KibbleType(type.className, file.pkgName, type.typeParameters, type.nullable, type.alias, true)
+            KibbleType(file, type.className, file.pkgName, type.typeParameters, type.nullable, type.alias, true)
         }
         return let
     }
@@ -26,8 +26,8 @@ class KibbleContext {
                 .flatMap { it.classes }
                 .firstOrNull { it.name == type }
         return found?.let {
-            KibbleType("${file.pkgName}.$type")
-            KibbleType(type, file.pkgName, imported = true)
+            KibbleType(file, "${file.pkgName}.$type")
+            KibbleType(file, type, file.pkgName, imported = true)
         }
     }
 

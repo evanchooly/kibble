@@ -35,13 +35,13 @@ class KibbleClassTest {
         Assert.assertEquals(kibbleClass.classes.size, 1)
         Assert.assertEquals(kibbleClass.classes[0].name, "Nested")
 
-        val kibbleFile = KibbleFile()
-        kibbleClass = kibbleFile.addClass("Temp")
+        val file = KibbleFile()
+        kibbleClass = file.addClass("Temp")
         val nested = kibbleClass.addClass("Nested")
 
-        nested.superType = KibbleType.from("Foo")
+        nested.superType = KibbleType.from(file, "Foo")
         nested.superCallArgs = listOf("\"bar\"")
-        nested.superTypes += KibbleType.from("Interface")
+        nested.superTypes += KibbleType.from(file, "Interface")
 
         nested.addSecondaryConstructor().delegationArguments += listOf("blarg", "\"nargle\"")
 
@@ -59,7 +59,7 @@ class KibbleClassTest {
 
         Assert.assertTrue(kibbleClass.objects[0].companion)
         Assert.assertEquals(kibbleClass.objects[1].name, "temp")
-        Assert.assertEquals(kibbleFile.toSource().toString().trim(), source.trim())
+        Assert.assertEquals(file.toSource().toString().trim(), source.trim())
     }
 
     @Test
@@ -104,7 +104,7 @@ open class Person : AbstractKotlinPerson {
         Assert.assertTrue(file.classes[0].superTypes.isEmpty())
         Assert.assertNull(file.classes[1].superType)
         Assert.assertEquals(file.classes[1].superTypes.size, 1)
-        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType("AbstractKotlinPerson"))
+        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType(file, "AbstractKotlinPerson"))
     }
 
     @Test
@@ -124,44 +124,46 @@ open class Person : AbstractKotlinPerson {
         val kibbleClass = Kibble.parseSource(source).classes[0]
         Assert.assertEquals(kibbleClass.toSource().toString(), source)
 
-        var generic = KibbleFile().addClass("Generic")
-        generic.typeParameters += TypeParameter(KibbleType("T"), OUT)
+        val file = KibbleFile()
+        var generic = file.addClass("Generic")
+        generic.addTypeParameter(KibbleType(file, "T"), OUT)
         Assert.assertEquals(generic.toSource().toString(), source)
 
-        generic = KibbleFile().addClass("Generic")
-        generic.typeParameters += TypeParameter(KibbleType.from("T"), IN)
+        generic = file.addClass("Generic")
+        generic.addTypeParameter(KibbleType.from(file, "T"), IN)
         Assert.assertEquals(generic.toSource().toString(), """class Generic<in T> {
 }
 """)
 
-        generic = KibbleFile().addClass("Generic")
-        generic.typeParameters += TypeParameter(KibbleType.from("K"))
-        generic.typeParameters += TypeParameter(KibbleType.from("V"))
+        generic = file.addClass("Generic")
+        generic.addTypeParameter(KibbleType.from(file, "K"))
+        generic.addTypeParameter(KibbleType.from(file, "V"))
         Assert.assertEquals(generic.toSource().toString(), """class Generic<K, V> {
 }
 """)
 
-        generic = KibbleFile().addClass("Generic")
-        generic.typeParameters += TypeParameter(KibbleType.from("K"), OUT)
-        generic.typeParameters += TypeParameter(KibbleType.from("V"), IN)
+        generic = file.addClass("Generic")
+        generic.addTypeParameter(KibbleType.from(file, "K"), OUT)
+        generic.addTypeParameter(KibbleType.from(file, "V"), IN)
         Assert.assertEquals(generic.toSource().toString(), """class Generic<out K, in V> {
 }
 """)
 
-        generic = KibbleFile().addClass("Generic")
-        generic.typeParameters += TypeParameter(KibbleType.from("K"), OUT)
-        generic.typeParameters += TypeParameter(KibbleType.from("V"), IN)
+        generic = file.addClass("Generic")
+        generic.addTypeParameter(KibbleType.from(file, "K"), OUT)
+        generic.addTypeParameter(KibbleType.from(file, "V"), IN)
         Assert.assertEquals(generic.toSource().toString(), """class Generic<out K, in V> {
 }
 """)
     }
 
     @Test
-      fun nestedGenerics() {
+    fun nestedGenerics() {
         @Language("kotlin")
-          val source = """class Generic<out T: Comparable<T>>
-"""
-          val kibbleClass = Kibble.parseSource(source).classes[0]
-          Assert.assertEquals(kibbleClass.toSource().toString(), source)
+        val source = """class Generic<out T: Comparable<T>> {
 }
+"""
+        val kibbleClass = Kibble.parseSource(source).classes[0]
+        Assert.assertEquals(kibbleClass.toSource().toString().trim(), source.trim())
+    }
 }

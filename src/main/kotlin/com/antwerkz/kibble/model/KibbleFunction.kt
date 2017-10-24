@@ -19,13 +19,15 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 class KibbleFunction internal constructor(override val file: KibbleFile, var name: String? = null,
                                           override var visibility: Visibility = PUBLIC,
                                           override var modality: Modality = FINAL,
-                                          var type: String = "Unit",
+                                          private var proposed: String = "Unit",
                                           var body: String = "",
                                           var bodyBlock: Boolean = true,
                                           override var overriding: Boolean = false)
     : Visible, Modal<KibbleFunction>, ParameterHolder, KibbleElement, Overridable {
 
     override val parameters = mutableListOf<KibbleParameter>()
+
+    val type: KibbleType? by lazy { file.normalize(KibbleType.from(file, proposed)) }
 
     internal constructor(file: KibbleFile, kt: KtFunction) : this(file, kt.name) {
         parse(file, kt)
@@ -43,7 +45,9 @@ class KibbleFunction internal constructor(override val file: KibbleFile, var nam
                     .dropLast(1)
                     .trimIndent()
         }
-        this.type = kt.typeReference?.text ?: ""
+        kt.typeReference?.let {
+            this.proposed = it.text
+        }
 
         kt.modifierList
         modality = Modal.apply(kt.modalityModifier())
@@ -62,7 +66,7 @@ class KibbleFunction internal constructor(override val file: KibbleFile, var nam
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.write("", level)
-        val returnType = if (type != "" && type != "Unit") ": $type" else ""
+        val returnType = if (type != null && type?.value != "Unit") ": $type" else ""
         if (overriding) {
             writer.write("override ")
         }
@@ -108,7 +112,7 @@ class KibbleFunction internal constructor(override val file: KibbleFile, var nam
         var result = name?.hashCode() ?: 0
         result = 31 * result + visibility.hashCode()
         result = 31 * result + modality.hashCode()
-        result = 31 * result + type.hashCode()
+        result = 31 * result + (type?.hashCode() ?: 0)
         result = 31 * result + body.hashCode()
         result = 31 * result + overriding.hashCode()
         result = 31 * result + parameters.hashCode()

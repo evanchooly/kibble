@@ -140,26 +140,26 @@ class Second""".trim())
     fun normalize() {
         val file = KibbleFile("test.kt")
 
-        Assert.assertEquals(file.normalize(KibbleType.from("java.util.List")).value, "List")
+        Assert.assertEquals(file.normalize(KibbleType.from(file, "java.util.List")).value, "List")
         Assert.assertNotNull(file.imports.firstOrNull { "List" == it.type.alias || "List" == it.type.className })
         assertImport(file, "java.util", "List")
 
-        Assert.assertEquals(file.normalize(KibbleType.from("java.util.List")).value, "List")
+        Assert.assertEquals(file.normalize(KibbleType.from(file, "java.util.List")).value, "List")
         assertImport(file, "java.util", "List")
 
-        Assert.assertEquals(file.normalize(KibbleType.from("List")).value, "List")
+        Assert.assertEquals(file.normalize(KibbleType.from(file, "List")).value, "List")
         assertImport(file, "java.util", "List")
 
-        Assert.assertEquals(file.normalize(KibbleType.from("java.util.Set")).value, "Set")
+        Assert.assertEquals(file.normalize(KibbleType.from(file, "java.util.Set")).value, "Set")
         assertImport(file, "java.util", "Set")
 
         file.addImport(java.awt.List::class.java, "awtList")
         assertImport(file, "java.awt", "List", "awtList")
 
-        Assert.assertEquals(file.normalize(KibbleType.from("java.awt.List")).value, "awtList")
-        Assert.assertEquals(file.normalize(KibbleType.from("awtList")).value, "awtList")
+        Assert.assertEquals(file.normalize(KibbleType.from(file, "java.awt.List")).value, "awtList")
+        Assert.assertEquals(file.normalize(KibbleType.from(file, "awtList")).value, "awtList")
 
-        Assert.assertEquals(file.normalize(KibbleType.from("Map.Entry")).value, "Map.Entry")
+        Assert.assertEquals(file.normalize(KibbleType.from(file, "Map.Entry")).value, "Map.Entry")
     }
 
 

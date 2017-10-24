@@ -5,10 +5,11 @@ import org.jetbrains.kotlin.psi.KtFunctionType
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtUserType
 
-class KibbleFunctionType internal constructor(name: String, var parameters: List<KibbleFunctionTypeParameter>,
-                                              val type: KibbleType?) : KibbleType(name) {
+class KibbleFunctionType internal constructor(file: KibbleFile, name: String,
+                                              var parameters: List<KibbleFunctionTypeParameter>, val type: KibbleType?)
+    : KibbleType(file, name) {
 
-    internal constructor(file: KibbleFile, kt: KtFunctionType) : this(kt.name ?: "",
+    internal constructor(file: KibbleFile, kt: KtFunctionType) : this(file, kt.name ?: "",
             kt.parameters.map { KibbleFunctionTypeParameter(file, it) },
             kt.returnTypeReference?.typeElement?.let { extractType(file, it as KtUserType) })
 

@@ -12,9 +12,9 @@ import java.io.File
  * @property pkgName the package name
  * @property imports the imports defined in the file
  */
-class KibbleFile(val name: String? = null, override var pkgName: String? = null,
+class KibbleFile(val name: String? = null, var pkgName: String? = null,
                  val context: KibbleContext = KibbleContext()) :
-        KibbleElement, PropertyHolder, Packaged, ClassOrObjectHolder {
+        KibbleElement, PropertyHolder, ClassOrObjectHolder {
 
     val imports = sortedSetOf<KibbleImport>()
 
@@ -76,7 +76,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         if (constructorParam) {
             throw IllegalArgumentException("File level properties can not also be constructor parameters")
         }
-        val property = KibbleProperty(this, name, type?.let { KibbleType.from(type) }, initializer,
+        val property = KibbleProperty(this, name, type?.let { KibbleType.from(file, type) }, initializer,
                 modality, overriding, lateInit)
 
         property.visibility = visibility
@@ -94,7 +94,7 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
      * @return the new import
      */
     fun addImport(name: String, alias: String? = null) {
-        addImport(KibbleType.from(name), alias)
+        addImport(KibbleType.from(file, name), alias)
     }
 
     /**
@@ -106,12 +106,12 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
      * @return the new import
      */
     fun addImport(type: Class<*>, alias: String? = null) {
-        addImport(KibbleType.from(type.name), alias)
+        addImport(KibbleType.from(file, type.name), alias)
     }
 
     private fun addImport(type: KibbleType, alias: String? = null) {
         type.pkgName?.let {
-            imports.add(KibbleImport(KibbleType(type.className, type.pkgName, alias = alias)))
+            imports.add(KibbleImport(KibbleType(file, type.className, type.pkgName, alias = alias)))
         }
     }
 
@@ -196,18 +196,19 @@ class KibbleFile(val name: String? = null, override var pkgName: String? = null,
         if (resolved == null) {
             normalized = classes.filter { proposed.className == it.name }
                     .map {
-                        KibbleType(proposed.className, file.pkgName, proposed.typeParameters, proposed.nullable, proposed.alias, true)
+                        KibbleType(file, proposed.className, file.pkgName, proposed.typeParameters, proposed.nullable, proposed.alias,
+                                true)
                     }
                     .firstOrNull() ?: context.resolve(this, proposed)
             if (normalized == null) {
                 if (proposed.pkgName != null) {
                     addImport(proposed)
-                    normalized = KibbleType(proposed.className, proposed.pkgName, proposed.typeParameters, proposed.nullable,
+                    normalized = KibbleType(file, proposed.className, proposed.pkgName, proposed.typeParameters, proposed.nullable,
                             proposed.alias, true)
                 }
             }
         } else {
-            normalized = KibbleType(resolved.type.className, resolved.type.pkgName,
+            normalized = KibbleType(file, resolved.type.className, resolved.type.pkgName,
                     proposed.typeParameters, proposed.nullable, resolved.type.alias, true)
         }
 

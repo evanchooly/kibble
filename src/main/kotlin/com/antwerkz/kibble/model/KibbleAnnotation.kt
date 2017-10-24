@@ -34,8 +34,8 @@ class KibbleAnnotation internal constructor(file: KibbleFile, val proposedType: 
                     }?.associateBy({ it.first }, { it.second })
                     ?: mapOf()
             val type = annotation.typeReference?.typeElement?.name?.let {
-                KibbleType.from(it)
-            } ?: KibbleType((annotation.typeReference?.typeElement as KtUserType).referencedName!!)
+                KibbleType.from(file, it)
+            } ?: KibbleType(file, (annotation.typeReference?.typeElement as KtUserType).referencedName!!)
             return KibbleAnnotation(file, type, arguments)
         }
     }

@@ -1,6 +1,14 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
+import com.antwerkz.kibble.model.KibbleExtractor.extractAnnotations
+import com.antwerkz.kibble.model.KibbleExtractor.extractClasses
+import com.antwerkz.kibble.model.KibbleExtractor.extractFunctions
+import com.antwerkz.kibble.model.KibbleExtractor.extractObjects
+import com.antwerkz.kibble.model.KibbleExtractor.extractProperties
+import com.antwerkz.kibble.model.KibbleExtractor.extractSuperCallArgs
+import com.antwerkz.kibble.model.KibbleExtractor.extractSuperType
+import com.antwerkz.kibble.model.KibbleExtractor.extractSuperTypes
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtClass
@@ -19,34 +27,39 @@ class KibbleClass internal constructor(override var file: KibbleFile,
                                        var name: String = "",
                                        override var modality: Modality = FINAL,
                                        override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder, GenericCapable,
-        Visible, Modal<KibbleClass>, AnnotationHolder, PropertyHolder, Extendable, ClassOrObjectHolder, Packaged {
+        Visible, Modal<KibbleClass>, AnnotationHolder, PropertyHolder, ClassOrObjectHolder {
 
     private var kt: KtClass? = null
-    override var pkgName: String?
-        get() = file.pkgName
-        set(value) {
-            file.pkgName = value
-        }
-    override var superTypes = listOf<KibbleType>()
-    override var superType: KibbleType? = null
-    override var superCallArgs = listOf<String>()
-    override var typeParameters = listOf<TypeParameter>()
+    val superTypes: MutableList<KibbleType> by lazy {
+        extractSuperTypes(file, kt?.superTypeListEntries)
+    }
 
-    override var annotations = mutableListOf<KibbleAnnotation>()
+    var superType: KibbleType? = null
+        private set
+
+    var superCallArgs = listOf<String>()
+        private set
+
+    override var typeParameters = mutableListOf<TypeParameter>()
+
+    override val annotations: MutableList<KibbleAnnotation> by lazy {
+        extractAnnotations(file, kt?.annotationEntries)
+    }
+
     override val classes: MutableList<KibbleClass> by lazy {
-        KibbleExtractor.extractClasses(kt?.declarations, file)
+        extractClasses(kt?.declarations, file)
     }
 
     override val objects: MutableList<KibbleObject> by lazy {
-        KibbleExtractor.extractObjects(file, kt?.declarations)
+        extractObjects(file, kt?.declarations)
     }
 
     override val functions: MutableList<KibbleFunction> by lazy {
-        KibbleExtractor.extractFunctions(file, kt?.declarations)
+        extractFunctions(file, kt?.declarations)
     }
 
     override val properties: MutableList<KibbleProperty> by lazy {
-        KibbleExtractor.extractProperties(file, kt?.declarations)
+        extractProperties(file, kt?.declarations)
     }
 
     var initBlock: String? = null
@@ -57,7 +70,6 @@ class KibbleClass internal constructor(override var file: KibbleFile,
 
     internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
         this.kt = kt
-        Extendable.extractSuperInformation(file, this, kt)
 
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
@@ -70,9 +82,16 @@ class KibbleClass internal constructor(override var file: KibbleFile,
         kt.secondaryConstructors.forEach {
             secondaries += SecondaryConstructor(file, it)
         }
-        extractAnnotations(file, kt.annotationEntries)
+
+        superType = extractSuperType(file, kt.superTypeListEntries)
+        superTypes = extractSuperTypes(file, kt.superTypeListEntries)
+        superCallArgs = extractSuperCallArgs(kt.superTypeListEntries)
+        annotations = extractAnnotations(file, kt.annotationEntries)
     }
 
+    fun addSuperType(type: String) {
+        superType = KibbleType.from(file, type)
+    }
     /**
      * Adds a secondary constructor to this class
      *
@@ -108,14 +127,14 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(file, name = name, type = type, body = body).also {
+        return KibbleFunction(file, name = name, proposed = type, body = body).also {
             functions += it
         }
     }
 
     override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
-        return KibbleProperty(file, name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
+        return KibbleProperty(file, name, type?.let { KibbleType.from(file, type) }, initializer, modality, overriding, lateInit).also {
             it.visibility = visibility
             it.mutability = mutability
             it.constructorParam = constructorParam

@@ -17,7 +17,7 @@ interface ParameterHolder {
      * @param initializer the parameter initializer
      */
     fun addParameter(name: String, type: String?, initializer: String? = null): KibbleParameter {
-        val param = KibbleParameter(file, name, type?.let { KibbleType.from(type) }, initializer)
+        val param = KibbleParameter(file, name, type?.let { KibbleType.from(file, type) }, initializer)
         parameters += param
         return param
     }

@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.psi.KtImportDirective
  */
 data class KibbleImport internal constructor(val type: KibbleType) : KibbleElement, Comparable<KibbleImport> {
 
-    internal constructor(file: KibbleFile, kt: KtImportDirective) : this(KibbleType.from(kt))
+    internal constructor(file: KibbleFile, kt: KtImportDirective) : this(KibbleType.from(file, kt))
 
     override fun compareTo(other: KibbleImport): Int {
         return type.compareTo(other.type)

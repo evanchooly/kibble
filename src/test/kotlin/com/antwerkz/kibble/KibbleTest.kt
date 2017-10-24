@@ -48,7 +48,7 @@ return "hi"""")
         }
 
         Assert.assertEquals(klass.functions.first { it.name == "output"}.parameters,
-                listOf(KibbleParameter(file,"count", KibbleType("Long"))))
+                listOf(KibbleParameter(file,"count", KibbleType(file, "Long"))))
 
         Assert.assertEquals(klass.functions.first { it.name == "toString" }.parameters, listOf<KibbleParameter>())
     }

@@ -1,6 +1,10 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
+import com.antwerkz.kibble.model.KibbleExtractor.extractAnnotations
+import com.antwerkz.kibble.model.KibbleExtractor.extractSuperCallArgs
+import com.antwerkz.kibble.model.KibbleExtractor.extractSuperType
+import com.antwerkz.kibble.model.KibbleExtractor.extractSuperTypes
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
@@ -12,11 +16,11 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property companion true if this object is a companion object
  */
 class KibbleObject internal constructor(override val file: KibbleFile, val name: String? = null, val companion: Boolean = false)
-    : AnnotationHolder, ClassOrObjectHolder, Extendable, FunctionHolder, KibbleElement, PropertyHolder, Visible {
+    : AnnotationHolder, ClassOrObjectHolder, FunctionHolder, KibbleElement, PropertyHolder, Visible {
 
-    override var superTypes = listOf<KibbleType>()
-    override var superType: KibbleType? = null
-    override var superCallArgs = listOf<String>()
+    var superTypes = listOf<KibbleType>()
+    var superType: KibbleType? = null
+    var superCallArgs = listOf<String>()
 
     override var visibility: Visibility = PUBLIC
     override var annotations = mutableListOf<KibbleAnnotation>()
@@ -40,10 +44,13 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
 
     internal constructor(file: KibbleFile, kt: KtObjectDeclaration): this(file, kt.name, kt.isCompanion()) {
         this.kt = kt
-        Extendable.extractSuperInformation(file,this, kt)
+        superType = extractSuperType(file, kt.superTypeListEntries)
+        superTypes = extractSuperTypes(file, kt.superTypeListEntries)
+        superCallArgs = extractSuperCallArgs(kt.superTypeListEntries)
+
         visibility = Visible.apply(kt.visibilityModifier())
 
-        extractAnnotations(file, kt.annotationEntries)
+        annotations = extractAnnotations(file, kt.annotationEntries)
     }
 
     override fun addClass(name: String): KibbleClass {
@@ -59,7 +66,7 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(file, name, type = type, body = body).also {
+        return KibbleFunction(file, name, proposed = type, body = body).also {
             functions += it
         }
     }
@@ -69,7 +76,7 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
         if (constructorParam) {
             throw IllegalArgumentException("Object properties can not also be constructor parameters")
         }
-        return KibbleProperty(file, name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
+        return KibbleProperty(file, name, type?.let { KibbleType.from(file, type) }, initializer, modality, overriding, lateInit).also {
             it.visibility = visibility
             properties += it
         }

@@ -4,6 +4,7 @@ import com.antwerkz.kibble.model.KibbleFile
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer.PLAIN_FULL_PATHS
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
+import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles.*
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.com.intellij.openapi.Disposable
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -68,7 +69,7 @@ class Kibble {
             paths.forEach { configuration.addKotlinSourceRoot(it.absolutePath) }
 
             return KotlinCoreEnvironment
-                    .createForProduction(Disposable { }, configuration, listOf())
+                    .createForProduction(Disposable { }, configuration, EMPTY)
                     .getSourceFiles()
                     .map { KibbleFile(it, context) }
         }

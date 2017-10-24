@@ -7,8 +7,8 @@ package com.antwerkz.kibble.model
  * @property objects the list of objects declared on this type
  */
 interface ClassOrObjectHolder: FunctionHolder {
-    val classes: MutableList<KibbleClass>
-    val objects: MutableList<KibbleObject>
+    val classes: List<KibbleClass>
+    val objects: List<KibbleObject>
 
     /**
      * Adds a class to this

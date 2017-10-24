@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.psi.KtProperty
  * @property properties the properties held by this type
  */
 interface PropertyHolder {
-    val properties: MutableList<KibbleProperty>
+    val properties: List<KibbleProperty>
 
     /**
      * Adds new property to this type
@@ -47,12 +47,4 @@ interface PropertyHolder {
     fun getProperty(prop: String): KibbleProperty? {
         return properties.firstOrNull { it.name == prop }
     }
-}
-
-internal fun PropertyHolder.extractProperties(file: KibbleFile, declarations: List<KtDeclaration>) {
-    properties += declarations
-            .filterIsInstance<KtProperty>()
-            .map {
-                KibbleProperty(file, it)
-            }
 }

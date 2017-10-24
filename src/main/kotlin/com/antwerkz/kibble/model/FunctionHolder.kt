@@ -1,16 +1,14 @@
 package com.antwerkz.kibble.model
 
-import org.jetbrains.kotlin.psi.KtDeclaration
-import org.jetbrains.kotlin.psi.KtFunction
-
 /**
  * Represents this type can hold functions
  *
  * @property functions the list of functions held by this type
  */
 interface FunctionHolder {
-    val functions: MutableList<KibbleFunction>
+    val functions: List<KibbleFunction>
     val file: KibbleFile
+
     /**
      * Adds a new function to this type
      *
@@ -25,12 +23,4 @@ interface FunctionHolder {
     fun getFunctions(name: String): List<KibbleFunction> {
         return functions.filter { it.name == name }
     }
-}
-
-internal fun FunctionHolder.extractFunctions(declarations: List<KtDeclaration>) {
-    functions += declarations
-            .filterIsInstance<KtFunction>()
-            .map {
-                KibbleFunction(file, it)
-            }
 }

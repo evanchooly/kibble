@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.psi.KtParameter
  * @property type the parameter type
  * @property initializer the parameter initializer
  */
-open class KibbleParameter internal constructor(file: KibbleFile, val name: String, proposedType: KibbleType?,
+open class KibbleParameter internal constructor(override val file: KibbleFile, val name: String, proposedType: KibbleType?,
                                                 var initializer: String? = null) : KibbleElement, GenericCapable, Mutable, Visible {
 
     internal constructor(file: KibbleFile, kt: KtParameter) : this(file, kt.name!!, KibbleType.from(file, kt.typeReference)) {

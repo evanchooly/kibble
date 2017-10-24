@@ -20,21 +20,24 @@ class KibbleTypeTest {
                 .properties[0]
                 .type!!
 
-        Assert.assertEquals(type.value, "SomeType<kotlin.String, kotlin.Double>?")
+        Assert.assertEquals(type.value, "SomeType<String, Double>?")
         Assert.assertEquals(type.className, "SomeType")
         Assert.assertEquals(type.pkgName, "com.foo.bar")
         Assert.assertTrue(type.nullable)
         Assert.assertEquals(type.typeParameters.size, 2)
-        Assert.assertEquals(type.typeParameters[0].type, "kotlin.String")
-        Assert.assertEquals(type.typeParameters[1].type, "kotlin.Double")
+        Assert.assertEquals(type.typeParameters[0].type.value, "String")
+        Assert.assertEquals(type.typeParameters[1].type.value, "Double")
     }
 
     fun fullyQualified() {
-        val qualified = KibbleType.from("java.math.BigDecimal")
-        val decimal = KibbleType.from("BigDecimal")
-        val integer = KibbleType.from("BigInteger")
-        val dateTime = KibbleType.from("java.time.LocalDateTime")
-        val list = KibbleType("List", "java.util", listOf(TypeParameter(KibbleType.from("String"))))
+        val file = KibbleFile()
+
+        val qualified = KibbleType.from(file, "java.math.BigDecimal")
+        val decimal = KibbleType.from(file, "BigDecimal")
+        val integer = KibbleType.from(file, "BigInteger")
+        val dateTime = KibbleType.from(file, "java.time.LocalDateTime")
+        val list = KibbleType(file, "List", "java.util", listOf(TypeParameter(file,
+                KibbleType.from(file, "String"))))
 
         Assert.assertEquals(qualified.value, "BigDecimal")
         Assert.assertEquals(decimal.value, "BigDecimal")
@@ -44,9 +47,11 @@ class KibbleTypeTest {
     }
 
     fun components() {
-        val dateTime = KibbleType.from("java.time.LocalDateTime")
-        val entry = KibbleType.from("java.util.Map.Entry")
-        val int = KibbleType.from("Int")
+        val file = KibbleFile()
+
+        val dateTime = KibbleType.from(file, "java.time.LocalDateTime")
+        val entry = KibbleType.from(file, "java.util.Map.Entry")
+        val int = KibbleType.from(file, "Int")
 
         Assert.assertEquals(dateTime.className, "LocalDateTime")
         Assert.assertEquals(dateTime.pkgName, "java.time")
@@ -57,8 +62,11 @@ class KibbleTypeTest {
     }
 
     fun values() {
-        val type = KibbleType("Class", "this.is.the.package", listOf(TypeParameter(KibbleType.from("K")),
-                TypeParameter(KibbleType.from("V"))), true, "Different", imported = true)
+        val file = KibbleFile()
+
+        val type = KibbleType(file, "Class", "this.is.the.package",
+                listOf(TypeParameter(file, KibbleType.from(file, "K")),
+                TypeParameter(file, KibbleType.from(file, "V"))), true, "Different", imported = true)
 
         Assert.assertEquals(type.fqcn, "this.is.the.package.Class")
         Assert.assertEquals(type.value, "Different<K, V>?")

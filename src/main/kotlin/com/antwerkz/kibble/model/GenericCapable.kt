@@ -15,21 +15,30 @@ interface GenericCapable {
                         ?.map { ParameterModifier.valueOf(it.text.toUpperCase()) }
                         ?.firstOrNull()
 
-                TypeParameter(file.normalize(KibbleType.from(it.name!!)), modifier, it.extendsBound?.text)
+                TypeParameter(file, KibbleType.from(file, it.name!!), modifier, it.extendsBound?.text)
             }
                     .toMutableList()
         }
 
         internal fun extractFromTypeProjections(file: KibbleFile, parameters: List<KtTypeProjection>): List<TypeParameter> {
-            val map: List<TypeParameter> = parameters.map {
-                TypeParameter(file.normalize(KibbleType.from(it.text)))
+            return parameters.map {
+                TypeParameter(file, KibbleType.from(file, it.text))
             }
-            return map
         }
 
     }
 
-    val typeParameters: List<TypeParameter>
+    val file: KibbleFile
+
+    val typeParameters: MutableList<TypeParameter>
+
+    fun addTypeParameter(type: String, modifier: ParameterModifier? = null, bounds: String? = null) {
+        addTypeParameter(KibbleType.from(file, type), modifier, bounds)
+    }
+
+    fun addTypeParameter(type: KibbleType, modifier: ParameterModifier? = null, bounds: String? = null) {
+        typeParameters += TypeParameter(file, type, modifier, bounds)
+    }
 }
 
 /**
@@ -39,7 +48,10 @@ interface GenericCapable {
  * @property modifier in/out
  * @property bounds the type bounds of the parameter
  */
-data class TypeParameter(val type: KibbleType, val modifier: ParameterModifier? = null, val bounds: String? = null) {
+class TypeParameter internal constructor(file: KibbleFile, proposed: KibbleType, val modifier: ParameterModifier? = null,
+                                         val bounds: String? = null) {
+    val type: KibbleType by lazy { file.normalize(proposed)}
+
     override fun toString(): String {
         return (modifier?.let { "$it " } ?: "") + type + (bounds?.let { ": $it"} ?: "")
     }

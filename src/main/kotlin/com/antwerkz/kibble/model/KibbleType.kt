@@ -17,8 +17,8 @@ import org.jetbrains.kotlin.psi.KtUserType
  * @property alias the type name alias
  * @property imported true if this type has been imported.  if true, only the className/alias will be used when generating the source code
  */
-open class KibbleType internal constructor(val className: String, val pkgName: String? = null,
-                                           override val typeParameters: List<TypeParameter> = listOf(),
+open class KibbleType internal constructor(override val file: KibbleFile, val className: String, val pkgName: String? = null,
+                                           override var typeParameters: List<TypeParameter> = listOf(),
                                            val nullable: Boolean = false, val alias: String? = null,
                                            private val imported: Boolean = false) : GenericCapable, Comparable<KibbleType> {
 
@@ -28,11 +28,11 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
          *
          * @return the new KibbleType
          */
-        fun from(type: String, alias: String? = null): KibbleType {
+        internal fun from(file: KibbleFile, type: String, alias: String? = null): KibbleType {
             val parsed = if (type.contains(".") || type.contains("<")) {
                 Kibble.parseSource("val temp: $type").properties[0].type!!
             } else {
-                KibbleType(type)
+                KibbleType(file, type)
             }
             return alias?.let { KibbleType(parsed, alias) } ?: parsed
         }
@@ -48,9 +48,9 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
             }
         }
 
-        internal fun from(kt: KtImportDirective): KibbleType {
+        internal fun from(file: KibbleFile, kt: KtImportDirective): KibbleType {
             val fqName = kt.importedFqName!!
-            return KibbleType(fqName.shortName().identifier, fqName.parent().asString(), alias = kt.aliasName)
+            return KibbleType(file, fqName.shortName().identifier, fqName.parent().asString(), alias = kt.aliasName)
         }
 
         internal fun extractType(file: KibbleFile, typeElement: KtUserType, nullable: Boolean = false): KibbleType {
@@ -68,14 +68,15 @@ open class KibbleType internal constructor(val className: String, val pkgName: S
 
             val className = pkgName?.let { raw.substring(it.length + 1) } ?: raw
 
-            return KibbleType(className, pkgName, parameters, nullable)
+            return KibbleType(file, className, pkgName, parameters, nullable)
         }
     }
 
-    internal constructor(type: KibbleType, imported: Boolean) : this(type.className, type.pkgName, type.typeParameters,
+    internal constructor(type: KibbleType, imported: Boolean) : this(type.file, type.className, type.pkgName, type.typeParameters,
             imported = imported)
 
-    internal constructor(type: KibbleType, alias: String) : this(type.className, type.pkgName, type.typeParameters, type.nullable, alias)
+    internal constructor(type: KibbleType, alias: String) : this(type.file, type.className, type.pkgName, type.typeParameters,
+            type.nullable, alias)
 
     /**
      * Gives the expression of this type for use in the source complete with type parameters

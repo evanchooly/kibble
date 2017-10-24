@@ -1,15 +1,12 @@
 package com.antwerkz.kibble.model
 
-import com.antwerkz.kibble.model.KibbleAnnotation.Companion.from
-import org.jetbrains.kotlin.psi.KtAnnotationEntry
-
 /**
  * Marks a type as supporting annotations
  *
  * @property annotations the list of annotations on this type
  */
 interface AnnotationHolder {
-    var annotations: MutableList<KibbleAnnotation>
+    val annotations: List<KibbleAnnotation>
 
     /**
      * Checks if this type has been annotated with a given Annotation
@@ -26,8 +23,4 @@ interface AnnotationHolder {
             it.type.className == annotation.simpleName || it.type.className == annotation.name
         }
     }
-}
-
-internal fun AnnotationHolder.extractAnnotations(file: KibbleFile, entries: List<KtAnnotationEntry>) {
-    annotations.addAll(entries.map { from(file, it) })
 }

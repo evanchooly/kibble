@@ -54,7 +54,5 @@ val list: List<Bar>"""
         Assert.assertEquals(typeParameter.type.fqcn, "com.foo.Bar")
         Assert.assertEquals(typeParameter.type.pkgName, "com.foo")
         Assert.assertEquals(typeParameter.type.className, "Bar")
-
-        println("typeParameter = ${typeParameter}")
     }
 }
