@@ -1,6 +1,7 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import org.intellij.lang.annotations.Language
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -10,7 +11,7 @@ class KibbleTypeTest {
         val file = Kibble.parseSource("val foo: com.foo.bar.Type")
         val type = file.properties[0].type
 
-        Assert.assertEquals(type?.value, "Type")
+        Assert.assertEquals(type?.toString(), "com.foo.bar.Type")
         Assert.assertTrue(type?.typeParameters?.isEmpty() ?: false)
     }
 
@@ -20,38 +21,33 @@ class KibbleTypeTest {
                 .properties[0]
                 .type!!
 
-        Assert.assertEquals(type.value, "SomeType<String, Double>?")
+        Assert.assertEquals(type.toString(), "com.foo.bar.SomeType<String, Double>?")
         Assert.assertEquals(type.className, "SomeType")
         Assert.assertEquals(type.pkgName, "com.foo.bar")
         Assert.assertTrue(type.nullable)
         Assert.assertEquals(type.typeParameters.size, 2)
-        Assert.assertEquals(type.typeParameters[0].type.value, "String")
-        Assert.assertEquals(type.typeParameters[1].type.value, "Double")
+        Assert.assertEquals(type.typeParameters[0].type.toString(), "String")
+        Assert.assertEquals(type.typeParameters[1].type.toString(), "Double")
     }
 
     fun fullyQualified() {
-        val file = KibbleFile()
+        val qualified = KibbleType.from("java.math.BigDecimal")
+        val decimal = KibbleType.from("BigDecimal")
+        val integer = KibbleType.from("BigInteger")
+        val dateTime = KibbleType.from("java.time.LocalDateTime")
+        val list = KibbleType("java.util", "List", mutableListOf(TypeParameter(KibbleType.from("String"))))
 
-        val qualified = KibbleType.from(file, "java.math.BigDecimal")
-        val decimal = KibbleType.from(file, "BigDecimal")
-        val integer = KibbleType.from(file, "BigInteger")
-        val dateTime = KibbleType.from(file, "java.time.LocalDateTime")
-        val list = KibbleType(file, "List", "java.util", listOf(TypeParameter(file,
-                KibbleType.from(file, "String"))))
-
-        Assert.assertEquals(qualified.value, "BigDecimal")
-        Assert.assertEquals(decimal.value, "BigDecimal")
-        Assert.assertEquals(integer.value, "BigInteger")
-        Assert.assertEquals(dateTime.value, "LocalDateTime")
-        Assert.assertEquals(list.value, "java.util.List<String>")
+        Assert.assertEquals(qualified.toString(), "java.math.BigDecimal")
+        Assert.assertEquals(decimal.toString(), "BigDecimal")
+        Assert.assertEquals(integer.toString(), "BigInteger")
+        Assert.assertEquals(dateTime.toString(), "java.time.LocalDateTime")
+        Assert.assertEquals(list.toString(), "java.util.List<String>")
     }
 
     fun components() {
-        val file = KibbleFile()
-
-        val dateTime = KibbleType.from(file, "java.time.LocalDateTime")
-        val entry = KibbleType.from(file, "java.util.Map.Entry")
-        val int = KibbleType.from(file, "Int")
+        val dateTime = KibbleType.from("java.time.LocalDateTime")
+        val entry = KibbleType.from("java.util.Map.Entry")
+        val int = KibbleType.from("Int")
 
         Assert.assertEquals(dateTime.className, "LocalDateTime")
         Assert.assertEquals(dateTime.pkgName, "java.time")
@@ -62,13 +58,50 @@ class KibbleTypeTest {
     }
 
     fun values() {
-        val file = KibbleFile()
-
-        val type = KibbleType(file, "Class", "this.is.the.package",
-                listOf(TypeParameter(file, KibbleType.from(file, "K")),
-                TypeParameter(file, KibbleType.from(file, "V"))), true, "Different", imported = true)
+        val file = KibbleFile(pkgName = "com.antwerkz.aliases")
+        val type = file.resolve(KibbleType("this.is.the.package", "Class",
+                mutableListOf(TypeParameter(KibbleType.from("K")),
+                TypeParameter(KibbleType.from("V"))), true))
 
         Assert.assertEquals(type.fqcn, "this.is.the.package.Class")
-        Assert.assertEquals(type.value, "Different<K, V>?")
+        Assert.assertEquals(type.toString(), "Class<K, V>?")
+
+        val list = file.resolve(KibbleType.from("java.util.List<com.foo.Bar, out K>"))
+        Assert.assertEquals(list.fqcn, "java.util.List")
+        Assert.assertEquals(list.toString(), "List<Bar, out K>")
+    }
+
+    fun autoImportedTypes() {
+        @Language("kotlin")
+        val source = """package com.antwerkz.testing
+class Main {
+    val b: Boolean
+    val byte: Byte
+    val short: Short
+    val d: Double
+    val f: Float
+    val l: Long
+    val i: Int
+    val integer: Integer
+    val s: String
+}
+""".trim()
+        val file = Kibble.parseSource(source)
+        val props = file.classes[0].properties.iterator()
+
+        check(props.next(), "Boolean")
+        check(props.next(), "Byte")
+        check(props.next(), "Short")
+        check(props.next(), "Double")
+        check(props.next(), "Float")
+        check(props.next(), "Long")
+        check(props.next(), "Int")
+        check(props.next(), "Integer")
+        check(props.next(), "String")
+    }
+
+    private fun check(property: KibbleProperty, fqcn: String) {
+        val type = property.type!!
+        Assert.assertEquals(type.fqcn, fqcn)
     }
 }

@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property name the object name
  * @property companion true if this object is a companion object
  */
-class KibbleObject internal constructor(override val file: KibbleFile, val name: String? = null, val companion: Boolean = false)
+class KibbleObject internal constructor(val file: KibbleFile, val name: String? = null, val companion: Boolean = false)
     : AnnotationHolder, ClassOrObjectHolder, FunctionHolder, KibbleElement, PropertyHolder, Visible {
 
     var superTypes = listOf<KibbleType>()
@@ -25,7 +25,7 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
     override var visibility: Visibility = PUBLIC
     override var annotations = mutableListOf<KibbleAnnotation>()
     override val classes: MutableList<KibbleClass> by lazy {
-        KibbleExtractor.extractClasses(kt?.declarations, file)
+        KibbleExtractor.extractClasses(file, kt?.declarations)
     }
 
     override val objects: MutableList<KibbleObject> by lazy {
@@ -33,28 +33,28 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
     }
 
     override val functions: MutableList<KibbleFunction> by lazy {
-        KibbleExtractor.extractFunctions(file, kt?.declarations)
+        KibbleExtractor.extractFunctions(kt?.declarations)
     }
 
     override val properties: MutableList<KibbleProperty> by lazy {
-        KibbleExtractor.extractProperties(file, kt?.declarations)
+        KibbleExtractor.extractProperties(kt?.declarations)
     }
 
     private var kt: KtObjectDeclaration? = null
 
-    internal constructor(file: KibbleFile, kt: KtObjectDeclaration): this(file, kt.name, kt.isCompanion()) {
+    internal constructor(file: KibbleFile, kt: KtObjectDeclaration) : this(file, kt.name, kt.isCompanion()) {
         this.kt = kt
-        superType = extractSuperType(file, kt.superTypeListEntries)
-        superTypes = extractSuperTypes(file, kt.superTypeListEntries)
+        superType = extractSuperType(kt.superTypeListEntries)
+        superTypes = extractSuperTypes(kt.superTypeListEntries)
         superCallArgs = extractSuperCallArgs(kt.superTypeListEntries)
 
         visibility = Visible.apply(kt.visibilityModifier())
 
-        annotations = extractAnnotations(file, kt.annotationEntries)
+        annotations = extractAnnotations(kt.annotationEntries)
     }
 
     override fun addClass(name: String): KibbleClass {
-        return KibbleClass(file).also {
+        return KibbleClass(file, name).also {
             classes += it
         }
     }
@@ -66,7 +66,7 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(file, name, proposed = type, body = body).also {
+        return KibbleFunction(name, type = KibbleType.from(type), body = body).also {
             functions += it
         }
     }
@@ -76,7 +76,7 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
         if (constructorParam) {
             throw IllegalArgumentException("Object properties can not also be constructor parameters")
         }
-        return KibbleProperty(file, name, type?.let { KibbleType.from(file, type) }, initializer, modality, overriding, lateInit).also {
+        return KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
             it.visibility = visibility
             properties += it
         }
@@ -86,6 +86,16 @@ class KibbleObject internal constructor(override val file: KibbleFile, val name:
      * @return the string/source form of this type
      */
     override fun toString() = toSource().toString()
+
+    override fun collectImports(file: KibbleFile) {
+        collectImports(file, objects, classes, functions, properties)
+    }
+
+    private fun collectImports(file: KibbleFile, vararg list: MutableList<out KibbleElement>) {
+        list
+                .flatMap { it }
+                .forEach { it.collectImports(file) }
+    }
 
     /**
      * @return the string/source form of this type

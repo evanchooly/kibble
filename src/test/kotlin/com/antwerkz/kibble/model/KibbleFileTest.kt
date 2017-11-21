@@ -20,7 +20,7 @@ class KibbleFileTest {
 
         file.addImport(ResultSet::class.java, "aliasName")
         file.addImport(String::class.java, "anotherAlias")
-        assertImport(file, "java.lang", "String", "anotherAlias")
+        assertImport(file, "java.lang.String", "anotherAlias")
         Assert.assertEquals(file.toSource().toString().trim(),
                 """package com.antwerkz.kibble
 
@@ -40,7 +40,7 @@ import java.sql.ResultSet as aliasName""")
         Assert.assertEquals(iterator.next().type.fqcn, "java.util.ArrayList")
         val next = iterator.next()
         Assert.assertEquals(next.type.fqcn, "java.util.HashMap")
-        Assert.assertEquals(next.type.alias, "HMap")
+        Assert.assertEquals(next.alias, "HMap")
         Assert.assertEquals(iterator.next().type.fqcn, "javax.annotation.Generated")
     }
 
@@ -84,11 +84,11 @@ class Generic<T>"""
         Kibble.parseSource(source2, file.context)
         val props = file.classes[0].properties.iterator()
 
-        check(props.next(), "Second", "com.antwerkz.testing.Second")
-        check(props.next(), "Third", "com.antwerkz.testing.Third")
-        check(props.next(), "Bar", "com.foo.Bar")
-        check(props.next(), "Flur", "com.zorg.Flur")
-        check(props.next(), "Generic<Int>", "com.antwerkz.testing.Generic")
+        check(props.next(), "com.antwerkz.testing.Second", "com.antwerkz.testing.Second")
+        check(props.next(), "com.antwerkz.testing.Third", "com.antwerkz.testing.Third")
+        check(props.next(), "com.foo.Bar", "com.foo.Bar")
+        check(props.next(), "com.zorg.Flur", "com.zorg.Flur")
+        check(props.next(), "com.antwerkz.testing.Generic<Int>", "com.antwerkz.testing.Generic")
 
     }
 
@@ -105,7 +105,7 @@ class Second""".trim()
         val file = Kibble.parseSource(source)
         val props = file.classes[0].properties.iterator()
 
-        check(props.next(), "Second", "com.antwerkz.testing.Second")
+        check(props.next(), "com.antwerkz.testing.Second", "com.antwerkz.testing.Second")
     }
 
     @Test
@@ -127,12 +127,12 @@ class Second""".trim())
         val files = Kibble.parse(listOf(sourceFile1, sourceFile2))
         val props = files[0].classes[0].properties.iterator()
 
-        check(props.next(), "Second", "com.antwerkz.testing.Second")
+        check(props.next(), "com.antwerkz.testing.Second", "com.antwerkz.testing.Second")
     }
 
     private fun check(property: KibbleProperty, expectedName: String, fqcn: String) {
         val type = property.type!!
-        Assert.assertEquals(type.value, expectedName)
+        Assert.assertEquals(type.toString(), expectedName)
         Assert.assertEquals(type.fqcn, fqcn)
     }
 
@@ -140,38 +140,69 @@ class Second""".trim())
     fun normalize() {
         val file = KibbleFile("test.kt")
 
-        Assert.assertEquals(file.normalize(KibbleType.from(file, "java.util.List")).value, "List")
-        Assert.assertNotNull(file.imports.firstOrNull { "List" == it.type.alias || "List" == it.type.className })
-        assertImport(file, "java.util", "List")
+        val list = file.resolve(KibbleType.from("java.util.List"))
+        Assert.assertEquals(list.toString(), "List")
+        Assert.assertEquals(list.resolved, "List")
+        Assert.assertNotNull(file.imports.firstOrNull { "List" == it.alias || "List" == it.type.className })
+        assertImport(file, "java.util.List")
 
-        Assert.assertEquals(file.normalize(KibbleType.from(file, "java.util.List")).value, "List")
-        assertImport(file, "java.util", "List")
+        val resolve = file.resolve(list)
+        Assert.assertEquals(resolve.toString(), "List")
+        Assert.assertEquals(resolve.resolved, "List")
+        assertImport(file, "java.util.List")
 
-        Assert.assertEquals(file.normalize(KibbleType.from(file, "List")).value, "List")
-        assertImport(file, "java.util", "List")
+        val bareList = file.resolve(KibbleType.from("List"))
+        Assert.assertEquals(bareList.toString(), "List")
+        Assert.assertEquals(bareList.resolved, "List")
+        assertImport(file, "java.util.List")
 
-        Assert.assertEquals(file.normalize(KibbleType.from(file, "java.util.Set")).value, "Set")
-        assertImport(file, "java.util", "Set")
+        val set = file.resolve(KibbleType.from("java.util.  Set"))
+        Assert.assertEquals(set.toString(), "Set")
+        Assert.assertEquals(set.resolved, "Set")
+        assertImport(file, "java.util.Set")
 
         file.addImport(java.awt.List::class.java, "awtList")
-        assertImport(file, "java.awt", "List", "awtList")
+        val awt = file.resolve(KibbleType.from("java.awt.List"))
+        Assert.assertEquals(awt.toString(), "awtList")
+        Assert.assertEquals(awt.resolved, "awtList")
+        assertImport(file, "java.awt.List", "awtList")
 
-        Assert.assertEquals(file.normalize(KibbleType.from(file, "java.awt.List")).value, "awtList")
-        Assert.assertEquals(file.normalize(KibbleType.from(file, "awtList")).value, "awtList")
+        val awt2 = file.resolve(KibbleType.from("awtList"))
+        Assert.assertEquals(awt2.toString(), "awtList")
+        Assert.assertEquals(awt2.resolved, "awtList")
 
-        Assert.assertEquals(file.normalize(KibbleType.from(file, "Map.Entry")).value, "Map.Entry")
+        val entry = file.resolve(KibbleType.from("Map.Entry"))
+        Assert.assertEquals(entry.toString(), "Map.Entry")
+        Assert.assertEquals(entry.resolved, "Map.Entry")
+
+        val bob = file.resolve(KibbleType.from("Bob"))
+        Assert.assertEquals(bob.toString(), "Bob")
+        Assert.assertEquals(bob.resolved, "Bob")
+        assertNoImport(file, "Bob", null)
     }
 
 
-    fun assertImport(file: KibbleFile, pkgName: String, className: String, alias: String? = null) {
+    private fun assertImport(file: KibbleFile, fqcn: String, alias: String? = null) {
         Assert.assertEquals(file.imports.filter {
-            it.type.pkgName == pkgName && it.type.className == className
-        }.size, 1)
+            it.type.fqcn == fqcn
+        }.size, 1, "Should have found an import for $fqcn")
 
         alias?.let {
-            Assert.assertEquals(file.imports.filter {
-                it.type.alias == alias
-            }.size, 1)
+            Assert.assertEquals(file.imports
+                    .filter { it.alias == alias }
+                    .size, 1, "Should have found an import for $alias")
+        }
+    }
+
+    private fun assertNoImport(file: KibbleFile, fqcn: String, alias: String? = null) {
+        Assert.assertEquals(file.imports.filter {
+            it.type.fqcn == fqcn
+        }.size, 0, "Should not have found an import for $fqcn")
+
+        alias?.let {
+            Assert.assertEquals(file.imports
+                    .filter { it.alias == alias }
+                    .size, 0, "Should not have found an import for $alias")
         }
     }
 }

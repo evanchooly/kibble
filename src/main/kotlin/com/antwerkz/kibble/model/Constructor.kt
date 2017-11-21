@@ -11,21 +11,21 @@ import org.jetbrains.kotlin.psi.KtPrimaryConstructor
  * @property parameters the constructor parameters
  * @property body the constructor body
  */
-open class Constructor internal constructor(override val file: KibbleFile) : Visible, ParameterHolder, KibbleElement {
-    internal constructor(file: KibbleFile, klass: KibbleClass, kt: KtPrimaryConstructor) : this(file) {
+open class Constructor internal constructor() : Visible, ParameterHolder, KibbleElement {
+    internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this() {
         kt.valueParameters.forEach {
-            val kibbleProperty = KibbleProperty(file, it)
+            val kibbleProperty = KibbleProperty(it)
             if (it.hasValOrVar()) {
                 kibbleProperty.constructorParam = true
                 klass.properties += kibbleProperty
             }
-            parameters += kibbleProperty
+            parameters.add(kibbleProperty)
         }
         body = kt.bodyExpression?.text ?: ""
     }
 
     override var visibility: Visibility = PUBLIC
-    override val parameters = mutableListOf<KibbleParameter>()
+    override var parameters: MutableList<KibbleParameter> = mutableListOf()
     var body: String? = null
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
@@ -36,5 +36,11 @@ open class Constructor internal constructor(override val file: KibbleFile) : Vis
         }
 
         return writer
+    }
+
+    override fun collectImports(file: KibbleFile) {
+        parameters.forEach {
+            it.type?.let { file.resolve(it) }
+        }
     }
 }

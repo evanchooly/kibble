@@ -8,9 +8,9 @@ import org.jetbrains.kotlin.psi.KtImportDirective
  *
  * @property type the imported typed
  */
-data class KibbleImport internal constructor(val type: KibbleType) : KibbleElement, Comparable<KibbleImport> {
+data class KibbleImport internal constructor(val type: KibbleType,  val alias: String? = null) : KibbleElement, Comparable<KibbleImport> {
 
-    internal constructor(file: KibbleFile, kt: KtImportDirective) : this(KibbleType.from(file, kt))
+    internal constructor(kt: KtImportDirective) : this(KibbleType.from(kt), kt.aliasName)
 
     override fun compareTo(other: KibbleImport): Int {
         return type.compareTo(other.type)
@@ -26,9 +26,11 @@ data class KibbleImport internal constructor(val type: KibbleType) : KibbleEleme
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.write("import ${type.fqcn}")
-        type.alias?.let { writer.write(" as ${type.alias}") }
+        alias?.let { writer.write(" as $it") }
         writer.writeln()
 
         return writer
     }
+
+    override fun collectImports(file: KibbleFile) {}
 }

@@ -7,7 +7,6 @@ package com.antwerkz.kibble.model
  */
 interface FunctionHolder {
     val functions: List<KibbleFunction>
-    val file: KibbleFile
 
     /**
      * Adds a new function to this type

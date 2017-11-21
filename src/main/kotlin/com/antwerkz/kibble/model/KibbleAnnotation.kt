@@ -13,11 +13,10 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
  * @property type the annotation type
  * @property arguments the values passed to the annotation
  */
-class KibbleAnnotation internal constructor(file: KibbleFile, val proposedType: KibbleType,
-                                            val arguments: Map<String, Any> = mapOf()) : KibbleElement {
+class KibbleAnnotation internal constructor(val type: KibbleType, val arguments: Map<String, Any> = mapOf()) : KibbleElement {
 
     companion object {
-        internal fun from(file: KibbleFile, annotation: KtAnnotationEntry): KibbleAnnotation {
+        internal fun from(annotation: KtAnnotationEntry): KibbleAnnotation {
             val arguments = annotation.allChildren
                     .filterIsInstance(KtValueArgumentList::class.java)
                     .firstOrNull()
@@ -26,7 +25,8 @@ class KibbleAnnotation internal constructor(file: KibbleFile, val proposedType: 
                         val name = it.getArgumentName()?.text ?: "value"
                         val expression = it.getArgumentExpression()
                         name to when (expression) {
-                            is KtAnnotatedExpression -> from(file, expression.allChildren
+                            is KtAnnotatedExpression -> from(expression
+                                    .allChildren
                                     .filterIsInstance(KtAnnotationEntry::class.java)
                                     .first())
                             else -> expression?.text ?: ""
@@ -34,13 +34,11 @@ class KibbleAnnotation internal constructor(file: KibbleFile, val proposedType: 
                     }?.associateBy({ it.first }, { it.second })
                     ?: mapOf()
             val type = annotation.typeReference?.typeElement?.name?.let {
-                KibbleType.from(file, it)
-            } ?: KibbleType(file, (annotation.typeReference?.typeElement as KtUserType).referencedName!!)
-            return KibbleAnnotation(file, type, arguments)
+                KibbleType.from(it)
+            } ?: KibbleType(className = (annotation.typeReference?.typeElement as KtUserType).referencedName!!)
+            return KibbleAnnotation(type, arguments)
         }
     }
-
-    val type: KibbleType by lazy { file.normalize(proposedType)  }
 
     /**
      * @return the source form of this annotation
@@ -48,7 +46,7 @@ class KibbleAnnotation internal constructor(file: KibbleFile, val proposedType: 
     override fun toString() = toSource().toString()
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        var string = "@${type.value}"
+        var string = "@$type"
         if (arguments.isNotEmpty()) {
             string += arguments.entries.joinToString(prefix = "(", postfix = ")",
                     transform = {
@@ -78,5 +76,9 @@ class KibbleAnnotation internal constructor(file: KibbleFile, val proposedType: 
      */
     fun getValue(): String? {
         return arguments["value"] as String
+    }
+
+    override fun collectImports(file: KibbleFile) {
+        file.resolve(type)
     }
 }

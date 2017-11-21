@@ -16,10 +16,10 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property body the function body
  * @property overriding true if this function overrides a function in a parent type
  */
-class KibbleFunction internal constructor(override val file: KibbleFile, var name: String? = null,
+class KibbleFunction internal constructor(var name: String? = null,
                                           override var visibility: Visibility = PUBLIC,
                                           override var modality: Modality = FINAL,
-                                          private var proposed: String = "Unit",
+                                          var type: KibbleType? = null,
                                           var body: String = "",
                                           var bodyBlock: Boolean = true,
                                           override var overriding: Boolean = false)
@@ -27,15 +27,13 @@ class KibbleFunction internal constructor(override val file: KibbleFile, var nam
 
     override val parameters = mutableListOf<KibbleParameter>()
 
-    val type: KibbleType? by lazy { file.normalize(KibbleType.from(file, proposed)) }
-
-    internal constructor(file: KibbleFile, kt: KtFunction) : this(file, kt.name) {
-        parse(file, kt)
+    internal constructor(kt: KtFunction) : this(kt.name) {
+        parse(kt)
     }
 
-    private fun parse(file: KibbleFile, kt: KtFunction) {
+    private fun parse(kt: KtFunction) {
         kt.valueParameters.forEach {
-            parameters += KibbleParameter(file, it)
+            parameters += KibbleParameter(it)
         }
         this.body = kt.bodyExpression?.text?.trim() ?: ""
         this.bodyBlock = kt.hasBlockBody()
@@ -46,7 +44,7 @@ class KibbleFunction internal constructor(override val file: KibbleFile, var nam
                     .trimIndent()
         }
         kt.typeReference?.let {
-            this.proposed = it.text
+            this.type = KibbleType.from(it.text)
         }
 
         kt.modifierList
@@ -61,12 +59,17 @@ class KibbleFunction internal constructor(override val file: KibbleFile, var nam
      */
     override fun toString() = toSource().toString()
 
+    override fun collectImports(file: KibbleFile) {
+        type?.let { file.resolve(it) }
+        parameters.forEach { it.collectImports(file) }
+    }
+
     /**
      * @return the string/source form of this type
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.write("", level)
-        val returnType = if (type != null && type?.value != "Unit") ": $type" else ""
+        val returnType = if (type != null && type?.toString() != "Unit") ": $type" else ""
         if (overriding) {
             writer.write("override ")
         }

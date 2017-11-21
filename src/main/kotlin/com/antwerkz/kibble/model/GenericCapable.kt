@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 
 interface GenericCapable {
     companion object {
-        internal fun extractFromTypeParameters(file: KibbleFile, parameters: MutableList<KtTypeParameter>): MutableList<TypeParameter> {
+        internal fun extractFromTypeParameters(parameters: MutableList<KtTypeParameter>): MutableList<TypeParameter> {
             return parameters.map {
                 val modifier: ParameterModifier? = it.modifierList
                         ?.allChildren
@@ -15,29 +15,27 @@ interface GenericCapable {
                         ?.map { ParameterModifier.valueOf(it.text.toUpperCase()) }
                         ?.firstOrNull()
 
-                TypeParameter(file, KibbleType.from(file, it.name!!), modifier, it.extendsBound?.text)
+                TypeParameter(KibbleType.from(it.name!!), modifier, it.extendsBound?.text)
             }
                     .toMutableList()
         }
 
-        internal fun extractFromTypeProjections(file: KibbleFile, parameters: List<KtTypeProjection>): List<TypeParameter> {
+        internal fun extractFromTypeProjections(parameters: List<KtTypeProjection>): MutableList<TypeParameter> {
             return parameters.map {
-                TypeParameter(file, KibbleType.from(file, it.text))
-            }
+                TypeParameter(KibbleType.from(it), it.modifierList?.let { ParameterModifier.valueOf(it.text.toUpperCase()) })
+            }.toMutableList()
         }
 
     }
 
-    val file: KibbleFile
-
     val typeParameters: MutableList<TypeParameter>
 
     fun addTypeParameter(type: String, modifier: ParameterModifier? = null, bounds: String? = null) {
-        addTypeParameter(KibbleType.from(file, type), modifier, bounds)
+        addTypeParameter(KibbleType.from(type), modifier, bounds)
     }
 
     fun addTypeParameter(type: KibbleType, modifier: ParameterModifier? = null, bounds: String? = null) {
-        typeParameters += TypeParameter(file, type, modifier, bounds)
+        typeParameters += TypeParameter(type, modifier, bounds)
     }
 }
 
@@ -48,9 +46,8 @@ interface GenericCapable {
  * @property modifier in/out
  * @property bounds the type bounds of the parameter
  */
-class TypeParameter internal constructor(file: KibbleFile, proposed: KibbleType, val modifier: ParameterModifier? = null,
+class TypeParameter internal constructor(val type: KibbleType, val modifier: ParameterModifier? = null,
                                          val bounds: String? = null) {
-    val type: KibbleType by lazy { file.normalize(proposed)}
 
     override fun toString(): String {
         return (modifier?.let { "$it " } ?: "") + type + (bounds?.let { ": $it"} ?: "")

@@ -39,9 +39,9 @@ class KibbleClassTest {
         kibbleClass = file.addClass("Temp")
         val nested = kibbleClass.addClass("Nested")
 
-        nested.superType = KibbleType.from(file, "Foo")
+        nested.superType = KibbleType.from("Foo")
         nested.superCallArgs = listOf("\"bar\"")
-        nested.superTypes += KibbleType.from(file, "Interface")
+        nested.superTypes += KibbleType.from("Interface")
 
         nested.addSecondaryConstructor().delegationArguments += listOf("blarg", "\"nargle\"")
 
@@ -104,7 +104,7 @@ open class Person : AbstractKotlinPerson {
         Assert.assertTrue(file.classes[0].superTypes.isEmpty())
         Assert.assertNull(file.classes[1].superType)
         Assert.assertEquals(file.classes[1].superTypes.size, 1)
-        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType(file, "AbstractKotlinPerson"))
+        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType("critter.test.source", "AbstractKotlinPerson"))
     }
 
     @Test
@@ -126,32 +126,32 @@ open class Person : AbstractKotlinPerson {
 
         val file = KibbleFile()
         var generic = file.addClass("Generic")
-        generic.addTypeParameter(KibbleType(file, "T"), OUT)
+        generic.addTypeParameter(KibbleType(className = "T"), OUT)
         Assert.assertEquals(generic.toSource().toString(), source)
 
         generic = file.addClass("Generic")
-        generic.addTypeParameter(KibbleType.from(file, "T"), IN)
+        generic.addTypeParameter(KibbleType.from("T"), IN)
         Assert.assertEquals(generic.toSource().toString(), """class Generic<in T> {
 }
 """)
 
         generic = file.addClass("Generic")
-        generic.addTypeParameter(KibbleType.from(file, "K"))
-        generic.addTypeParameter(KibbleType.from(file, "V"))
+        generic.addTypeParameter(KibbleType.from("K"))
+        generic.addTypeParameter(KibbleType.from("V"))
         Assert.assertEquals(generic.toSource().toString(), """class Generic<K, V> {
 }
 """)
 
         generic = file.addClass("Generic")
-        generic.addTypeParameter(KibbleType.from(file, "K"), OUT)
-        generic.addTypeParameter(KibbleType.from(file, "V"), IN)
+        generic.addTypeParameter(KibbleType.from("K"), OUT)
+        generic.addTypeParameter(KibbleType.from("V"), IN)
         Assert.assertEquals(generic.toSource().toString(), """class Generic<out K, in V> {
 }
 """)
 
         generic = file.addClass("Generic")
-        generic.addTypeParameter(KibbleType.from(file, "K"), OUT)
-        generic.addTypeParameter(KibbleType.from(file, "V"), IN)
+        generic.addTypeParameter(KibbleType.from("K"), OUT)
+        generic.addTypeParameter(KibbleType.from("V"), IN)
         Assert.assertEquals(generic.toSource().toString(), """class Generic<out K, in V> {
 }
 """)

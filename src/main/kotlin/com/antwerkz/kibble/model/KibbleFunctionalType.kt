@@ -5,13 +5,11 @@ import org.jetbrains.kotlin.psi.KtFunctionType
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtUserType
 
-class KibbleFunctionType internal constructor(file: KibbleFile, name: String,
-                                              var parameters: List<KibbleFunctionTypeParameter>, val type: KibbleType?)
-    : KibbleType(file, name) {
+class KibbleFunctionType internal constructor(name: String, var parameters: List<KibbleFunctionTypeParameter>, val type: KibbleType?)
+    : KibbleType(className = name) {
 
-    internal constructor(file: KibbleFile, kt: KtFunctionType) : this(file, kt.name ?: "",
-            kt.parameters.map { KibbleFunctionTypeParameter(file, it) },
-            kt.returnTypeReference?.typeElement?.let { extractType(file, it as KtUserType) })
+    internal constructor(kt: KtFunctionType) : this(kt.name ?: "", kt.parameters.map { KibbleFunctionTypeParameter(it) },
+            kt.returnTypeReference?.typeElement?.let { extractType(it as KtUserType) })
 
     override fun toString(): String {
         var string = parameters.joinToString(", ", prefix = "(", postfix = ")")
@@ -27,8 +25,12 @@ class KibbleFunctionType internal constructor(file: KibbleFile, name: String,
 internal class KibbleFunctionTypeParameter(val type: KibbleType?) : KibbleElement {
     var typeParameters = listOf<TypeParameter>()
 
-    internal constructor(file: KibbleFile, kt: KtParameter) : this(KibbleType.from(file, kt.typeReference)) {
-        typeParameters += GenericCapable.extractFromTypeParameters(file, kt.typeParameters)
+    internal constructor(kt: KtParameter) : this(KibbleType.from(kt.typeReference)) {
+        typeParameters += GenericCapable.extractFromTypeParameters(kt.typeParameters)
+    }
+
+    override fun collectImports(file: KibbleFile) {
+        type?.let { file.resolve(it) }
     }
 
     /**

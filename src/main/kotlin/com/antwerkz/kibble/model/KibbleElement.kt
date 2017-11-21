@@ -13,4 +13,6 @@ interface KibbleElement {
      * @param level the indentation level to use on the generated code
      */
     fun toSource(writer: SourceWriter = SourceWriter(), level: Int = 0): SourceWriter
+
+    fun collectImports(file: KibbleFile)
 }

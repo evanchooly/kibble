@@ -21,29 +21,27 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property overriding true if this property is overriding a property in a parent type
  * @property constructorParam true if the property should be listed as a constructor parameter
  */
-class KibbleProperty internal constructor(override val file: KibbleFile, name: String, type: KibbleType?, initializer: String? = null,
+class KibbleProperty internal constructor(name: String, type: KibbleType?, initializer: String? = null,
                                           override var modality: Modality = FINAL, override var overriding: Boolean = false,
                                           var lateInit: Boolean = false, var constructorParam: Boolean = false)
-    : KibbleParameter(file, name, type, initializer), Visible, Mutable, Modal<KibbleProperty>, Overridable, AnnotationHolder {
+    : KibbleParameter(name, type, initializer), Visible, Mutable, Modal<KibbleProperty>, Overridable, AnnotationHolder {
 
     init {
         visibility = PUBLIC
         mutability = VAL
     }
 
-    internal constructor(file: KibbleFile, kt: KtParameter) : this(file, kt.name!!, KibbleType.from(file, kt.typeReference),
-            kt.defaultValue?.text) {
+    internal constructor(kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference), kt.defaultValue?.text) {
 
-        extractAnnotations(file, kt.annotationEntries)
+        annotations.addAll(KibbleExtractor.extractAnnotations(kt.annotationEntries))
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
         mutability = Mutable.apply(kt.valOrVarKeyword)
     }
 
-    internal constructor(file: KibbleFile, kt: KtProperty) : this(file, kt.name!!, KibbleType.from(file, kt.typeReference),
-            kt.initializer?.text) {
+    internal constructor(kt: KtProperty) : this(kt.name!!, KibbleType.from(kt.typeReference), kt.initializer?.text) {
 
-        extractAnnotations(file, kt.annotationEntries)
+        annotations.addAll(KibbleExtractor.extractAnnotations(kt.annotationEntries))
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
         lateInit = kt.modifierList?.allChildren?.find { it.text == "lateinit" } != null

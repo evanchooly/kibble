@@ -23,82 +23,62 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property constructor the primary constructor for this class
  * @property secondaries the secondary constructors this class
  */
-class KibbleClass internal constructor(override var file: KibbleFile,
-                                       var name: String = "",
+class KibbleClass internal constructor(val file: KibbleFile, var name: String = "",
                                        override var modality: Modality = FINAL,
                                        override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder, GenericCapable,
         Visible, Modal<KibbleClass>, AnnotationHolder, PropertyHolder, ClassOrObjectHolder {
 
-    private var kt: KtClass? = null
-    val superTypes: MutableList<KibbleType> by lazy {
-        extractSuperTypes(file, kt?.superTypeListEntries)
-    }
-
-    var superType: KibbleType? = null
-        private set
-
     var superCallArgs = listOf<String>()
-        private set
 
     override var typeParameters = mutableListOf<TypeParameter>()
-
-    override val annotations: MutableList<KibbleAnnotation> by lazy {
-        extractAnnotations(file, kt?.annotationEntries)
-    }
-
-    override val classes: MutableList<KibbleClass> by lazy {
-        extractClasses(kt?.declarations, file)
-    }
-
-    override val objects: MutableList<KibbleObject> by lazy {
-        extractObjects(file, kt?.declarations)
-    }
-
-    override val functions: MutableList<KibbleFunction> by lazy {
-        extractFunctions(file, kt?.declarations)
-    }
-
-    override val properties: MutableList<KibbleProperty> by lazy {
-        extractProperties(file, kt?.declarations)
-    }
+    override val annotations: MutableList<KibbleAnnotation> = mutableListOf()
+    override val classes: MutableList<KibbleClass> = mutableListOf()
+    override val objects: MutableList<KibbleObject> = mutableListOf()
+    override val functions: MutableList<KibbleFunction> = mutableListOf()
+    override val properties: MutableList<KibbleProperty> = mutableListOf()
+    var superType: KibbleType? = null
+    val superTypes: MutableList<KibbleType> = mutableListOf()
 
     var initBlock: String? = null
 
-    var constructor = Constructor(file)
-        private set
+    var constructor: Constructor? = null
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
 
     internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
-        this.kt = kt
-
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
 
-        typeParameters = GenericCapable.extractFromTypeParameters(file, kt.typeParameters)
+        typeParameters = GenericCapable.extractFromTypeParameters(kt.typeParameters)
 
         kt.primaryConstructor?.let {
-            constructor = Constructor(file, this, it)
+            constructor = Constructor(this, it)
         }
         kt.secondaryConstructors.forEach {
-            secondaries += SecondaryConstructor(file, it)
+            secondaries += SecondaryConstructor(it)
         }
 
-        superType = extractSuperType(file, kt.superTypeListEntries)
-        superTypes = extractSuperTypes(file, kt.superTypeListEntries)
-        superCallArgs = extractSuperCallArgs(kt.superTypeListEntries)
-        annotations = extractAnnotations(file, kt.annotationEntries)
+        superType = extractSuperType(kt.superTypeListEntries)
+        superTypes += extractSuperTypes(kt.superTypeListEntries)
+        superCallArgs += extractSuperCallArgs(kt.superTypeListEntries)
+        annotations += extractAnnotations(kt.annotationEntries)
+
+        classes += extractClasses(file, kt.declarations)
+        objects += extractObjects(file, kt.declarations)
+        functions += extractFunctions(kt.declarations)
+        properties += extractProperties(kt.declarations)
     }
 
     fun addSuperType(type: String) {
-        superType = KibbleType.from(file, type)
+        superType = KibbleType.from(type)
     }
+
     /**
      * Adds a secondary constructor to this class
      *
      * @return the new constructor
      */
     fun addSecondaryConstructor(): SecondaryConstructor {
-        return SecondaryConstructor(file).also {
+        return SecondaryConstructor().also {
             secondaries += it
         }
     }
@@ -127,19 +107,22 @@ class KibbleClass internal constructor(override var file: KibbleFile,
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(file, name = name, proposed = type, body = body).also {
+        return KibbleFunction(name = name, type = KibbleType.from(type), body = body).also {
             functions += it
         }
     }
 
     override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
-        return KibbleProperty(file, name, type?.let { KibbleType.from(file, type) }, initializer, modality, overriding, lateInit).also {
+        return KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
             it.visibility = visibility
             it.mutability = mutability
             it.constructorParam = constructorParam
             if (constructorParam) {
-                constructor.parameters += it
+                if(constructor == null) {
+                    constructor = Constructor()
+                }
+                constructor?.parameters?.add(it)
             }
             properties += it
         }
@@ -160,7 +143,7 @@ class KibbleClass internal constructor(override var file: KibbleFile,
             writer.write(typeParameters.joinToString(", ", prefix = "<", postfix = ">"))
         }
 
-        constructor.toSource(writer, level)
+        constructor?.toSource(writer, level)
         superType?.let {
             writer.write(" : $it")
             writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))
@@ -204,5 +187,17 @@ class KibbleClass internal constructor(override var file: KibbleFile,
      */
     fun companion(): KibbleObject? {
         return objects.firstOrNull { it.companion }
+    }
+
+    override fun collectImports(file: KibbleFile) {
+        collectImports(file, properties, classes, objects, functions)
+        superType?.let { file.resolve(it) }
+        superTypes.forEach { file.resolve(it) }
+
+    }
+
+    private fun collectImports(file: KibbleFile, vararg list: MutableList<out KibbleElement>) {
+        list.flatMap { it }
+                .forEach { it.collectImports(file) }
     }
 }

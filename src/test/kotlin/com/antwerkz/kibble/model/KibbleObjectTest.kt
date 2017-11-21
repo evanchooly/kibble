@@ -39,7 +39,7 @@ object temp {
         Assert.assertEquals(obj.name, "temp")
         val function = obj.functions[0]
         Assert.assertEquals(function.name, "something")
-        Assert.assertEquals(function.type, "Junk")
+        Assert.assertEquals(function.type, KibbleType(className = "Junk"))
 
         val file = KibbleFile("temp.kt")
 

@@ -33,13 +33,6 @@ class SourceWriter {
     }
 
     /**
-     * Dumps the content of this SourceWriter to standard out
-     */
-    fun toConsole() {
-        println(toString())
-    }
-
-    /**
      * Returns the source written to this SourceWriter
      *
      * @return the source

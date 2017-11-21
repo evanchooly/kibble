@@ -20,7 +20,7 @@ class KibbleTest {
 
         Assert.assertEquals(file.functions.size, 1)
         Assert.assertEquals(file.functions[0].visibility, Visibility.INTERNAL)
-        Assert.assertEquals(file.functions[0].type, "String")
+        Assert.assertEquals(file.functions[0].type, KibbleType(className = "String"))
         Assert.assertEquals(file.functions[0].body, """println("hi")
 return "hi"""")
     }
@@ -36,7 +36,7 @@ return "hi"""")
         Assert.assertTrue(klass.isInternal())
         Assert.assertTrue(klass.hasAnnotation(Generated::class.java))
         Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
-        Assert.assertEquals(klass.constructor.parameters.size, 2, klass.constructor.parameters.toString())
+        Assert.assertEquals(klass.constructor?.parameters?.size, 2, klass.constructor?.parameters.toString())
 
         listOf("cost", "name", "age", "list", "map", "time", "random").forEach {
             Assert.assertNotNull(klass.properties.firstOrNull { p -> p.name == it}, "Should find '$it: "
@@ -48,7 +48,7 @@ return "hi"""")
         }
 
         Assert.assertEquals(klass.functions.first { it.name == "output"}.parameters,
-                listOf(KibbleParameter(file,"count", KibbleType(file, "Long"))))
+                listOf(KibbleParameter("count", KibbleType(className = "Long"))))
 
         Assert.assertEquals(klass.functions.first { it.name == "toString" }.parameters, listOf<KibbleParameter>())
     }
