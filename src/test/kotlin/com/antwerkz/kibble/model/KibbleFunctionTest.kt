@@ -16,6 +16,7 @@ class KibbleFunctionTest {
             fun temp(vararg bob: String) {
                 return 4
             }
+
             """.trimIndent())
     }
 }

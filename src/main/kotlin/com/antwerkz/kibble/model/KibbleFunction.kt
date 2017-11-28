@@ -83,12 +83,15 @@ class KibbleFunction internal constructor(var name: String? = null,
         val paramList = parameters.joinToString(", ")
         writer.write("${visibility}fun $modality$name($paramList)$returnType")
         if (bodyBlock) {
-            writer.writeln(" {")
-            body.trimIndent()
-                    .split("\n").forEach { s ->
-                writer.writeln(s, level + 1)
+            if (body.isNotBlank()) {
+                writer.writeln(" {")
+                body.trimIndent()
+                        .split("\n")
+                        .forEach { s ->
+                            writer.writeln(s, level + 1)
+                        }
+                writer.writeln("}", level)
             }
-            writer.write("}", level)
         } else {
             writer.write(" = $body")
         }

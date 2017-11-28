@@ -31,7 +31,8 @@ class AnnotationHolderTest {
     fun functions() {
         val function = Kibble.parseSource("""
         @SuppressWarnings("deprecation", count=10, foo=@Foo(42))
-        fun foo()""")
+        fun foo()
+        """)
                 .functions[0]
         Assert.assertTrue(function.hasAnnotation(SuppressWarnings::class.java))
         verify(function.getAnnotation(SuppressWarnings::class.java)!!)
@@ -46,10 +47,7 @@ class AnnotationHolderTest {
 
 @Bob(name = Feller)
 @Retention
-fun foo() {
-
-}
-
+fun foo()
 """.trimMargin())
     }
 
