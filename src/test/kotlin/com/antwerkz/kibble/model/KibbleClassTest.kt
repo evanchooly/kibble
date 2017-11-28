@@ -14,8 +14,8 @@ class KibbleClassTest {
         val prop = 42
     }
     object temp
-    class Nested(val foo: Bob) : Foo("bar"), Interface {
-        constructor() : this(blarg, "nargle")
+    class Nested(val foo: Bob): Foo("bar"), Interface {
+        constructor(): this(blarg, "nargle")
 
         init {
             println()

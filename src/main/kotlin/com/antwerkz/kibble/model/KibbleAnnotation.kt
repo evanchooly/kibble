@@ -50,7 +50,7 @@ class KibbleAnnotation internal constructor(val type: KibbleType, val arguments:
         if (arguments.isNotEmpty()) {
             string += arguments.entries.joinToString(prefix = "(", postfix = ")",
                     transform = {
-                        if (it.key == "value") it.value.toString() else "${it.key} = ${it.value}"
+                        if (it.key == "value" || it.key.isBlank()) it.value.toString() else "${it.key} = ${it.value}"
                     })
         }
         writer.write(string)

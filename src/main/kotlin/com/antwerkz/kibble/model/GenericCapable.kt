@@ -15,7 +15,7 @@ interface GenericCapable {
                         ?.map { ParameterModifier.valueOf(it.text.toUpperCase()) }
                         ?.firstOrNull()
 
-                TypeParameter(KibbleType.from(it.name!!), modifier, it.extendsBound?.text)
+                TypeParameter(KibbleType.from(it.name!!), modifier, it.extendsBound?.let { KibbleType.from(it.text) })
             }
                     .toMutableList()
         }
@@ -35,7 +35,7 @@ interface GenericCapable {
     }
 
     fun addTypeParameter(type: KibbleType, modifier: ParameterModifier? = null, bounds: String? = null) {
-        typeParameters += TypeParameter(type, modifier, bounds)
+        typeParameters += TypeParameter(type, modifier, bounds?.let { KibbleType.from(it)})
     }
 }
 
@@ -47,10 +47,10 @@ interface GenericCapable {
  * @property bounds the type bounds of the parameter
  */
 class TypeParameter internal constructor(val type: KibbleType, val modifier: ParameterModifier? = null,
-                                         val bounds: String? = null) {
+                                         val bounds: KibbleType? = null) {
 
     override fun toString(): String {
-        return (modifier?.let { "$it " } ?: "") + type + (bounds?.let { ": $it"} ?: "")
+        return (modifier?.let { "$it " } ?: "") + type + (bounds?.let { ": $it" } ?: "")
     }
 }
 

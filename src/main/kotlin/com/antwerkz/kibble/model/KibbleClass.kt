@@ -144,7 +144,7 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
             constructor.toSource(writer, level)
         }
         superType?.let {
-            writer.write(" : $it")
+            writer.write(": $it")
             writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))
         }
         if (!superTypes.isEmpty()) {
