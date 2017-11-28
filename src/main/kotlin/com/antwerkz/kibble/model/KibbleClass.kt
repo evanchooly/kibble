@@ -41,7 +41,7 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
 
     var initBlock: String? = null
 
-    var constructor: Constructor? = null
+    var constructor = Constructor()
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
 
     internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
@@ -119,10 +119,7 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
             it.mutability = mutability
             it.constructorParam = constructorParam
             if (constructorParam) {
-                if(constructor == null) {
-                    constructor = Constructor()
-                }
-                constructor?.parameters?.add(it)
+                constructor.parameters.add(it)
             }
             properties += it
         }
@@ -143,7 +140,9 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
             writer.write(typeParameters.joinToString(", ", prefix = "<", postfix = ">"))
         }
 
-        constructor?.toSource(writer, level)
+        if (constructor.parameters.isNotEmpty()) {
+            constructor.toSource(writer, level)
+        }
         superType?.let {
             writer.write(" : $it")
             writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))

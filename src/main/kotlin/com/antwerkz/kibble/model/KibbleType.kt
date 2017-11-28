@@ -25,26 +25,17 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
     internal constructor(type: KibbleType) : this(type.pkgName, type.className, type.typeParameters, type.nullable)
 
     companion object {
-        val AUTOIMPORTS = listOf("Byte", "Short", "Int", "Long", "Float", "Double",
+        private val AUTOIMPORTS = listOf("Any", "Unit", "Nothing", "Byte", "Short", "Int", "Long", "Float", "Double",
                 "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString")
         private val AUTOIMPORTED = mutableSetOf<String>()
 
-        internal fun from(type: String): KibbleType {
-            return if (type.contains(".") || type.contains("<")) {
-                Kibble.parseSource("val temp: $type").properties[0].type!!
-            } else {
-                KibbleType(className = type)
-            }
+        fun from(type: String) = if (type.contains(".") || type.contains("<")) {
+            Kibble.parseSource("val temp: $type").properties[0].type!!
+        } else {
+            KibbleType(className = type)
         }
 
-        internal fun from(type: KtTypeProjection): KibbleType {
-            try {
-                return if (type.text == "*") KibbleType(className = "*") else from(type.typeReference)!!
-            } catch (e: KotlinNullPointerException) {
-                println("type = ${type}")
-                throw e
-            }
-        }
+        internal fun from(type: KtTypeProjection) = if (type.text == "*") KibbleType(className = "*") else from(type.typeReference)!!
 
         internal fun from(kt: KtTypeReference?): KibbleType? {
             return kt?.typeElement.let {

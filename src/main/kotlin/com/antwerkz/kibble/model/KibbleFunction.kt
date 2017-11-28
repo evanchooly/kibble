@@ -23,9 +23,10 @@ class KibbleFunction internal constructor(var name: String? = null,
                                           var body: String = "",
                                           var bodyBlock: Boolean = true,
                                           override var overriding: Boolean = false)
-    : Visible, Modal<KibbleFunction>, ParameterHolder, KibbleElement, Overridable {
+    : AnnotationHolder, Visible, Modal<KibbleFunction>, ParameterHolder, KibbleElement, Overridable {
 
     override val parameters = mutableListOf<KibbleParameter>()
+    override val annotations = mutableListOf<KibbleAnnotation>()
 
     internal constructor(kt: KtFunction) : this(kt.name) {
         parse(kt)
@@ -51,6 +52,7 @@ class KibbleFunction internal constructor(var name: String? = null,
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
         overriding = Overridable.apply(kt)
+        annotations += KibbleExtractor.extractAnnotations(kt.annotationEntries)
     }
 
 
@@ -62,6 +64,7 @@ class KibbleFunction internal constructor(var name: String? = null,
     override fun collectImports(file: KibbleFile) {
         type?.let { file.resolve(it) }
         parameters.forEach { it.collectImports(file) }
+        annotations.forEach { it.collectImports(file) }
     }
 
     /**
@@ -69,6 +72,10 @@ class KibbleFunction internal constructor(var name: String? = null,
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.write("", level)
+        annotations.forEach {
+            it.toSource(writer, level)
+            writer.writeln()
+        }
         val returnType = if (type != null && type?.toString() != "Unit") ": $type" else ""
         if (overriding) {
             writer.write("override ")

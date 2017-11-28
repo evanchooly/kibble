@@ -21,6 +21,11 @@ class SecondaryConstructor internal constructor() : Constructor() {
 
     val delegationArguments = mutableListOf<String>()
 
+    fun addDelegationArguments(vararg arguments: String): SecondaryConstructor {
+        delegationArguments += arguments
+        return this
+    }
+
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.write("""constructor(${parameters.joinToString(", ")}) : this(${delegationArguments.joinToString(", ")})""", level)
         body?.let {

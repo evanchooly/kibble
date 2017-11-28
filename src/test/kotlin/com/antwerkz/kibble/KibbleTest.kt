@@ -36,7 +36,7 @@ return "hi"""")
         Assert.assertTrue(klass.isInternal())
         Assert.assertTrue(klass.hasAnnotation(Generated::class.java))
         Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
-        Assert.assertEquals(klass.constructor?.parameters?.size, 2, klass.constructor?.parameters.toString())
+        Assert.assertEquals(klass.constructor.parameters.size, 2, klass.constructor.parameters.toString())
 
         listOf("cost", "name", "age", "list", "map", "time", "random").forEach {
             Assert.assertNotNull(klass.properties.firstOrNull { p -> p.name == it}, "Should find '$it: "

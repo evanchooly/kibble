@@ -27,6 +27,32 @@ class AnnotationHolderTest {
         verify(klass.getAnnotation(SuppressWarnings::class.java)!!)
     }
 
+    @Test
+    fun functions() {
+        val function = Kibble.parseSource("""
+        @SuppressWarnings("deprecation", count=10, foo=@Foo(42))
+        fun foo()""")
+                .functions[0]
+        Assert.assertTrue(function.hasAnnotation(SuppressWarnings::class.java))
+        verify(function.getAnnotation(SuppressWarnings::class.java)!!)
+
+        val file = KibbleFile("temp")
+        val foo = file.addFunction("foo")
+        foo.addAnnotation("Bob", mapOf("name" to "Feller"))
+        foo.addAnnotation(Retention::class.java)
+        val source = file.toSource().toString()
+        //language=kotlin
+        Assert.assertEquals(source, """import kotlin.annotation.Retention
+
+@Bob(name = Feller)
+@Retention
+fun foo() {
+
+}
+
+""".trimMargin())
+    }
+
     private fun verify(annotation: KibbleAnnotation) {
         Assert.assertEquals(annotation["value"], "\"deprecation\"")
         Assert.assertEquals(annotation.getValue(), "\"deprecation\"")
