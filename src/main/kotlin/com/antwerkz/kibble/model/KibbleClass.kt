@@ -189,10 +189,9 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
     }
 
     override fun collectImports(file: KibbleFile) {
-        collectImports(file, properties, classes, objects, functions)
+        collectImports(file, properties, classes, objects, functions, secondaries)
         superType?.let { file.resolve(it) }
         superTypes.forEach { file.resolve(it) }
-
     }
 
     private fun collectImports(file: KibbleFile, vararg list: MutableList<out KibbleElement>) {

@@ -27,7 +27,7 @@ class SecondaryConstructor internal constructor() : Constructor() {
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.write("""constructor(${parameters.joinToString(", ")}) : this(${delegationArguments.joinToString(", ")})""", level)
+        writer.write("""constructor(${parameters.joinToString(", ")}): this(${delegationArguments.joinToString(", ")})""", level)
         body?.let {
             writer.writeln("{")
             val bodyText = it.trimIndent().split("\n")

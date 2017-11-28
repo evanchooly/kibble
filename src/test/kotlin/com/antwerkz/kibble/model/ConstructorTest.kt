@@ -22,4 +22,25 @@ class Factory(val type: String) {
         Assert.assertNotNull(secondary)
         Assert.assertTrue(secondary.parameters.isEmpty())
     }
+
+    @Test
+    fun imports() {
+        val file = KibbleFile()
+        val temp = file.addClass("temp")
+        temp.addProperty("temp", "com.foo.Bob", constructorParam = true)
+        temp.addSecondaryConstructor()
+                .addParameter("foo", "org.box.Bla")
+
+        val source = file.toSource().toString()
+        //language=kotlin
+        Assert.assertEquals(source, """import com.foo.Bob
+import org.box.Bla
+
+class temp(val temp: Bob) {
+    constructor(foo: Bla): this()
+
+}
+
+            """.trimIndent())
+    }
 }
