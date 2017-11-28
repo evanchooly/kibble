@@ -15,8 +15,8 @@ interface ParameterHolder {
      * @param type the parameter type
      * @param initializer the parameter initializer
      */
-    fun addParameter(name: String, type: String?, initializer: String? = null): KibbleParameter {
-        return KibbleParameter(name, type?.let { KibbleType.from(type) }, initializer).also {
+    fun addParameter(name: String, type: String?, initializer: String? = null, varargs: Boolean = false): KibbleParameter {
+        return KibbleParameter(name, type?.let { KibbleType.from(type) }, initializer, varargs).also {
             parameters += it
         }
     }

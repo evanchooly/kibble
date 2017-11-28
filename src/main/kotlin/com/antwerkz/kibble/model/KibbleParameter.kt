@@ -14,12 +14,14 @@ import org.jetbrains.kotlin.psi.KtParameter
  * @property initializer the parameter initializer
  */
 open class KibbleParameter internal constructor(val name: String, val type: KibbleType?,
-                                                var initializer: String? = null) : KibbleElement, GenericCapable, Mutable, Visible {
+                                                var initializer: String? = null, var varargs: Boolean = false)
+    : KibbleElement, GenericCapable, Mutable, Visible {
 
     @Suppress("LeakingThis")
     internal constructor(kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference)) {
         mutability = Mutable.apply(kt.valOrVarKeyword)
         typeParameters.addAll(GenericCapable.extractFromTypeParameters(kt.typeParameters))
+        varargs = kt.isVarArg
     }
 
     override var mutability: Mutability = NEITHER
@@ -48,6 +50,9 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.write("$visibility$mutability")
+        if(varargs) {
+            writer.write("vararg ")
+        }
         name.let { writer.write(name) }
         type?.let {
             writer.write(": $it")
