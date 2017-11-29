@@ -23,18 +23,17 @@ class KibbleFunction internal constructor(var name: String? = null,
                                           var body: String = "",
                                           var bodyBlock: Boolean = true,
                                           override var overriding: Boolean = false)
-    : AnnotationHolder, Visible, Modal<KibbleFunction>, ParameterHolder, KibbleElement, Overridable {
+    : AnnotationHolder, Visible, Modal<KibbleFunction>, ParameterHolder, KibbleElement, Overridable, GenericCapable {
 
     override val parameters = mutableListOf<KibbleParameter>()
-    val typeParameters = mutableListOf<TypeParameter>()
     override val annotations = mutableListOf<KibbleAnnotation>()
+    override val typeParameters = mutableListOf<TypeParameter>()
 
     internal constructor(kt: KtFunction) : this(kt.name) {
         kt.valueParameters.forEach {
             parameters += KibbleParameter(it)
         }
-        val extractFromTypeParameters = GenericCapable.extractFromTypeParameters(kt.typeParameters)
-        typeParameters += extractFromTypeParameters
+        typeParameters += GenericCapable.extractFromTypeParameters(kt.typeParameters)
         body = kt.bodyExpression?.text?.trim() ?: ""
         bodyBlock = kt.hasBlockBody()
         if (bodyBlock) {
@@ -62,6 +61,7 @@ class KibbleFunction internal constructor(var name: String? = null,
     override fun collectImports(file: KibbleFile) {
         type?.let { file.resolve(it) }
         parameters.forEach { it.collectImports(file) }
+        typeParameters.forEach { it.collectImports(file) }
         annotations.forEach { it.collectImports(file) }
     }
 
@@ -69,17 +69,18 @@ class KibbleFunction internal constructor(var name: String? = null,
      * @return the string/source form of this type
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.write("", level)
         annotations.forEach {
             it.toSource(writer, level)
             writer.writeln()
         }
+        writer.write("", level)
         val returnType = if (type != null && type?.toString() != "Unit") ": $type" else ""
         if (overriding) {
             writer.write("override ")
         }
         val paramList = parameters.joinToString(", ")
-        writer.write("${visibility}fun $modality$name($paramList)$returnType")
+        val types = if(typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = "> ") else ""
+        writer.write("${visibility}fun $types$modality$name($paramList)$returnType")
         if (bodyBlock) {
             if (body.isNotBlank()) {
                 writer.writeln(" {")

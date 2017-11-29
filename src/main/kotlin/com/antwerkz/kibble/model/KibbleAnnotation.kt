@@ -53,7 +53,7 @@ class KibbleAnnotation internal constructor(val type: KibbleType, val arguments:
                         if (it.key == "value" || it.key.isBlank()) it.value.toString() else "${it.key} = ${it.value}"
                     })
         }
-        writer.write(string)
+        writer.write(string, level)
         return writer
     }
 

@@ -52,6 +52,11 @@ class TypeParameter internal constructor(val type: KibbleType, val modifier: Par
     override fun toString(): String {
         return (modifier?.let { "$it " } ?: "") + type + (bounds?.let { ": $it" } ?: "")
     }
+
+    fun collectImports(file: KibbleFile) {
+        file.resolve(type)
+        bounds?.let { file.resolve(it) }
+    }
 }
 
 enum class ParameterModifier {

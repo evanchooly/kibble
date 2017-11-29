@@ -37,5 +37,10 @@ class KibbleFunctionTest {
         Assert.assertEquals(ParameterModifier.OUT, kibbleFunction.typeParameters[0].modifier)
         Assert.assertEquals(KibbleType.from("Bar"), kibbleFunction.typeParameters[0].bounds)
 
+        val foo = KibbleFunction("foo")
+        foo.addParameter("t", "T")
+        foo.addTypeParameter("T")
+
+        Assert.assertEquals(foo.toString(), "fun <T> foo(t: T)")
     }
 }
