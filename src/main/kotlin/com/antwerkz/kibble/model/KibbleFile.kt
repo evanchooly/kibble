@@ -4,7 +4,6 @@ import com.antwerkz.kibble.KibbleContext
 import com.antwerkz.kibble.SourceWriter
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
-import kotlin.Long.Companion
 
 /**
  * Defines a kotlin source file model
@@ -138,18 +137,17 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
             writer.writeln()
         }
 
-        collectImports(properties, objects, classes, functions)
+        properties.forEach { it.collectImports(this) }
+        objects.forEach { it.collectImports(this) }
+        classes.forEach { it.collectImports(this) }
+        functions.forEach { it.collectImports(this) }
+
         writeBlock(writer, level, false, imports)
         writeBlock(writer, level, false, properties)
         writeBlock(writer, level, true, classes)
         writeBlock(writer, level, true, functions)
 
         return writer
-    }
-
-    private fun collectImports(vararg list: MutableList<out KibbleElement>) {
-        list.flatMap { it }
-                .forEach { it.collectImports(this) }
     }
 
     private fun writeBlock(writer: SourceWriter, level: Int, inBetween: Boolean, block: Collection<KibbleElement>) {
@@ -166,12 +164,10 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     }
 
     override fun collectImports(file: KibbleFile) {
-        collectImports(file, properties, classes, objects, functions)
-    }
-
-    private fun collectImports(file: KibbleFile, vararg list: MutableList<out KibbleElement>) {
-        list.flatMap { it }
-                .forEach { it.collectImports(file) }
+        properties.forEach { it.collectImports(file) }
+        classes.forEach { it.collectImports(file) }
+        objects.forEach { it.collectImports(file) }
+        functions.forEach { it.collectImports(file) }
     }
 
     /**

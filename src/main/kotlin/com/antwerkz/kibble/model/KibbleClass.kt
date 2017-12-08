@@ -44,11 +44,13 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
     var constructor = Constructor()
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
 
+    var enum = false
+
     internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
-
         typeParameters = GenericCapable.extractFromTypeParameters(kt.typeParameters)
+        enum = kt.isEnum()
 
         kt.primaryConstructor?.let {
             constructor = Constructor(this, it)
@@ -66,6 +68,7 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
         objects += extractObjects(file, kt.declarations)
         functions += extractFunctions(kt.declarations)
         properties += extractProperties(kt.declarations)
+
     }
 
     fun addSuperType(type: String) {
@@ -124,6 +127,8 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
             properties += it
         }
     }
+
+    fun isEnum() = enum
 
     /**
      * @return the string form of this class
@@ -189,13 +194,13 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
     }
 
     override fun collectImports(file: KibbleFile) {
-        collectImports(file, properties, classes, objects, functions, secondaries)
+        properties.forEach { it.collectImports(file) }
+        classes.forEach { it.collectImports(file) }
+        objects.forEach { it.collectImports(file) }
+        functions.forEach { it.collectImports(file) }
+        secondaries.forEach { it.collectImports(file) }
         superType?.let { file.resolve(it) }
         superTypes.forEach { file.resolve(it) }
     }
 
-    private fun collectImports(file: KibbleFile, vararg list: MutableList<out KibbleElement>) {
-        list.flatMap { it }
-                .forEach { it.collectImports(file) }
-    }
 }

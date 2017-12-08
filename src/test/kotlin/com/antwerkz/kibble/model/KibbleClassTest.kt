@@ -166,4 +166,22 @@ open class Person : AbstractKotlinPerson {
         val kibbleClass = Kibble.parseSource(source).classes[0]
         Assert.assertEquals(kibbleClass.toSource().toString().trim(), source.trim())
     }
+
+    @Test
+    fun abstractClasses() {
+        @Language("kotlin")
+        val source = """abstract class Abstract"""
+        val kibbleClass = Kibble.parseSource(source).classes[0]
+        Assert.assertTrue(kibbleClass.isAbstract())
+
+    }
+
+    @Test
+    fun enumClasses() {
+        @Language("kotlin")
+        val source = """enum class Enum"""
+        val kibbleClass = Kibble.parseSource(source).classes[0]
+        Assert.assertTrue(kibbleClass.enum)
+
+    }
 }

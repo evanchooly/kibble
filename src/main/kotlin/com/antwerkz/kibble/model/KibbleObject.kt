@@ -24,26 +24,12 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
 
     override var visibility: Visibility = PUBLIC
     override var annotations = mutableListOf<KibbleAnnotation>()
-    override val classes: MutableList<KibbleClass> by lazy {
-        KibbleExtractor.extractClasses(file, kt?.declarations)
-    }
-
-    override val objects: MutableList<KibbleObject> by lazy {
-        KibbleExtractor.extractObjects(file, kt?.declarations)
-    }
-
-    override val functions: MutableList<KibbleFunction> by lazy {
-        KibbleExtractor.extractFunctions(kt?.declarations)
-    }
-
-    override val properties: MutableList<KibbleProperty> by lazy {
-        KibbleExtractor.extractProperties(kt?.declarations)
-    }
-
-    private var kt: KtObjectDeclaration? = null
+    override val classes = mutableListOf<KibbleClass>()
+    override val objects = mutableListOf<KibbleObject>()
+    override val functions = mutableListOf<KibbleFunction>()
+    override val properties = mutableListOf<KibbleProperty>()
 
     internal constructor(file: KibbleFile, kt: KtObjectDeclaration) : this(file, kt.name, kt.isCompanion()) {
-        this.kt = kt
         superType = extractSuperType(kt.superTypeListEntries)
         superTypes = extractSuperTypes(kt.superTypeListEntries)
         superCallArgs = extractSuperCallArgs(kt.superTypeListEntries)
@@ -51,6 +37,10 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
         visibility = Visible.apply(kt.visibilityModifier())
 
         annotations = extractAnnotations(kt.annotationEntries)
+        classes += KibbleExtractor.extractClasses(file, kt.declarations)
+        objects += KibbleExtractor.extractObjects(file, kt.declarations)
+        functions += KibbleExtractor.extractFunctions(kt.declarations)
+        properties += KibbleExtractor.extractProperties(kt.declarations)
     }
 
     override fun addClass(name: String): KibbleClass {
@@ -88,13 +78,10 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
     override fun toString() = toSource().toString()
 
     override fun collectImports(file: KibbleFile) {
-        collectImports(file, objects, classes, functions, properties)
-    }
-
-    private fun collectImports(file: KibbleFile, vararg list: MutableList<out KibbleElement>) {
-        list
-                .flatMap { it }
-                .forEach { it.collectImports(file) }
+        objects.forEach { it.collectImports(file) }
+        classes.forEach { it.collectImports(file) }
+        functions.forEach { it.collectImports(file) }
+        properties.forEach { it.collectImports(file) }
     }
 
     /**
