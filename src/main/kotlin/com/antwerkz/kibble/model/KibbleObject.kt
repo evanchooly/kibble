@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  *
  * @property name the object name
  * @property companion true if this object is a companion object
+ * @property initBlock any custom init block for this class
  */
 class KibbleObject internal constructor(val file: KibbleFile, val name: String? = null, val companion: Boolean = false)
     : AnnotationHolder, ClassOrObjectHolder, FunctionHolder, KibbleElement, PropertyHolder, Visible {
@@ -25,9 +26,11 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
     override var visibility: Visibility = PUBLIC
     override var annotations = mutableListOf<KibbleAnnotation>()
     override val classes = mutableListOf<KibbleClass>()
+    override val interfaces = mutableListOf<KibbleInterface>()
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
+    var initBlock: String? = null
 
     internal constructor(file: KibbleFile, kt: KtObjectDeclaration) : this(file, kt.name, kt.isCompanion()) {
         superType = extractSuperType(kt.superTypeListEntries)
@@ -46,6 +49,12 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
     override fun addClass(name: String): KibbleClass {
         return KibbleClass(file, name).also {
             classes += it
+        }
+    }
+
+    override fun addInterface(name: String): KibbleInterface {
+        return KibbleInterface(file, name).also {
+            interfaces += it
         }
     }
 
@@ -79,6 +88,7 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
 
     override fun collectImports(file: KibbleFile) {
         objects.forEach { it.collectImports(file) }
+        interfaces.forEach { it.collectImports(file) }
         classes.forEach { it.collectImports(file) }
         functions.forEach { it.collectImports(file) }
         properties.forEach { it.collectImports(file) }
@@ -108,7 +118,17 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
             writer.writeln(" {")
 
             properties.forEach { it.toSource(writer, level + 1) }
+            initBlock?.let {
+                writer.writeln("init {", level + 1)
+                it.trimIndent().split("\n").forEach {
+                    writer.writeln(it, level + 2)
+                }
+                writer.writeln("}", level + 1)
+                writer.writeln()
+            }
+
             functions.forEach { it.toSource(writer, level + 1) }
+            interfaces.forEach { it.toSource(writer, level + 1) }
             classes.forEach { it.toSource(writer, level + 1) }
 
             writer.write("}", level)

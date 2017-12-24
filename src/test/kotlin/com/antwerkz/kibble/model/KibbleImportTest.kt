@@ -39,6 +39,11 @@ class KibbleImportTest {
 
 
     @Test
+    fun starImport() {
+        tryImport(KibbleFile("Foo.kt"), "com.foo.*")
+    }
+
+    @Test
     fun duplicateImport() {
         tryImport(KibbleFile("Foo.kt"), "com.foo.Bar")
         tryImport(KibbleFile("Foo.kt"), "com.foo.Bar", "Second")
@@ -50,7 +55,7 @@ class KibbleImportTest {
         val from = KibbleType.from(type)
         val fqcn = from.fqcn
 
-        file.addImport(type, alias)
+        file.addImport(from, alias)
         Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.alias == alias}, 1)
 
         file.addImport(type)

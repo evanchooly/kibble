@@ -18,7 +18,14 @@ import org.jetbrains.kotlin.resolve.calls.callUtil.getValueArgumentsInParenthese
 internal object KibbleExtractor {
     internal fun extractClasses(file: KibbleFile, kt: List<KtDeclaration>?): MutableList<KibbleClass> {
         return (kt?.filterIsInstance<KtClass>()
+                ?.filter { !it.isInterface() }
                 ?.map { KibbleClass(file, it) }
+                ?: listOf()).toMutableList()
+    }
+    internal fun extractInterfaces(file: KibbleFile, kt: List<KtDeclaration>?): MutableList<KibbleInterface> {
+        return (kt?.filterIsInstance<KtClass>()
+                ?.filter { it.isInterface() }
+                ?.map { KibbleInterface(file, it) }
                 ?: listOf()).toMutableList()
     }
 

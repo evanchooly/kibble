@@ -15,18 +15,18 @@ class ExtendableTest {
     class Jerry: Runnable
 """)
         val foo = file.classes[0]
-        Assert.assertEquals(foo.superType?.className, "Bar")
+        Assert.assertEquals(foo.parentClass?.className, "Bar")
         Assert.assertEquals(foo.superCallArgs[0], "12")
-        Assert.assertEquals(foo.superTypes[0].className, "Runnable")
+        Assert.assertEquals(foo.parentInterfaces[0].className, "Runnable")
 
         val baz = file.classes[1]
-        Assert.assertEquals(baz.superType?.className, "Foo")
+        Assert.assertEquals(baz.parentClass?.className, "Foo")
         Assert.assertTrue(baz.superCallArgs.isEmpty())
-        Assert.assertTrue(baz.superTypes.isEmpty())
+        Assert.assertTrue(baz.parentInterfaces.isEmpty())
 
         val jerry = file.classes[2]
-        Assert.assertNull(jerry.superType)
+        Assert.assertNull(jerry.parentClass)
         Assert.assertTrue(jerry.superCallArgs.isEmpty())
-        Assert.assertEquals(jerry.superTypes[0].className, "Runnable")
+        Assert.assertEquals(jerry.parentInterfaces[0].className, "Runnable")
     }
 }

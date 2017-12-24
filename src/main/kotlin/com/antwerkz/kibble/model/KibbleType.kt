@@ -29,7 +29,7 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
                 "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString")
         private val AUTOIMPORTED = mutableSetOf<String>()
 
-        fun from(type: String) = if (type.contains(".") || type.contains("<")) {
+        fun from(type: String) = if (!type.contains("*") && (type.contains(".") || type.contains("<"))) {
             Kibble.parseSource("val temp: $type").properties[0].type!!
         } else {
             KibbleType(className = type)

@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.psi.ValueArgument
  *
  * @property delegationArguments the arguments to pass to the delegation constructor call
  */
-class SecondaryConstructor internal constructor() : Constructor() {
+class SecondaryConstructor internal constructor(vararg arguments: String) : Constructor() {
     internal constructor(kt: KtSecondaryConstructor) : this() {
         kt.valueParameters.forEach {
             parameters.add(KibbleParameter(it))
@@ -19,11 +19,10 @@ class SecondaryConstructor internal constructor() : Constructor() {
         delegationArguments += valueArguments.map { it.getArgumentExpression()?.text ?: "" }
     }
 
-    val delegationArguments = mutableListOf<String>()
+    private val delegationArguments = mutableListOf<String>()
 
-    fun addDelegationArguments(vararg arguments: String): SecondaryConstructor {
+    init {
         delegationArguments += arguments
-        return this
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {

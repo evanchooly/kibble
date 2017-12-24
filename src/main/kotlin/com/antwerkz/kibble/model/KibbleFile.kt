@@ -2,6 +2,11 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.KibbleContext
 import com.antwerkz.kibble.SourceWriter
+import com.antwerkz.kibble.model.KibbleExtractor.extractClasses
+import com.antwerkz.kibble.model.KibbleExtractor.extractFunctions
+import com.antwerkz.kibble.model.KibbleExtractor.extractInterfaces
+import com.antwerkz.kibble.model.KibbleExtractor.extractObjects
+import com.antwerkz.kibble.model.KibbleExtractor.extractProperties
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 
@@ -18,21 +23,11 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
 
     val imports = sortedSetOf<KibbleImport>()
 
-    override val classes: MutableList<KibbleClass> by lazy {
-        KibbleExtractor.extractClasses(this, kt?.declarations)
-    }
-
-    override val objects: MutableList<KibbleObject> by lazy {
-        KibbleExtractor.extractObjects(this, kt?.declarations)
-    }
-
-    override val functions: MutableList<KibbleFunction> by lazy {
-        KibbleExtractor.extractFunctions(kt?.declarations)
-    }
-
-    override val properties: MutableList<KibbleProperty> by lazy {
-        KibbleExtractor.extractProperties(kt?.declarations)
-    }
+    override val classes = mutableListOf<KibbleClass>()
+    override val interfaces = mutableListOf<KibbleInterface>()
+    override val objects= mutableListOf<KibbleObject>()
+    override val functions= mutableListOf<KibbleFunction>()
+    override val properties= mutableListOf<KibbleProperty>()
 
     private var kt: KtFile? = null
     val sourceTimestamp = kt?.originalFile?.modificationStamp ?: Long.MIN_VALUE
@@ -44,6 +39,11 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         kt.importDirectives.forEach {
             imports += KibbleImport(it)
         }
+        interfaces += extractInterfaces(this, kt.declarations)
+        classes += extractClasses(this, kt.declarations)
+        objects += extractObjects(this, kt.declarations)
+        functions += extractFunctions(kt.declarations)
+        properties += extractProperties(kt.declarations)
     }
 
 
@@ -54,6 +54,11 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     override fun addClass(name: String): KibbleClass {
         return KibbleClass(this, name).also {
             classes += it
+        }
+    }
+    override fun addInterface(name: String): KibbleInterface {
+        return KibbleInterface(this, name).also {
+            interfaces += it
         }
     }
 
@@ -107,8 +112,8 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         addImport(KibbleType.from(type.name), alias)
     }
 
-    private fun addImport(type: KibbleType, alias: String? = null) {
-        if (type.pkgName != null) {
+    fun addImport(type: KibbleType, alias: String? = null) {
+        if (type.pkgName != null || type.className.endsWith(".*")) {
             KibbleImport(type, alias).also {
                 imports.add(it)
                 type.resolved = alias ?: type.className
@@ -144,7 +149,9 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
 
         writeBlock(writer, level, false, imports)
         writeBlock(writer, level, false, properties)
+        writeBlock(writer, level, true, interfaces)
         writeBlock(writer, level, true, classes)
+        writeBlock(writer, level, true, objects)
         writeBlock(writer, level, true, functions)
 
         return writer
@@ -168,6 +175,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         classes.forEach { it.collectImports(file) }
         objects.forEach { it.collectImports(file) }
         functions.forEach { it.collectImports(file) }
+        interfaces.forEach { it.collectImports(file) }
     }
 
     /**
@@ -202,51 +210,4 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         }
         return type
     }
-
-/*
-    fun normalize(proposed: KibbleType): KibbleType {
-        var normalized: KibbleType?
-
-        val simpleMatch = imports.firstOrNull { proposed.className == it.alias || proposed.className == it.type.className }
-        val fullMatch = imports.firstOrNull { proposed.pkgName == it.type.pkgName && proposed.className == it.type.className }
-
-        val resolved = if (proposed.pkgName == null) simpleMatch else fullMatch
-
-        if (resolved == null) {
-            normalized = classes.filter { proposed.className == it.name }
-                    .map {
-                        KibbleType(proposed.className, pkgName, proposed.typeParameters, proposed.nullable, true)
-                    }
-                    .firstOrNull() ?: context.resolve(this, proposed)
-            if (normalized == null) {
-                if (proposed.pkgName != null) {
-                    addImport(proposed)
-                    normalized = KibbleType(proposed.className, proposed.pkgName, proposed.typeParameters, proposed.nullable, true)
-                }
-            }
-        } else {
-            normalized = KibbleType(resolved.type.className, resolved.type.pkgName,
-                    proposed.typeParameters, proposed.nullable, true)
-        }
-
-        return normalized ?: proposed
-    }
-*/
-
-    /*
-    fun resolve(type: String): KibbleType {
-        var resolved: KibbleType? = imports.firstOrNull { it.type.fqcn == type || it.alias == name }?.type
-
-        if (resolved == null) {
-            classes.firstOrNull { type == it.name }?.let {
-                resolved = KibbleType("$pkgName.$type")
-            }
-        }
-        if (resolved == null) {
-            resolved = context.resolve(this, type)
-        }
-
-        return resolved ?: KibbleType(type)
-    }
-*/
 }

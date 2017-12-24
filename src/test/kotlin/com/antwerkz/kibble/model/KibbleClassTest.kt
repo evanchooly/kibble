@@ -39,11 +39,10 @@ class KibbleClassTest {
         kibbleClass = file.addClass("Temp")
         val nested = kibbleClass.addClass("Nested")
 
-        nested.superType = KibbleType.from("Foo")
-        nested.superCallArgs = listOf("\"bar\"")
-        nested.superTypes += KibbleType.from("Interface")
+        nested.extend("Foo", "\"bar\"")
+        nested.parentInterfaces += KibbleType.from("Interface")
 
-        nested.addSecondaryConstructor().delegationArguments += listOf("blarg", "\"nargle\"")
+        nested.addSecondaryConstructor("blarg", "\"nargle\"")
 
         nested.initBlock = """println()"""
         nested.addProperty("foo", "Bob", constructorParam = true)
@@ -100,11 +99,11 @@ open class Person : AbstractKotlinPerson {
 
     var last: String? = null
 } """)
-        Assert.assertNull(file.classes[0].superType)
-        Assert.assertTrue(file.classes[0].superTypes.isEmpty())
-        Assert.assertNull(file.classes[1].superType)
-        Assert.assertEquals(file.classes[1].superTypes.size, 1)
-        Assert.assertEquals(file.classes[1].superTypes[0], KibbleType("critter.test.source", "AbstractKotlinPerson"))
+        Assert.assertNull(file.classes[0].parentClass)
+        Assert.assertTrue(file.classes[0].parentInterfaces.isEmpty())
+        Assert.assertNull(file.classes[1].parentClass)
+        Assert.assertEquals(file.classes[1].parentInterfaces.size, 1)
+        Assert.assertEquals(file.classes[1].parentInterfaces[0], KibbleType("critter.test.source", "AbstractKotlinPerson"))
     }
 
     @Test
@@ -182,6 +181,22 @@ open class Person : AbstractKotlinPerson {
         val source = """enum class Enum"""
         val kibbleClass = Kibble.parseSource(source).classes[0]
         Assert.assertTrue(kibbleClass.enum)
+    }
 
+    @Test
+    fun implements() {
+        val file = KibbleFile("temp.kt")
+        file.addClass("Temp").also {
+            it.implement("java.lang.Runnable")
+        }
+
+        val temp = """import java.lang.Runnable
+
+class Temp: Runnable {
+}"""
+        Assert.assertEquals(file.toSource().toString().trim(), temp.trim())
+
+        val parsed = Kibble.parseSource(temp)
+        Assert.assertEquals(parsed.toSource().toString().trim(), temp.trim())
     }
 }
