@@ -13,6 +13,5 @@ class KibbleContext {
     fun resolve(type: KibbleType) =
         lookup(type.pkgName)
                 .flatMap { it.classes }
-                .firstOrNull { it.name == type.className } /*?.let {
-            KibbleType(file.pkgName, type.className, type.typeParameters, type.nullable)*/
+                .firstOrNull { it.name == type.className }
 }
