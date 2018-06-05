@@ -11,11 +11,6 @@ import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 @Suppress("UNCHECKED_CAST")
 interface Modal<out T> {
     companion object {
-        internal fun apply(modifier: PsiElement?): Modality {
-            return modifier?.text?.let {
-                Modality.valueOf(it.toUpperCase())
-            } ?: FINAL
-        }
     }
     var modality: Modality
 

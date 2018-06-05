@@ -33,14 +33,17 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
 
     internal constructor(kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference), kt.defaultValue?.text) {
 
+/*
         annotations.addAll(KibbleExtractor.extractAnnotations(kt.annotationEntries))
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
         mutability = Mutable.apply(kt.valOrVarKeyword)
+*/
     }
 
     internal constructor(kt: KtProperty) : this(kt.name!!, KibbleType.from(kt.typeReference), kt.initializer?.text) {
 
+/*
         annotations.addAll(KibbleExtractor.extractAnnotations(kt.annotationEntries))
         modality = Modal.apply(kt.modalityModifier())
         visibility = Visible.apply(kt.visibilityModifier())
@@ -49,6 +52,7 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
         if (kt.isVar || lateInit) {
             mutability = VAR
         }
+*/
     }
 
     override var annotations: MutableList<KibbleAnnotation> = mutableListOf()

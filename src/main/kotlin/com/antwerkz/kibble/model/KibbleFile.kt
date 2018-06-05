@@ -2,12 +2,6 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.KibbleContext
 import com.antwerkz.kibble.SourceWriter
-import com.antwerkz.kibble.model.KibbleExtractor.extractClasses
-import com.antwerkz.kibble.model.KibbleExtractor.extractFunctions
-import com.antwerkz.kibble.model.KibbleExtractor.extractInterfaces
-import com.antwerkz.kibble.model.KibbleExtractor.extractObjects
-import com.antwerkz.kibble.model.KibbleExtractor.extractProperties
-import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 
 /**
@@ -24,46 +18,24 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     val imports = sortedSetOf<KibbleImport>()
 
     override val classes = mutableListOf<KibbleClass>()
-    override val interfaces = mutableListOf<KibbleInterface>()
     override val objects= mutableListOf<KibbleObject>()
     override val functions= mutableListOf<KibbleFunction>()
     override val properties= mutableListOf<KibbleProperty>()
 
-    private var kt: KtFile? = null
-    val sourceTimestamp = kt?.originalFile?.modificationStamp ?: Long.MIN_VALUE
-
-    internal constructor(kt: KtFile, context: KibbleContext) : this(kt.name, kt.packageDirective?.fqName.toString(), context) {
-        this.kt = kt
-        kt.virtualFile.modificationStamp
-        pkgName = kt.extractPackage()
-        kt.importDirectives.forEach {
-            imports += KibbleImport(it)
-        }
-        interfaces += extractInterfaces(this, kt.declarations)
-        classes += extractClasses(this, kt.declarations)
-        objects += extractObjects(this, kt.declarations)
-        functions += extractFunctions(kt.declarations)
-        properties += extractProperties(kt.declarations)
-    }
-
+    var sourceTimestamp: Long = 0
 
     init {
         context.register(this)
     }
 
     override fun addClass(name: String): KibbleClass {
-        return KibbleClass(this, name).also {
+        return KibbleClass(name).also {
             classes += it
-        }
-    }
-    override fun addInterface(name: String): KibbleInterface {
-        return KibbleInterface(this, name).also {
-            interfaces += it
         }
     }
 
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
-        return KibbleObject(this, name, isCompanion).also {
+        return KibbleObject(name, isCompanion).also {
             objects += it
         }
 
@@ -114,11 +86,12 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
 
     fun addImport(type: KibbleType, alias: String? = null) {
         if (type.pkgName != null || type.className.endsWith(".*")) {
-            KibbleImport(type, alias).also {
-                imports.add(it)
-                type.resolved = alias ?: type.className
-            }
+            addImport(KibbleImport(type, alias))
         }
+    }
+
+    fun addImport(kibbleImport: KibbleImport) {
+        imports.add(kibbleImport)
     }
 
     /**
@@ -149,8 +122,8 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
 
         writeBlock(writer, level, false, imports)
         writeBlock(writer, level, false, properties)
-        writeBlock(writer, level, true, interfaces)
-        writeBlock(writer, level, true, classes)
+        writeBlock(writer, level, true, classes.filter { it.isInterface })
+        writeBlock(writer, level, true, classes.filter { it.isInterface })
         writeBlock(writer, level, true, objects)
         writeBlock(writer, level, true, functions)
 
@@ -175,7 +148,6 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         classes.forEach { it.collectImports(file) }
         objects.forEach { it.collectImports(file) }
         functions.forEach { it.collectImports(file) }
-        interfaces.forEach { it.collectImports(file) }
     }
 
     /**

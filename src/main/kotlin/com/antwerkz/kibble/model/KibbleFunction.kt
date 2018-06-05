@@ -29,6 +29,7 @@ class KibbleFunction internal constructor(var name: String? = null,
     override val annotations = mutableListOf<KibbleAnnotation>()
     override val typeParameters = mutableListOf<TypeParameter>()
 
+/*
     internal constructor(kt: KtFunction) : this(kt.name) {
         kt.valueParameters.forEach {
             parameters += KibbleParameter(it)
@@ -51,6 +52,7 @@ class KibbleFunction internal constructor(var name: String? = null,
         overriding = Overridable.apply(kt)
         annotations += KibbleExtractor.extractAnnotations(kt.annotationEntries)
     }
+*/
 
 
     /**

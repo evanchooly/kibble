@@ -12,6 +12,10 @@ data class KibbleImport internal constructor(val type: KibbleType,  val alias: S
 
     internal constructor(kt: KtImportDirective) : this(KibbleType.from(kt), kt.aliasName)
 
+    init {
+        type.resolved = alias ?: type.className
+    }
+
     override fun compareTo(other: KibbleImport): Int {
         return type.compareTo(other.type)
     }

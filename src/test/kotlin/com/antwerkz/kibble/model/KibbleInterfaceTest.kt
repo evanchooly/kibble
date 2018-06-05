@@ -10,7 +10,7 @@ class KibbleInterfaceTest {
         val file = Kibble.parseSource("""interface temp {
         |}""".trimMargin())
 
-        Assert.assertFalse(file.interfaces.isEmpty())
+        Assert.assertTrue(file.classes.any { it.isInterface })
         Assert.assertTrue(file.classes.isEmpty())
         Assert.assertTrue(file.objects.isEmpty())
         Assert.assertTrue(file.functions.isEmpty())
@@ -31,8 +31,8 @@ class KibbleInterfaceTest {
         |
         |}""".trimMargin())
 
-        Assert.assertFalse(file.interfaces.isEmpty())
-        val kibbleInterface = file.interfaces[0]
+        Assert.assertTrue(file.classes.any { it.isInterface })
+        val kibbleInterface = file.classes.first { it.isInterface }
         Assert.assertFalse(kibbleInterface.classes.isEmpty())
         Assert.assertFalse(kibbleInterface.objects.isEmpty())
         Assert.assertFalse(kibbleInterface.functions.isEmpty())

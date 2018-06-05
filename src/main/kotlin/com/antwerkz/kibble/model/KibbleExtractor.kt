@@ -16,37 +16,48 @@ import org.jetbrains.kotlin.renderer.render
 import org.jetbrains.kotlin.resolve.calls.callUtil.getValueArgumentsInParentheses
 
 internal object KibbleExtractor {
-    internal fun extractClasses(file: KibbleFile, kt: List<KtDeclaration>?): MutableList<KibbleClass> {
+/*
+    internal fun extractClasses(kt: List<KtDeclaration>?): MutableList<KibbleClass> {
         return (kt?.filterIsInstance<KtClass>()
                 ?.filter { !it.isInterface() }
-                ?.map { KibbleClass(file, it) }
+                ?.map { KibbleClass(it) }
                 ?: listOf()).toMutableList()
     }
-    internal fun extractInterfaces(file: KibbleFile, kt: List<KtDeclaration>?): MutableList<KibbleInterface> {
+*/
+
+/*
+    internal fun extractInterfaces(kt: List<KtDeclaration>?): MutableList<KibbleInterface> {
         return (kt?.filterIsInstance<KtClass>()
                 ?.filter { it.isInterface() }
-                ?.map { KibbleInterface(file, it) }
+                ?.map { KibbleInterface(it) }
                 ?: listOf()).toMutableList()
     }
+*/
 
-    internal fun extractObjects(file: KibbleFile, kt: List<KtDeclaration>?): MutableList<KibbleObject> {
+/*
+    internal fun extractObjects(kt: List<KtDeclaration>?): MutableList<KibbleObject> {
         return (kt?.filterIsInstance<KtObjectDeclaration>()
-                ?.map { KibbleObject(file, it) }
+                ?.map { KibbleObject(it) }
                 ?: listOf()).toMutableList()
     }
+*/
 
+/*
     internal fun extractFunctions(kt: List<KtDeclaration>?): MutableList<KibbleFunction> {
         return (kt?.filterIsInstance<KtFunction>()
                 ?.map { KibbleFunction(it) }
                 ?: listOf()).toMutableList()
     }
+*/
 
+/*
     internal fun extractProperties(kt: List<KtDeclaration>?): MutableList<KibbleProperty> {
         // KotlinToJVMBytecodeCompiler
         return (kt?.filterIsInstance<KtProperty>()
                 ?.map { KibbleProperty(it) }
                 ?: listOf()).toMutableList()
     }
+*/
 
     internal fun extractAnnotations(kt: List<Any>?): MutableList<KibbleAnnotation> {
         return (kt?.filterIsInstance<KtAnnotationEntry>()

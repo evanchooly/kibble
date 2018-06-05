@@ -1,19 +1,8 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import com.antwerkz.kibble.model.KibbleExtractor.extractAnnotations
-import com.antwerkz.kibble.model.KibbleExtractor.extractClasses
-import com.antwerkz.kibble.model.KibbleExtractor.extractFunctions
-import com.antwerkz.kibble.model.KibbleExtractor.extractObjects
-import com.antwerkz.kibble.model.KibbleExtractor.extractProperties
-import com.antwerkz.kibble.model.KibbleExtractor.extractSuperCallArgs
-import com.antwerkz.kibble.model.KibbleExtractor.extractSuperType
-import com.antwerkz.kibble.model.KibbleExtractor.extractSuperTypes
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
-import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
 /**
  * Represents an annotation in kotlin source code.
@@ -23,7 +12,7 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property constructor the primary constructor for this class
  * @property secondaries the secondary constructors this class
  */
-class KibbleClass internal constructor(val file: KibbleFile, var name: String = "",
+class KibbleClass internal constructor(var name: String = "",
                                        override var modality: Modality = FINAL,
                                        override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder, GenericCapable,
         Visible, Modal<KibbleClass>, AnnotationHolder, PropertyHolder, ClassOrObjectHolder {
@@ -33,7 +22,6 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
 
     override var typeParameters = mutableListOf<TypeParameter>()
     override val annotations = mutableListOf<KibbleAnnotation>()
-    override val interfaces = mutableListOf<KibbleInterface>()
     override val classes = mutableListOf<KibbleClass>()
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
@@ -48,9 +36,13 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
 
     var enum = false
+    var isInterface = false
 
-    internal constructor(file: KibbleFile, kt: KtClass) : this(file, kt.name ?: "") {
-        modality = Modal.apply(kt.modalityModifier())
+/*
+    internal constructor(kt: KtClass) : this(*/
+/*file,*//*
+ kt.name ?: "") {
+        modality = kt.modalityModifier().toModality()
         visibility = Visible.apply(kt.visibilityModifier())
         typeParameters = GenericCapable.extractFromTypeParameters(kt.typeParameters)
         enum = kt.isEnum()
@@ -67,12 +59,13 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
         superCallArgs += extractSuperCallArgs(kt.superTypeListEntries)
         annotations += extractAnnotations(kt.annotationEntries)
 
-        classes += extractClasses(file, kt.declarations)
-        objects += extractObjects(file, kt.declarations)
+        classes += extractClasses(kt.declarations)
+        objects += extractObjects(kt.declarations)
         functions += extractFunctions(kt.declarations)
         properties += extractProperties(kt.declarations)
 
     }
+*/
 
     fun extend(type: String, vararg arguments: String) {
         extend(KibbleType.from(type), *arguments)
@@ -99,14 +92,8 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
     }
 
     override fun addClass(name: String): KibbleClass {
-        return KibbleClass(file, name).also {
+        return KibbleClass(name).also {
             classes += it
-        }
-    }
-
-    override fun addInterface(name: String): KibbleInterface {
-        return KibbleInterface(file, name).also {
-            interfaces += it
         }
     }
 
@@ -116,13 +103,13 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
      * @return the companion object
      */
     fun addCompanionObject(): KibbleObject {
-        return companion() ?: KibbleObject(file, companion = true).also {
+        return companion() ?: KibbleObject(companion = true).also {
             objects.add(it)
         }
     }
 
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
-        return KibbleObject(file, name, isCompanion).also {
+        return KibbleObject(name, isCompanion).also {
             objects += it
         }
     }
@@ -177,7 +164,6 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
             writer.write(": ")
             writer.write(extends.joinToString(", "))
         }
-        val nonParamProps = properties.filter { !it.constructorParam }
 
         writer.writeln(" {")
 
@@ -193,12 +179,15 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
             writer.writeln("}", level + 1)
             writer.writeln()
         }
-        nonParamProps.forEach { it.toSource(writer, level + 1) }
+        properties.filter { !it.constructorParam }
+                .forEach { it.toSource(writer, level + 1) }
 
         objects.filter { !it.companion }
                 .forEach { it.toSource(writer, level + 1) }
-        interfaces.forEach { it.toSource(writer, level + 1) }
-        classes.forEach { it.toSource(writer, level + 1) }
+        classes.filter { it.isInterface }
+                .forEach { it.toSource(writer, level + 1) }
+        classes.filter { !it.isInterface }
+                .forEach { it.toSource(writer, level + 1) }
         functions.forEach { it.toSource(writer, level + 1) }
 
         writer.write("}", level)
@@ -218,7 +207,6 @@ class KibbleClass internal constructor(val file: KibbleFile, var name: String = 
 
     override fun collectImports(file: KibbleFile) {
         properties.forEach { it.collectImports(file) }
-        interfaces.forEach { it.collectImports(file) }
         classes.forEach { it.collectImports(file) }
         objects.forEach { it.collectImports(file) }
         functions.forEach { it.collectImports(file) }

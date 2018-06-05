@@ -1,13 +1,7 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import com.antwerkz.kibble.model.KibbleExtractor.extractAnnotations
-import com.antwerkz.kibble.model.KibbleExtractor.extractSuperCallArgs
-import com.antwerkz.kibble.model.KibbleExtractor.extractSuperType
-import com.antwerkz.kibble.model.KibbleExtractor.extractSuperTypes
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.psi.KtObjectDeclaration
-import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
 /**
  * Defines an object type
@@ -16,7 +10,7 @@ import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
  * @property companion true if this object is a companion object
  * @property initBlock any custom init block for this class
  */
-class KibbleObject internal constructor(val file: KibbleFile, val name: String? = null, val companion: Boolean = false)
+class KibbleObject internal constructor(val name: String? = null, val companion: Boolean = false)
     : AnnotationHolder, ClassOrObjectHolder, FunctionHolder, KibbleElement, PropertyHolder, Visible {
 
     var superTypes = listOf<KibbleType>()
@@ -26,13 +20,13 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
     override var visibility: Visibility = PUBLIC
     override var annotations = mutableListOf<KibbleAnnotation>()
     override val classes = mutableListOf<KibbleClass>()
-    override val interfaces = mutableListOf<KibbleInterface>()
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
     var initBlock: String? = null
 
-    internal constructor(file: KibbleFile, kt: KtObjectDeclaration) : this(file, kt.name, kt.isCompanion()) {
+/*
+    internal constructor(kt: KtObjectDeclaration) : this(kt.name, kt.isCompanion()) {
         superType = extractSuperType(kt.superTypeListEntries)
         superTypes = extractSuperTypes(kt.superTypeListEntries)
         superCallArgs = extractSuperCallArgs(kt.superTypeListEntries)
@@ -40,26 +34,21 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
         visibility = Visible.apply(kt.visibilityModifier())
 
         annotations = extractAnnotations(kt.annotationEntries)
-        classes += KibbleExtractor.extractClasses(file, kt.declarations)
-        objects += KibbleExtractor.extractObjects(file, kt.declarations)
+        classes += KibbleExtractor.extractClasses(kt.declarations)
+        objects += KibbleExtractor.extractObjects(kt.declarations)
         functions += KibbleExtractor.extractFunctions(kt.declarations)
         properties += KibbleExtractor.extractProperties(kt.declarations)
     }
+*/
 
     override fun addClass(name: String): KibbleClass {
-        return KibbleClass(file, name).also {
+        return KibbleClass(name).also {
             classes += it
         }
     }
 
-    override fun addInterface(name: String): KibbleInterface {
-        return KibbleInterface(file, name).also {
-            interfaces += it
-        }
-    }
-
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
-        return KibbleObject(file, name = name, companion = isCompanion).also {
+        return KibbleObject(name = name, companion = isCompanion).also {
             objects += it
         }
     }
@@ -88,7 +77,6 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
 
     override fun collectImports(file: KibbleFile) {
         objects.forEach { it.collectImports(file) }
-        interfaces.forEach { it.collectImports(file) }
         classes.forEach { it.collectImports(file) }
         functions.forEach { it.collectImports(file) }
         properties.forEach { it.collectImports(file) }
@@ -128,8 +116,12 @@ class KibbleObject internal constructor(val file: KibbleFile, val name: String? 
             }
 
             functions.forEach { it.toSource(writer, level + 1) }
-            interfaces.forEach { it.toSource(writer, level + 1) }
-            classes.forEach { it.toSource(writer, level + 1) }
+            classes
+                    .filter { it.isInterface }
+                    .forEach { it.toSource(writer, level + 1) }
+            classes
+                    .filter { !it.isInterface }
+                    .forEach { it.toSource(writer, level + 1) }
 
             writer.write("}", level)
         }
