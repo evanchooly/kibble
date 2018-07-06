@@ -4,7 +4,6 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Mutability.NEITHER
 import com.antwerkz.kibble.model.Mutability.VAL
 import com.antwerkz.kibble.model.Visibility.NONE
-import org.jetbrains.kotlin.psi.KtParameter
 
 /**
  * Defines a function parameter
@@ -14,23 +13,18 @@ import org.jetbrains.kotlin.psi.KtParameter
  * @property initializer the parameter initializer
  */
 open class KibbleParameter internal constructor(val name: String, val type: KibbleType?,
-                                                var initializer: String? = null, var varargs: Boolean = false)
-    : KibbleElement, GenericCapable, Mutable, Visible {
+                                                var initializer: String? = null,
+                                                var vararg: Boolean = false)
+    : KibbleElement, AnnotationHolder, GenericCapable, Mutable, Visible {
 
-    @Suppress("LeakingThis")
-    internal constructor(kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference)) {
-        mutability = Mutable.apply(kt.valOrVarKeyword)
-        typeParameters.addAll(GenericCapable.extractFromTypeParameters(kt.typeParameters))
-        varargs = kt.isVarArg
-    }
-
+    override val annotations =  mutableListOf<KibbleAnnotation>()
     override var mutability: Mutability = NEITHER
+        set(value) {
+            field = if (value != NEITHER) value else VAL
+        }
     override var visibility: Visibility = NONE
         set(value) {
-            field = value
-            if (mutability != NEITHER) {
-                mutability = VAL
-            }
+            field = if (value != NEITHER) value else NONE
         }
     override var typeParameters = mutableListOf<TypeParameter>()
 
@@ -43,6 +37,8 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
 
     override fun collectImports(file: KibbleFile) {
         type?.let { file.resolve(it) }
+        annotations.forEach { it.collectImports(file) }
+        typeParameters.forEach { it.collectImports(file) }
     }
 
     /**
@@ -50,7 +46,7 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer.write("$visibility$mutability")
-        if(varargs) {
+        if(vararg) {
             writer.write("vararg ")
         }
         name.let { writer.write(name) }

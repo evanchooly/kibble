@@ -17,6 +17,7 @@ internal abstract class KotlinSampleClass(val cost: Double, ignored: Int): Paren
     var time: Int? = null
     @SuppressWarnings("message")
     protected lateinit var random: String
+    @SuppressWarnings("message")
     protected fun output(count: Long) {
         println("age = $age")
     }

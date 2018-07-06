@@ -22,7 +22,7 @@ class KibbleContext {
     fun fileList(): List<KibbleFile> {
         return files.values.flatMap { it.toList() }
     }
-/*
+
     fun push(value: Any) {
         stack.push(value)
     }
@@ -32,7 +32,11 @@ class KibbleContext {
     }
 
     fun <T> peek(): T {
-        return stack.peek() as T
+        return (if (!stack.isEmpty()) stack.peek() else null) as T
     }
-*/
+
+    override fun toString(): String {
+        return if (!stack.isEmpty()) peek<Any>().toString() else "{}"
+    }
+
 }

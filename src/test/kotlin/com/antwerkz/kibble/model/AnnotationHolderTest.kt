@@ -39,7 +39,7 @@ class AnnotationHolderTest {
 
         val file = KibbleFile("temp")
         val foo = file.addFunction("foo")
-        foo.addAnnotation("Bob", mapOf("name" to "Feller"))
+        foo.addAnnotation("Bob", listOf(KibbleArgument("name", "Feller")))
         foo.addAnnotation(Retention::class.java)
         val source = file.toSource().toString()
         //language=kotlin
@@ -55,6 +55,7 @@ fun foo()
         Assert.assertEquals(annotation["value"], "\"deprecation\"")
         Assert.assertEquals(annotation.getValue(), "\"deprecation\"")
         Assert.assertEquals(annotation["count"], "10")
-        Assert.assertEquals(annotation.getAnnotationValue("foo")?.getValue(), "42")
+        val annotationValue = annotation.getAnnotationValue("foo")
+        Assert.assertEquals(annotationValue?.getValue(), "42")
     }
 }

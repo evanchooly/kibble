@@ -59,11 +59,13 @@ internal object KibbleExtractor {
     }
 */
 
+/*
     internal fun extractAnnotations(kt: List<Any>?): MutableList<KibbleAnnotation> {
         return (kt?.filterIsInstance<KtAnnotationEntry>()
                 ?.map { KibbleAnnotation.from(it) }
                 ?: listOf()).toMutableList()
     }
+*/
 
     internal fun extractSuperTypes(kt: List<KtSuperTypeListEntry>?): MutableList<KibbleType> {
         return (kt?.filterIsInstance(KtSuperTypeEntry::class.java)

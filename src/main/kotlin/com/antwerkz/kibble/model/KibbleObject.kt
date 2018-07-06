@@ -11,11 +11,11 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
  * @property initBlock any custom init block for this class
  */
 class KibbleObject internal constructor(val name: String? = null, val companion: Boolean = false)
-    : AnnotationHolder, ClassOrObjectHolder, FunctionHolder, KibbleElement, PropertyHolder, Visible {
+    : KibbleElement, ClassOrObjectHolder, PropertyHolder, FunctionHolder, AnnotationHolder, Polymorphic, Visible {
 
-    var superTypes = listOf<KibbleType>()
+    var superTypes = mutableListOf<KibbleType>()
     var superType: KibbleType? = null
-    var superCallArgs = listOf<String>()
+    var superCallArgs = mutableListOf<KibbleArgument>()
 
     override var visibility: Visibility = PUBLIC
     override var annotations = mutableListOf<KibbleAnnotation>()
@@ -23,23 +23,24 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
+    val implements = mutableListOf<KibbleType>()
     var initBlock: String? = null
 
-/*
-    internal constructor(kt: KtObjectDeclaration) : this(kt.name, kt.isCompanion()) {
-        superType = extractSuperType(kt.superTypeListEntries)
-        superTypes = extractSuperTypes(kt.superTypeListEntries)
-        superCallArgs = extractSuperCallArgs(kt.superTypeListEntries)
-
-        visibility = Visible.apply(kt.visibilityModifier())
-
-        annotations = extractAnnotations(kt.annotationEntries)
-        classes += KibbleExtractor.extractClasses(kt.declarations)
-        objects += KibbleExtractor.extractObjects(kt.declarations)
-        functions += KibbleExtractor.extractFunctions(kt.declarations)
-        properties += KibbleExtractor.extractProperties(kt.declarations)
+    override fun addSuperType(type: KibbleType) {
+        TODO("not implemented")
     }
-*/
+
+    override fun addSuperCallArg(argument: KibbleArgument) {
+        superCallArgs.add(argument)
+    }
+
+    override fun extends(type: KibbleType, vararg arguments: String) {
+        TODO("not implemented")
+    }
+
+    override fun implements(type: KibbleType) {
+        implements += type
+    }
 
     override fun addClass(name: String): KibbleClass {
         return KibbleClass(name).also {
@@ -59,6 +60,7 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
         }
     }
 
+/*
     override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
         if (constructorParam) {
@@ -69,6 +71,7 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
             properties += it
         }
     }
+*/
 
     /**
      * @return the string/source form of this type

@@ -6,7 +6,7 @@ package com.antwerkz.kibble.model
  * @property classes the list of classes declared on this type
  * @property objects the list of objects declared on this type
  */
-interface ClassOrObjectHolder : FunctionHolder {
+interface ClassOrObjectHolder {
     val classes: MutableList<KibbleClass>
     val objects: MutableList<KibbleObject>
 
@@ -44,5 +44,4 @@ interface ClassOrObjectHolder : FunctionHolder {
     fun getClass(className: String): KibbleClass? {
         return classes.firstOrNull { it.name == className }
     }
-
 }

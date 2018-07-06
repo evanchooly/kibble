@@ -1,10 +1,6 @@
 package com.antwerkz.kibble.model
 
-import com.antwerkz.kibble.model.Modality.FINAL
-import com.antwerkz.kibble.model.Mutability.VAL
-import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.psi.KtDeclaration
-import org.jetbrains.kotlin.psi.KtProperty
+import com.antwerkz.kibble.Kibble
 
 /**
  * Represents a type than hold properties
@@ -12,9 +8,20 @@ import org.jetbrains.kotlin.psi.KtProperty
  * @property properties the properties held by this type
  */
 interface PropertyHolder {
-    val properties: List<KibbleProperty>
+    val properties: MutableList<KibbleProperty>
 
     /**
+     * Adds new property to this type
+     *
+     * @param property the property name
+     *
+     * @return the new property
+     */
+    fun addProperty(property: String): KibbleProperty {
+        return Kibble.parseSource(property).properties.first().also { properties += it }
+    }
+
+/*
      * Adds new property to this type
      *
      * @param name the property name
@@ -28,7 +35,7 @@ interface PropertyHolder {
      * @param constructorParam true if the property should should be listed as a constructor parameter
      *
      * @return the new property
-     */
+
     fun addProperty(name: String, type: String? = null,
                     initializer: String? = null,
                     modality: Modality = FINAL,
@@ -37,6 +44,7 @@ interface PropertyHolder {
                     mutability: Mutability = VAL,
                     lateInit: Boolean = false,
                     constructorParam: Boolean = false): KibbleProperty
+*/
 
     /**
      * Gets a property by name if it exists

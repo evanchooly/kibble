@@ -64,7 +64,7 @@ object Kibble {
 
         val visitor = KibbleVisitor(context)
         environment.getSourceFiles()
-                .forEach { visitor.visitKtFile(it) }
+                .forEach { it.accept(visitor) }
 
         return context.fileList()
     }

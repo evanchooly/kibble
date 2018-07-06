@@ -8,12 +8,12 @@ package com.antwerkz.kibble.model
 interface AnnotationHolder {
     val annotations: MutableList<KibbleAnnotation>
 
-    fun addAnnotation(type: Class<out Annotation>, arguments: Map<String, Any> = mapOf()) {
-        addAnnotation(type.name, arguments)
+    fun addAnnotation(type: Class<out Annotation>, arguments: List<KibbleArgument> = listOf()) {
+        annotations.add(KibbleAnnotation(KibbleType.from(type as Class<Any>), arguments))
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun addAnnotation(type: String, arguments: Map<String, Any> = mapOf()) {
+    fun addAnnotation(type: String, arguments: List<KibbleArgument> = listOf()) {
         annotations.add(KibbleAnnotation(KibbleType.from(type), arguments))
     }
 

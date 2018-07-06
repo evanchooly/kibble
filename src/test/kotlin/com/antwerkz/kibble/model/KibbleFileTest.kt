@@ -10,7 +10,8 @@ import java.sql.ResultSet
 class KibbleFileTest {
     @Test(expectedExceptions = arrayOf(IllegalArgumentException::class))
     fun constructorProperties() {
-        KibbleFile().addProperty("name", constructorParam = true)
+        KibbleFile().addProperty("name").
+                constructorParam = true
     }
 
     @Test

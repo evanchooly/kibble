@@ -1,17 +1,29 @@
 package com.antwerkz.kibble
 
+import com.antwerkz.kibble.model.ClassOrObjectHolder
+import com.antwerkz.kibble.model.Constructor
+import com.antwerkz.kibble.model.KibbleAnnotation
+import com.antwerkz.kibble.model.KibbleArgument
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFile
 import com.antwerkz.kibble.model.KibbleFunction
 import com.antwerkz.kibble.model.KibbleImport
 import com.antwerkz.kibble.model.KibbleObject
+import com.antwerkz.kibble.model.KibbleParameter
 import com.antwerkz.kibble.model.KibbleProperty
 import com.antwerkz.kibble.model.KibbleType
 import com.antwerkz.kibble.model.Modality
 import com.antwerkz.kibble.model.Modality.FINAL
+import com.antwerkz.kibble.model.Mutability
+import com.antwerkz.kibble.model.Mutability.NEITHER
+import com.antwerkz.kibble.model.SecondaryConstructor
+import com.antwerkz.kibble.model.SuperCall
+import com.antwerkz.kibble.model.TypeParameter
 import com.antwerkz.kibble.model.Visibility
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.com.intellij.psi.PsiWhiteSpace
+import org.jetbrains.kotlin.lexer.KtSingleValueToken
 import org.jetbrains.kotlin.psi.KtAnnotatedExpression
 import org.jetbrains.kotlin.psi.KtAnnotation
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -115,6 +127,7 @@ import org.jetbrains.kotlin.psi.KtUnaryExpression
 import org.jetbrains.kotlin.psi.KtUserType
 import org.jetbrains.kotlin.psi.KtValueArgument
 import org.jetbrains.kotlin.psi.KtValueArgumentList
+import org.jetbrains.kotlin.psi.KtVisitorVoid
 import org.jetbrains.kotlin.psi.KtWhenConditionInRange
 import org.jetbrains.kotlin.psi.KtWhenConditionIsPattern
 import org.jetbrains.kotlin.psi.KtWhenConditionWithExpression
@@ -122,527 +135,634 @@ import org.jetbrains.kotlin.psi.KtWhenEntry
 import org.jetbrains.kotlin.psi.KtWhenExpression
 import org.jetbrains.kotlin.psi.KtWhileExpression
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
+import org.jetbrains.kotlin.psi.psiUtil.hasActualModifier
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-internal class KibbleVisitor(private val context: KibbleContext) {
-    fun visitKtFile(kt: KtFile): KibbleFile {
+internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid() {
+    override fun visitKtFile(kt: KtFile) {
         val kibbleFile = KibbleFile()
 
         kibbleFile.sourceTimestamp = kt.virtualFile.modificationStamp
-        kt.packageDirective?.let { kibbleFile.pkgName = visitPackageDirective(it) }
-        kt.importDirectives.forEach {
-            kibbleFile.addImport(visitImportDirective(it))
-        }
+        kibbleFile.pkgName = kt.packageDirective?.evaluate(this)
+        kibbleFile.imports.addAll(kt.importList?.evaluate(this) ?: listOf())
 
-        kt.declarations.forEach { decl ->
-            val declaration = visitDeclaration(decl)
+        kt.declarations.forEach {
+            val declaration = it.evaluate<Any>(this)
             when (declaration) {
-                is KibbleClass -> kibbleFile.classes.add(declaration)
-                is KibbleObject -> kibbleFile.objects.add(declaration)
-                is KibbleFunction -> kibbleFile.functions.add(declaration)
-                is KibbleProperty -> kibbleFile.properties.add(declaration)
-                else -> throw RuntimeException("unknown type: ${declaration::class.java}")
+                is KibbleFunction -> kibbleFile.functions += declaration
+                is KibbleClass -> kibbleFile.classes += declaration
+                is KibbleObject -> kibbleFile.objects += declaration
+                is KibbleProperty -> kibbleFile.properties += declaration
+                else -> TODO("handle declaration type $declaration")
             }
         }
 
         context.register(kibbleFile)
-        return kibbleFile
     }
 
-    fun visitImportDirective(directive: KtImportDirective): KibbleImport {
+    override fun visitImportDirective(directive: KtImportDirective) {
         val fqName = directive.importedFqName!!
         val type = KibbleType(fqName.parent().asString(), fqName.shortName().identifier)
+        val kibbleImport = KibbleImport(type, directive.aliasName)
 
-        return KibbleImport(type, directive.aliasName)
+        context.push(kibbleImport)
     }
 
-    fun visitKtElement(element: KtElement) {
-        Exception("Found an unprocessed type: ${element.name}").printStackTrace()
+    override fun visitKtElement(element: KtElement) {
+        throw Exception("Found an unprocessed type: $element")
     }
 
-    fun visitDeclaration(dcl: KtDeclaration): Any {
-        when (dcl) {
-            is KtClass -> { return visitClass(dcl)}
-            is KtObjectDeclaration -> { return visitObjectDeclaration(dcl)}
-            is KtNamedFunction -> { return visitNamedFunction(dcl)}
-            is KtProperty -> { return visitProperty(dcl) }
+    override fun visitDeclaration(dcl: KtDeclaration) {
+        return when (dcl) {
+            is KtClass -> visitClass(dcl)
+            is KtObjectDeclaration -> visitObjectDeclaration(dcl)
+            is KtNamedFunction -> visitNamedFunction(dcl)
+            is KtProperty -> visitProperty(dcl)
             else -> throw RuntimeException("Unprocessed declaration: ${dcl.name}")
         }
     }
 
-    fun visitClass(kt: KtClass): KibbleClass {
+    override fun visitClass(kt: KtClass) {
         val kibbleClass = KibbleClass(kt.name ?: "",
                 kt.modalityModifier().toModality(),
                 kt.visibilityModifier().toVisibility())
 
         kibbleClass.isInterface = kt.isInterface()
 
-        kt.typeParameterList?.let { visitTypeParameterList(it) }
+        kibbleClass.typeParameters += kt.typeParameterList?.evaluate<List<TypeParameter>>(this) ?: listOf()
 
-        val superTypeList = kt.getSuperTypeList()
-        superTypeList?.let { visitSuperTypeList(it) }
-        val annotationEntries = kt.annotationEntries
-        annotationEntries.forEach { visitAnnotationEntry(it) }
+        kt.getSuperTypeList()?.evaluate<List<Any>>(this)
+                ?.forEach {
+                    when (it) {
+                        is SuperCall -> {
+                            kibbleClass.parentClass = it.type
+                            kibbleClass.superCallArgs += it.arguments
+                        }
+                        is KibbleType -> kibbleClass.addSuperType(it)
+                        else -> TODO("handled this type: $it")
+                    }
+                }
+        kibbleClass.annotations += kt.annotationEntries.evaluate(this)
 
-        kt.declarations.forEach { visitDeclaration(it) }
+        kt.declarations.forEach {
+            val declaration = it.evaluate<Any>(this)
+            when (declaration) {
+                is KibbleFunction -> kibbleClass.functions += declaration
+                is KibbleClass -> kibbleClass.classes += declaration
+                is KibbleObject -> kibbleClass.objects += declaration
+                is KibbleProperty -> kibbleClass.properties += declaration
+                is SecondaryConstructor -> kibbleClass.secondaries += declaration
+                else -> TODO("handle declaration type $declaration")
+            }
+        }
 
-        return kibbleClass
+        kt.primaryConstructor?.evaluate<Constructor>(this)?.let { kibbleClass.constructor = it }
+
+        kibbleClass.constructor.parameters.forEachIndexed { index, it ->
+            if(it.mutability != NEITHER) {
+                val prop = KibbleProperty(it.name, it.type, it.initializer, constructorParam = true).also { prop ->
+                    prop.annotations += it.annotations
+                    prop.mutability = it.mutability
+                    prop.typeParameters = it.typeParameters
+                }
+                kibbleClass.constructor.parameters[index] = prop
+                kibbleClass.properties += prop
+            }
+        }
+
+        context.push(kibbleClass)
     }
 
-    fun visitObjectDeclaration(declaration: KtObjectDeclaration): KibbleObject {
-        TODO("this.visitClassOrObject(declaration)")
+    override fun visitObjectDeclaration(declaration: KtObjectDeclaration) {
+        if (true) TODO("this.visitClassOrObject(declaration)")
+        context.peek<ClassOrObjectHolder>().objects.add(context.pop())
     }
 
-    fun visitClassOrObject(classOrObject: KtClassOrObject) {
+    override fun visitClassOrObject(classOrObject: KtClassOrObject) {
         this.visitNamedDeclaration(classOrObject)
     }
 
-    fun visitSecondaryConstructor(constructor: KtSecondaryConstructor) {
-        this.visitNamedDeclaration(constructor)
+    override fun visitSecondaryConstructor(constructor: KtSecondaryConstructor) {
+        val ctor = SecondaryConstructor()
+        constructor.bodyExpression?.let {
+            ctor.body = it.evaluate<String>(this)
+        }
+        ctor.delegationArguments += constructor.getDelegationCall().evaluate<List<KibbleArgument>>(this)
+        ctor.parameters += constructor.valueParameters.evaluate(this)
+        context.push(ctor)
     }
 
-    fun visitPrimaryConstructor(constructor: KtPrimaryConstructor) {
-        this.visitNamedDeclaration(constructor)
+    override fun visitPrimaryConstructor(constructor: KtPrimaryConstructor) {
+        val ctor = Constructor()
+        constructor.bodyExpression?.let {
+            ctor.body = it.evaluate<String>(this)
+        }
+        ctor.parameters += constructor.valueParameters.evaluate(this)
+        context.push(ctor)
     }
 
-    fun visitNamedFunction(kt: KtNamedFunction): KibbleFunction {
+    override fun visitNamedFunction(kt: KtNamedFunction) {
         val kibbleFunction = KibbleFunction(kt.name, kt.visibilityModifier().toVisibility(), kt.modalityModifier().toModality(),
                 overriding = kt.isOverridden())
-        kt.valueParameterList?.let { visitParameterList(it) }
-        kt.typeParameterList?.let { visitTypeParameterList(it) }
 
-/*
-        kibbleFunction.body = kt.bodyExpression?.text?.trim() ?: ""
-        bodyBlock = kt.hasBlockBody()
-        if (bodyBlock) {
-            body = (kt.bodyExpression?.text ?: "")
-                    .drop(1)
-                    .dropLast(1)
-                    .trimIndent()
-        }
-        kt.typeReference?.let {
-            type = KibbleType.from(it.text)
-        }
-        kt.modifierList
-*/
-        kt.annotationEntries.forEach { visitAnnotationEntry(it) }
+        kibbleFunction.parameters += kt.valueParameterList?.evaluate<List<KibbleParameter>>(this) ?: listOf()
+        kibbleFunction.typeParameters += kt.typeParameterList?.evaluate<List<TypeParameter>>(this) ?: listOf()
+        kibbleFunction.annotations += kt.annotationEntries
+                .map { it.evaluate<KibbleAnnotation>(this) }
+        kibbleFunction.body = kt.bodyExpression?.evaluate<String>(this) ?: ""
+        kibbleFunction.type = kt.typeReference?.evaluate<KibbleType>(this)
+//        val modifiers = kt.modifierList?.evaluate<List<Any>>(this)
 
-        return kibbleFunction
+        context.push(kibbleFunction)
     }
 
-    fun visitProperty(property: KtProperty): KibbleProperty {
-        TODO("property = ${property}")
+    fun <T> KtElement.evaluate(visitor: KibbleVisitor): T {
+        this.accept(visitor)
+        return visitor.context.pop()
     }
 
-    fun visitDestructuringDeclaration(multiDeclaration: KtDestructuringDeclaration) {
+    fun <T> PsiElement.evaluate(visitor: KibbleVisitor): T {
+        this.accept(visitor)
+        return visitor.context.pop()
+    }
+
+    fun <T> List<KtElement>.evaluate(visitor: KibbleVisitor): List<T> {
+        return map { it.evaluate<T>(visitor) }
+    }
+
+    override fun visitProperty(property: KtProperty) {
+        val type: KibbleType? = property.typeReference?.evaluate(this)
+
+        val visibility = property.visibilityModifier().toVisibility()
+        val kibbleProperty = KibbleProperty(property.name ?: "", type,
+                property.initializer?.evaluate(this), property.modalityModifier().toModality(),
+                property.isOverridden())
+        kibbleProperty.visibility = visibility
+        kibbleProperty.annotations += property.annotationEntries.evaluate(this)
+
+
+        context.push(kibbleProperty)
+    }
+
+    override fun visitDestructuringDeclaration(multiDeclaration: KtDestructuringDeclaration) {
         this.visitDeclaration(multiDeclaration)
     }
 
-    fun visitDestructuringDeclarationEntry(multiDeclarationEntry: KtDestructuringDeclarationEntry) {
+    override fun visitDestructuringDeclarationEntry(multiDeclarationEntry: KtDestructuringDeclarationEntry) {
         this.visitNamedDeclaration(multiDeclarationEntry)
     }
 
-    fun visitTypeAlias(typeAlias: KtTypeAlias) {
+    override fun visitTypeAlias(typeAlias: KtTypeAlias) {
         this.visitNamedDeclaration(typeAlias)
     }
 
-    fun visitScript(script: KtScript) {
+    override fun visitScript(script: KtScript) {
         this.visitDeclaration(script)
     }
 
-    fun visitImportAlias(importAlias: KtImportAlias) {
+    override fun visitImportAlias(importAlias: KtImportAlias) {
         this.visitKtElement(importAlias)
     }
 
-    fun visitImportList(importList: KtImportList) {
-        this.visitKtElement(importList)
+    override fun visitImportList(importList: KtImportList) {
+        context.push(importList.imports
+                .map { it.evaluate<KibbleImport>(this) }
+                .toList())
     }
 
     fun visitFileAnnotationList(fileAnnotationList: KtFileAnnotationList) {
         this.visitKtElement(fileAnnotationList)
     }
 
-    fun visitClassBody(classBody: KtClassBody) {
+    override fun visitClassBody(classBody: KtClassBody) {
         this.visitKtElement(classBody)
     }
 
-    fun visitModifierList(list: KtModifierList) {
-        this.visitKtElement(list)
+    override fun visitModifierList(list: KtModifierList) {
+        val hasActualModifier = list.hasActualModifier()
+        println("hasActualModifier = $hasActualModifier")
+        context.push(listOf<Any>())
     }
 
-    fun visitAnnotation(annotation: KtAnnotation) {
+    override fun visitAnnotation(annotation: KtAnnotation) {
         this.visitKtElement(annotation)
     }
 
-    fun visitAnnotationEntry(annotationEntry: KtAnnotationEntry) {
-         val annType = visitTypeReference(annotationEntry.typeReference!!)
-        val arguments = annotationEntry.valueArgumentList?.let { visitValueArgumentList(it) }
-
-//        return KibbleAnnotation(type, arguments)
-        this.visitKtElement(annotationEntry)
+    override fun visitAnnotationEntry(annotationEntry: KtAnnotationEntry) {
+        val annType = annotationEntry.typeReference?.evaluate<KibbleType>(this)!!
+        val arguments = annotationEntry.valueArgumentList?.evaluate<List<KibbleArgument>>(this) ?: listOf()
+        context.push(KibbleAnnotation(annType, arguments))
     }
 
     fun visitAnnotationUseSiteTarget(annotationTarget: KtAnnotationUseSiteTarget) {
         this.visitKtElement(annotationTarget)
     }
 
-    fun visitConstructorCalleeExpression(constructorCalleeExpression: KtConstructorCalleeExpression) {
+    override fun visitConstructorCalleeExpression(constructorCalleeExpression: KtConstructorCalleeExpression) {
         this.visitKtElement(constructorCalleeExpression)
     }
 
-    fun visitTypeParameterList(list: KtTypeParameterList) {
+    override fun visitTypeParameterList(list: KtTypeParameterList) {
         this.visitKtElement(list)
     }
 
-    fun visitTypeParameter(parameter: KtTypeParameter) {
+    override fun visitTypeParameter(parameter: KtTypeParameter) {
         this.visitNamedDeclaration(parameter)
     }
 
-    fun visitEnumEntry(enumEntry: KtEnumEntry) {
+    override fun visitEnumEntry(enumEntry: KtEnumEntry) {
         this.visitClass(enumEntry)
     }
 
-    fun visitParameterList(list: KtParameterList) {
-        this.visitKtElement(list)
+    override fun visitParameterList(list: KtParameterList) {
+        context.push(list.parameters.map { it.evaluate<KibbleParameter>(this) }.toList())
     }
 
-    fun visitParameter(parameter: KtParameter) {
-        this.visitNamedDeclaration(parameter)
+    override fun visitParameter(parameter: KtParameter) {
+        val name = parameter.name as String
+        val type = parameter.typeReference?.evaluate<KibbleType>(this)
+        val defaultValue = parameter.defaultValue?.evaluate<String>(this)
+        val kibbleParameter = KibbleParameter(name, type, defaultValue, parameter.isVarArg)
+
+        if (parameter.hasValOrVar()) {
+            val valOrVarKeyword = parameter.valOrVarKeyword?.text ?: "NEITHER"
+            kibbleParameter.mutability = Mutability.valueOf(valOrVarKeyword.toUpperCase())
+        }
+        kibbleParameter.annotations += parameter.annotationEntries.evaluate(this)
+
+        context.push(kibbleParameter)
     }
 
-    fun visitSuperTypeList(list: KtSuperTypeList) {
-        this.visitKtElement(list)
+    override fun visitSuperTypeList(list: KtSuperTypeList) {
+        context.push(list.entries.map {
+            it.evaluate<Any>(this)
+        })
     }
 
-    fun visitSuperTypeListEntry(specifier: KtSuperTypeListEntry) {
-        this.visitKtElement(specifier)
+    override fun visitSuperTypeListEntry(specifier: KtSuperTypeListEntry) {
+        specifier.typeReference?.evaluate<KibbleType>(this)?.let {
+            context.push(it)
+        }
     }
 
-    fun visitDelegatedSuperTypeEntry(specifier: KtDelegatedSuperTypeEntry) {
+    override fun visitDelegatedSuperTypeEntry(specifier: KtDelegatedSuperTypeEntry) {
         this.visitSuperTypeListEntry(specifier)
     }
 
-    fun visitSuperTypeCallEntry(call: KtSuperTypeCallEntry) {
-        this.visitSuperTypeListEntry(call)
+    override fun visitSuperTypeCallEntry(call: KtSuperTypeCallEntry) {
+        val type = call.typeReference?.evaluate<KibbleType>(this)
+        type?.let {
+            val invocation = SuperCall(type).also { superCall ->
+                call.valueArgumentList?.evaluate<List<KibbleArgument>>(this)?.let {
+                    superCall.arguments.addAll(it)
+                }
+            }
+            context.push(invocation)
+        }
     }
 
-    fun visitSuperTypeEntry(specifier: KtSuperTypeEntry) {
-        this.visitSuperTypeListEntry(specifier)
+    override fun visitSuperTypeEntry(specifier: KtSuperTypeEntry) {
+        specifier.typeReference?.evaluate<KibbleType>(this)?.let {
+            context.push(it)
+        }
     }
 
-    fun visitConstructorDelegationCall(call: KtConstructorDelegationCall) {
-        this.visitKtElement(call)
+    override fun visitConstructorDelegationCall(call: KtConstructorDelegationCall) {
+        context.push(call.valueArguments.map {
+            KibbleArgument(
+                    it.getArgumentName()?.toString(),
+                    it.getArgumentExpression()?.evaluate<String>(this) ?: "")
+        })
     }
 
-    fun visitPropertyDelegate(delegate: KtPropertyDelegate) {
+    override fun visitPropertyDelegate(delegate: KtPropertyDelegate) {
         this.visitKtElement(delegate)
     }
 
-    fun visitTypeReference(typeReference: KtTypeReference): KibbleType {
-        val type = visitTypeElement(typeReference.typeElement!!)
-        return type
+    override fun visitTypeReference(typeReference: KtTypeReference) {
+        typeReference.typeElement?.accept(this)
     }
 
-    fun visitValueArgumentList(list: KtValueArgumentList) {
-        val map = list.arguments.map { visitArgument(it) }
-        TODO()
+    override fun visitValueArgumentList(list: KtValueArgumentList) {
+        context.push(list.arguments.evaluate<KibbleArgument>(this))
     }
 
-    fun visitArgument(argument: KtValueArgument): Pair<String?, Any> {
+    override fun visitArgument(argument: KtValueArgument) {
         val name = if (argument.isNamed()) argument.getArgumentName()!!.text else null
-        val value = argument.getArgumentExpression()?.let { visitExpression(it) }
-        return Pair(name, argument.text)
+        val evaluate = argument.getArgumentExpression()?.evaluate<Any>(this)
+        val value = evaluate ?: ""
+        context.push(KibbleArgument(name, value))
     }
 
-    fun visitExpression(expression: KtExpression) {
-        expression.a
-        TODO()
+    override fun visitExpression(expression: KtExpression) {
+        expression.accept(this)
     }
 
-    fun visitLoopExpression(loopExpression: KtLoopExpression) {
+    override fun visitLoopExpression(loopExpression: KtLoopExpression) {
         this.visitExpression(loopExpression)
     }
 
-    fun visitConstantExpression(expression: KtConstantExpression) {
-        this.visitExpression(expression)
+    override fun visitConstantExpression(expression: KtConstantExpression) {
+        context.push(expression.text)
     }
 
-    fun visitSimpleNameExpression(expression: KtSimpleNameExpression) {
+    override fun visitSimpleNameExpression(expression: KtSimpleNameExpression) {
         this.visitReferenceExpression(expression)
     }
 
-    fun visitReferenceExpression(expression: KtReferenceExpression) {
+    override fun visitReferenceExpression(expression: KtReferenceExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitLabeledExpression(expression: KtLabeledExpression) {
-        this.visitExpressionWithLabel(expression)
+    override fun visitLabeledExpression(expression: KtLabeledExpression) {
+        context.push(expression.text)
     }
 
-    fun visitPrefixExpression(expression: KtPrefixExpression) {
+    override fun visitPrefixExpression(expression: KtPrefixExpression) {
+        context.push(expression.text)
+    }
+
+    override fun visitPostfixExpression(expression: KtPostfixExpression) {
         this.visitUnaryExpression(expression)
     }
 
-    fun visitPostfixExpression(expression: KtPostfixExpression) {
-        this.visitUnaryExpression(expression)
+    override fun visitUnaryExpression(expression: KtUnaryExpression) {
+        val operationToken = expression.operationToken
+        val token = when (operationToken) {
+            is KtSingleValueToken -> operationToken.value
+            else -> TODO("handle token type $operationToken")
+        }
+        context.push(token)
+        expression.baseExpression?.accept(this)
     }
 
-    fun visitUnaryExpression(expression: KtUnaryExpression) {
+    override fun visitBinaryExpression(expression: KtBinaryExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitBinaryExpression(expression: KtBinaryExpression) {
+    override fun visitReturnExpression(expression: KtReturnExpression) {
+        val returned = expression.returnedExpression?.evaluate<String>(this)
+        val retVal = returned
+                ?: (expression.labeledExpression?.evaluate<String>(this)?.let { it }
+                        ?: throw RuntimeException("Could not find value for return expression: $expression"))
+        context.push("return $retVal")
+    }
+
+    override fun visitExpressionWithLabel(expression: KtExpressionWithLabel) {
         this.visitExpression(expression)
     }
 
-    fun visitReturnExpression(expression: KtReturnExpression) {
+    override fun visitThrowExpression(expression: KtThrowExpression) {
+        this.visitExpression(expression)
+    }
+
+    override fun visitBreakExpression(expression: KtBreakExpression) {
         this.visitExpressionWithLabel(expression)
     }
 
-    fun visitExpressionWithLabel(expression: KtExpressionWithLabel) {
-        this.visitExpression(expression)
-    }
-
-    fun visitThrowExpression(expression: KtThrowExpression) {
-        this.visitExpression(expression)
-    }
-
-    fun visitBreakExpression(expression: KtBreakExpression) {
+    override fun visitContinueExpression(expression: KtContinueExpression) {
         this.visitExpressionWithLabel(expression)
     }
 
-    fun visitContinueExpression(expression: KtContinueExpression) {
-        this.visitExpressionWithLabel(expression)
-    }
-
-    fun visitIfExpression(expression: KtIfExpression) {
+    override fun visitIfExpression(expression: KtIfExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitWhenExpression(expression: KtWhenExpression) {
+    override fun visitWhenExpression(expression: KtWhenExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitCollectionLiteralExpression(expression: KtCollectionLiteralExpression) {
+    override fun visitCollectionLiteralExpression(expression: KtCollectionLiteralExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitTryExpression(expression: KtTryExpression) {
+    override fun visitTryExpression(expression: KtTryExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitForExpression(expression: KtForExpression) {
+    override fun visitForExpression(expression: KtForExpression) {
         this.visitLoopExpression(expression)
     }
 
-    fun visitWhileExpression(expression: KtWhileExpression) {
+    override fun visitWhileExpression(expression: KtWhileExpression) {
         this.visitLoopExpression(expression)
     }
 
-    fun visitDoWhileExpression(expression: KtDoWhileExpression) {
+    override fun visitDoWhileExpression(expression: KtDoWhileExpression) {
         this.visitLoopExpression(expression)
     }
 
-    fun visitLambdaExpression(expression: KtLambdaExpression) {
+    override fun visitLambdaExpression(expression: KtLambdaExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitAnnotatedExpression(expression: KtAnnotatedExpression) {
-        this.visitExpression(expression)
+    override fun visitAnnotatedExpression(expression: KtAnnotatedExpression) {
+        if(expression.annotationEntries.size != 1) {
+            throw RuntimeException("Should have found one entry")
+        }
+        context.push(expression.annotationEntries[0].evaluate(this))
     }
 
-    fun visitCallExpression(expression: KtCallExpression) {
+    override fun visitCallExpression(expression: KtCallExpression) {
+        val prevSibling = expression.prevSibling
+        var indent = if (prevSibling is PsiWhiteSpace) {
+            prevSibling.text.removePrefix("\n")
+        } else ""
+        if (indent.length == 1) {
+            indent = ""
+        }
+        val value = expression.text
+        context.push(indent + value)
+    }
+
+    override fun visitArrayAccessExpression(expression: KtArrayAccessExpression) {
         this.visitReferenceExpression(expression)
     }
 
-    fun visitArrayAccessExpression(expression: KtArrayAccessExpression) {
-        this.visitReferenceExpression(expression)
-    }
-
-    fun visitQualifiedExpression(expression: KtQualifiedExpression) {
+    override fun visitQualifiedExpression(expression: KtQualifiedExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitDoubleColonExpression(expression: KtDoubleColonExpression) {
+    override fun visitDoubleColonExpression(expression: KtDoubleColonExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitCallableReferenceExpression(expression: KtCallableReferenceExpression) {
+    override fun visitCallableReferenceExpression(expression: KtCallableReferenceExpression) {
         this.visitDoubleColonExpression(expression)
     }
 
-    fun visitClassLiteralExpression(expression: KtClassLiteralExpression) {
+    override fun visitClassLiteralExpression(expression: KtClassLiteralExpression) {
         this.visitDoubleColonExpression(expression)
     }
 
-    fun visitDotQualifiedExpression(expression: KtDotQualifiedExpression) {
+    override fun visitDotQualifiedExpression(expression: KtDotQualifiedExpression) {
+        context.push(expression.text)
+    }
+
+    override fun visitSafeQualifiedExpression(expression: KtSafeQualifiedExpression) {
         this.visitQualifiedExpression(expression)
     }
 
-    fun visitSafeQualifiedExpression(expression: KtSafeQualifiedExpression) {
-        this.visitQualifiedExpression(expression)
-    }
-
-    fun visitObjectLiteralExpression(expression: KtObjectLiteralExpression) {
+    override fun visitObjectLiteralExpression(expression: KtObjectLiteralExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitBlockExpression(expression: KtBlockExpression) {
-        this.visitExpression(expression)
+    override fun visitBlockExpression(expression: KtBlockExpression) {
+        context.push(expression.statements.evaluate<String>(this).joinToString("\n"))
     }
 
-    fun visitCatchSection(catchClause: KtCatchClause) {
+    override fun visitCatchSection(catchClause: KtCatchClause) {
         this.visitKtElement(catchClause)
     }
 
-    fun visitFinallySection(finallySection: KtFinallySection) {
+    override fun visitFinallySection(finallySection: KtFinallySection) {
         this.visitKtElement(finallySection)
     }
 
-    fun visitTypeArgumentList(typeArgumentList: KtTypeArgumentList) {
+    override fun visitTypeArgumentList(typeArgumentList: KtTypeArgumentList) {
         this.visitKtElement(typeArgumentList)
     }
 
-    fun visitThisExpression(expression: KtThisExpression) {
+    override fun visitThisExpression(expression: KtThisExpression) {
         this.visitExpressionWithLabel(expression)
     }
 
-    fun visitSuperExpression(expression: KtSuperExpression) {
+    override fun visitSuperExpression(expression: KtSuperExpression) {
         this.visitExpressionWithLabel(expression)
     }
 
-    fun visitParenthesizedExpression(expression: KtParenthesizedExpression) {
+    override fun visitParenthesizedExpression(expression: KtParenthesizedExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitInitializerList(list: KtInitializerList) {
+    override fun visitInitializerList(list: KtInitializerList) {
         this.visitKtElement(list)
     }
 
-    fun visitAnonymousInitializer(initializer: KtAnonymousInitializer) {
+    override fun visitAnonymousInitializer(initializer: KtAnonymousInitializer) {
         this.visitDeclaration(initializer)
     }
 
-    fun visitScriptInitializer(initializer: KtScriptInitializer) {
+    override fun visitScriptInitializer(initializer: KtScriptInitializer) {
         this.visitAnonymousInitializer(initializer)
     }
 
-    fun visitClassInitializer(initializer: KtClassInitializer) {
+    override fun visitClassInitializer(initializer: KtClassInitializer) {
         this.visitAnonymousInitializer(initializer)
     }
 
-    fun visitPropertyAccessor(accessor: KtPropertyAccessor) {
+    override fun visitPropertyAccessor(accessor: KtPropertyAccessor) {
         this.visitDeclaration(accessor)
     }
 
-    fun visitTypeConstraintList(list: KtTypeConstraintList) {
+    override fun visitTypeConstraintList(list: KtTypeConstraintList) {
         this.visitKtElement(list)
     }
 
-    fun visitTypeConstraint(constraint: KtTypeConstraint) {
+    override fun visitTypeConstraint(constraint: KtTypeConstraint) {
         this.visitKtElement(constraint)
     }
 
-    private fun visitTypeElement(type: KtTypeElement): KibbleType {
-        return when(type) {
-            is KtUserType -> visitUserType(type)
-            else -> throw RuntimeException("unknown type: ${type}")
+    private fun visitTypeElement(type: KtTypeElement) {
+//        return when(type) {
+////            is KtUserType -> visitUserType(type)
+//            else -> throw RuntimeException("unknown type: ${type}")
+//        }
+        throw RuntimeException("unhandled type: $type")
+    }
+
+    override fun visitUserType(type: KtUserType) {
+        type.typeArguments.forEach {
+            TODO("handle type arguments: $it")
         }
-/*
-        return if (!type..contains("*") && (type.contains(".") || type.contains("<"))) {
-            Kibble.parseSource("val temp: $type").properties[0].type!!
-        } else {
-            KibbleType(className = type)
-        }
-*/
-
-        TODO()
+        context.push(KibbleType(type.qualifier?.text,  type.referencedName!!))
     }
 
-    fun visitUserType(type: KtUserType): KibbleType {
-        return KibbleType(className = type.referencedName!!)
-    }
-
-    fun visitDynamicType(type: KtDynamicType) {
+    override fun visitDynamicType(type: KtDynamicType) {
         this.visitTypeElement(type)
     }
 
-    fun visitFunctionType(type: KtFunctionType) {
+    override fun visitFunctionType(type: KtFunctionType) {
         this.visitTypeElement(type)
     }
 
-    fun visitSelfType(type: KtSelfType) {
+    override fun visitSelfType(type: KtSelfType) {
         this.visitTypeElement(type)
     }
 
-    fun visitBinaryWithTypeRHSExpression(expression: KtBinaryExpressionWithTypeRHS) {
+    override fun visitBinaryWithTypeRHSExpression(expression: KtBinaryExpressionWithTypeRHS) {
         this.visitExpression(expression)
     }
 
-    fun visitStringTemplateExpression(expression: KtStringTemplateExpression) {
-        this.visitExpression(expression)
+    override fun visitStringTemplateExpression(expression: KtStringTemplateExpression) {
+        context.push(expression.text)
     }
 
-    fun visitNamedDeclaration(declaration: KtNamedDeclaration) {
+    override fun visitNamedDeclaration(declaration: KtNamedDeclaration) {
         this.visitDeclaration(declaration)
     }
 
-    fun visitNullableType(nullableType: KtNullableType) {
-        this.visitTypeElement(nullableType)
+    override fun visitNullableType(nullableType: KtNullableType) {
+        nullableType.innerType?.accept(this)
+        val type = context.pop<KibbleType>()
+        if (nullableType.modifierList?.allChildren?.isEmpty == true) {
+            TODO("handle the modifiers: ${nullableType.modifierList}")
+        }
+        context.push(KibbleType(type, true))
     }
 
-    fun visitTypeProjection(typeProjection: KtTypeProjection) {
+    override fun visitTypeProjection(typeProjection: KtTypeProjection) {
         this.visitKtElement(typeProjection)
     }
 
-    fun visitWhenEntry(jetWhenEntry: KtWhenEntry) {
+    override fun visitWhenEntry(jetWhenEntry: KtWhenEntry) {
         this.visitKtElement(jetWhenEntry)
     }
 
-    fun visitIsExpression(expression: KtIsExpression) {
+    override fun visitIsExpression(expression: KtIsExpression) {
         this.visitExpression(expression)
     }
 
-    fun visitWhenConditionIsPattern(condition: KtWhenConditionIsPattern) {
+    override fun visitWhenConditionIsPattern(condition: KtWhenConditionIsPattern) {
         this.visitKtElement(condition)
     }
 
-    fun visitWhenConditionInRange(condition: KtWhenConditionInRange) {
+    override fun visitWhenConditionInRange(condition: KtWhenConditionInRange) {
         this.visitKtElement(condition)
     }
 
-    fun visitWhenConditionWithExpression(condition: KtWhenConditionWithExpression) {
+    override fun visitWhenConditionWithExpression(condition: KtWhenConditionWithExpression) {
         this.visitKtElement(condition)
     }
 
-    fun visitStringTemplateEntry(entry: KtStringTemplateEntry) {
+    override fun visitStringTemplateEntry(entry: KtStringTemplateEntry) {
         this.visitKtElement(entry)
     }
 
-    fun visitStringTemplateEntryWithExpression(entry: KtStringTemplateEntryWithExpression) {
+    override fun visitStringTemplateEntryWithExpression(entry: KtStringTemplateEntryWithExpression) {
         this.visitStringTemplateEntry(entry)
     }
 
-    fun visitBlockStringTemplateEntry(entry: KtBlockStringTemplateEntry) {
+    override fun visitBlockStringTemplateEntry(entry: KtBlockStringTemplateEntry) {
         this.visitStringTemplateEntryWithExpression(entry)
     }
 
-    fun visitSimpleNameStringTemplateEntry(entry: KtSimpleNameStringTemplateEntry) {
+    override fun visitSimpleNameStringTemplateEntry(entry: KtSimpleNameStringTemplateEntry) {
         this.visitStringTemplateEntryWithExpression(entry)
     }
 
-    fun visitLiteralStringTemplateEntry(entry: KtLiteralStringTemplateEntry) {
+    override fun visitLiteralStringTemplateEntry(entry: KtLiteralStringTemplateEntry) {
         this.visitStringTemplateEntry(entry)
     }
 
-    fun visitEscapeStringTemplateEntry(entry: KtEscapeStringTemplateEntry) {
+    override fun visitEscapeStringTemplateEntry(entry: KtEscapeStringTemplateEntry) {
         this.visitStringTemplateEntry(entry)
     }
 
-    fun visitPackageDirective(directive: KtPackageDirective): String {
-        return directive.fqName.asString()
+    override fun visitPackageDirective(directive: KtPackageDirective) {
+        context.push(directive.fqName.asString())
     }
 
     private fun KtModifierListOwner.isOverridden(): Boolean {
@@ -661,4 +781,15 @@ internal class KibbleVisitor(private val context: KibbleContext) {
         } ?: PUBLIC
     }
 
+
+    private fun extractPkgAndClassName(raw: String): Pair<String?, String> {
+        val name = raw.split(".")
+                .dropLastWhile { it.isEmpty() || it[0].isUpperCase() }
+                .filter { it != "" }
+                .joinToString(".")
+        val pkgName = if (name != "") name else null
+        val className = pkgName?.let { raw.substring(it.length + 1) } ?: raw
+
+        return pkgName to className
+    }
 }

@@ -13,7 +13,7 @@ import java.io.File
  */
 class KibbleFile(val name: String? = null, var pkgName: String? = null,
                  val context: KibbleContext = KibbleContext()) :
-        KibbleElement, PropertyHolder, ClassOrObjectHolder {
+        KibbleElement, ClassOrObjectHolder, PropertyHolder, FunctionHolder {
 
     val imports = sortedSetOf<KibbleImport>()
 
@@ -47,8 +47,12 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         }
     }
 
+/*
     override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
+        TODO("maybe remove?")
+*/
+/*
         if (constructorParam) {
             throw IllegalArgumentException("File level properties can not also be constructor parameters")
         }
@@ -58,7 +62,10 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         property.mutability = mutability
         properties += property
         return property
+*//*
+
     }
+*/
 
     /**
      * Adds an import to this file
@@ -123,7 +130,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         writeBlock(writer, level, false, imports)
         writeBlock(writer, level, false, properties)
         writeBlock(writer, level, true, classes.filter { it.isInterface })
-        writeBlock(writer, level, true, classes.filter { it.isInterface })
+        writeBlock(writer, level, true, classes.filter { !it.isInterface })
         writeBlock(writer, level, true, objects)
         writeBlock(writer, level, true, functions)
 

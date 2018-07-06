@@ -39,18 +39,19 @@ class KibbleClassTest {
         kibbleClass = file.addClass("Temp")
         val nested = kibbleClass.addClass("Nested")
 
-        nested.extend("Foo", "\"bar\"")
-        nested.parentInterfaces += KibbleType.from("Interface")
+        nested.extends("Foo", "\"bar\"")
+//        nested.parentInterfaces += KibbleType.from("Interface")
 
         nested.addSecondaryConstructor("blarg", "\"nargle\"")
 
         nested.initBlock = """println()"""
-        nested.addProperty("foo", "Bob", constructorParam = true)
-        nested.addProperty("property", "String")
+        nested.addProperty("val foo: Bob")
+                .constructorParam = true
+        nested.addProperty("val property: String")
         nested.addFunction("something", "Int", "return 4")
 
         val companion = kibbleClass.addCompanionObject()
-        companion.addProperty("prop", initializer = "42")
+        companion.addProperty("val prop = 42")
         kibbleClass.addObject("temp")
 
         Assert.assertEquals(kibbleClass.classes.size, 1)
@@ -100,10 +101,10 @@ open class Person : AbstractKotlinPerson {
     var last: String? = null
 } """)
         Assert.assertNull(file.classes[0].parentClass)
-        Assert.assertTrue(file.classes[0].parentInterfaces.isEmpty())
+//        Assert.assertTrue(file.classes[0].parentInterfaces.isEmpty())
         Assert.assertNull(file.classes[1].parentClass)
-        Assert.assertEquals(file.classes[1].parentInterfaces.size, 1)
-        Assert.assertEquals(file.classes[1].parentInterfaces[0], KibbleType("critter.test.source", "AbstractKotlinPerson"))
+//        Assert.assertEquals(file.classes[1].parentInterfaces.size, 1)
+//        Assert.assertEquals(file.classes[1].parentInterfaces[0], KibbleType("critter.test.source", "AbstractKotlinPerson"))
     }
 
     @Test
@@ -187,7 +188,7 @@ open class Person : AbstractKotlinPerson {
     fun implements() {
         val file = KibbleFile("temp.kt")
         file.addClass("Temp").also {
-            it.implement("java.lang.Runnable")
+            it.implements("java.lang.Runnable")
         }
 
         val temp = """import java.lang.Runnable

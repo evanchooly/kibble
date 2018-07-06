@@ -10,8 +10,6 @@ import org.jetbrains.kotlin.com.intellij.psi.PsiElement
  */
 @Suppress("UNCHECKED_CAST")
 interface Modal<out T> {
-    companion object {
-    }
     var modality: Modality
 
     /**

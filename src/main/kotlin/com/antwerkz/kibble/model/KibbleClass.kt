@@ -14,21 +14,22 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
  */
 class KibbleClass internal constructor(var name: String = "",
                                        override var modality: Modality = FINAL,
-                                       override var visibility: Visibility = PUBLIC) : KibbleElement, FunctionHolder, GenericCapable,
-        Visible, Modal<KibbleClass>, AnnotationHolder, PropertyHolder, ClassOrObjectHolder {
+                                       override var visibility: Visibility = PUBLIC)
+    : KibbleElement, ClassOrObjectHolder, PropertyHolder, FunctionHolder, AnnotationHolder, Polymorphic,
+        GenericCapable, Visible, Modal<KibbleClass> {
 
-    var superCallArgs = listOf<String>()
-        private set
+    val superCallArgs = mutableListOf<KibbleArgument>()
+    var superTypes = mutableListOf<KibbleType>()
+    var parentClass: KibbleType? = null
+//    val parentInterfaces: MutableList<KibbleType>
 
-    override var typeParameters = mutableListOf<TypeParameter>()
+    override val typeParameters = mutableListOf<TypeParameter>()
     override val annotations = mutableListOf<KibbleAnnotation>()
     override val classes = mutableListOf<KibbleClass>()
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
-    var parentClass: KibbleType? = null
-        private set
-    val parentInterfaces: MutableList<KibbleType> = mutableListOf()
+    val implements: MutableList<KibbleType> = mutableListOf()
 
     var initBlock: String? = null
 
@@ -67,17 +68,21 @@ class KibbleClass internal constructor(var name: String = "",
     }
 */
 
-    fun extend(type: String, vararg arguments: String) {
-        extend(KibbleType.from(type), *arguments)
-    }
-
-    fun extend(type: KibbleType, vararg arguments: String) {
+    override fun extends(type: KibbleType, vararg arguments: String) {
         parentClass = type
-        superCallArgs = listOf(*arguments)
+        superCallArgs.addAll(arguments.map { KibbleArgument(it) })
     }
 
-    fun implement(type: String) {
-        parentInterfaces += KibbleType.from(type)
+    override fun implements(type: KibbleType) {
+        implements += type
+    }
+
+    override fun addSuperType(type: KibbleType) {
+        superTypes.add(type)
+    }
+
+    override fun addSuperCallArg(argument: KibbleArgument) {
+        superCallArgs.add(argument)
     }
 
     /**
@@ -86,7 +91,9 @@ class KibbleClass internal constructor(var name: String = "",
      * @return the new constructor
      */
     fun addSecondaryConstructor(vararg arguments: String): SecondaryConstructor {
-        return SecondaryConstructor(*arguments).also {
+        return SecondaryConstructor(*(arguments
+                .map { KibbleArgument(value = it) }
+                .toTypedArray())).also {
             secondaries += it
         }
     }
@@ -120,8 +127,10 @@ class KibbleClass internal constructor(var name: String = "",
         }
     }
 
+/*
     override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
                              visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
+        TODO("maybe remove?")
         return KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
             it.visibility = visibility
             it.mutability = mutability
@@ -132,6 +141,7 @@ class KibbleClass internal constructor(var name: String = "",
             properties += it
         }
     }
+*/
 
     fun isEnum() = enum
 
@@ -139,27 +149,35 @@ class KibbleClass internal constructor(var name: String = "",
      * @return the string form of this class
      */
     override fun toString(): String {
-        return "class $name"
+        return (if (isInterface) "interface" else "class") + " $name"
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         annotations.forEach { writer.writeln(it.toString(), level) }
-        writer.write("$visibility${modality}class ", level)
+        writer.write("$visibility${modality}", level)
+        writer.write(if (isInterface) "interface " else "class ")
         writer.write(name)
         if (!typeParameters.isEmpty()) {
             writer.write(typeParameters.joinToString(", ", prefix = "<", postfix = ">"))
         }
 
-        if (constructor.parameters.isNotEmpty()) {
-            constructor.toSource(writer, level)
+        val ctorParams: MutableList<KibbleParameter> = properties.filter { it.constructorParam }.toMutableList()
+        ctorParams.addAll(constructor.parameters)
+        if (ctorParams.size != 0) {
+            writer.write("(")
+            writer.write(ctorParams.joinToString(", "))
+            writer.write(")")
         }
+
         val extends = mutableListOf<String>()
         parentClass?.let {
             extends += "$it${superCallArgs.joinToString(prefix = "(", postfix = ")")}"
         }
+/*
         if (!parentInterfaces.isEmpty()) {
             extends += parentInterfaces.joinToString(", ")
         }
+*/
         if (extends.isNotEmpty()) {
             writer.write(": ")
             writer.write(extends.joinToString(", "))
@@ -210,9 +228,9 @@ class KibbleClass internal constructor(var name: String = "",
         classes.forEach { it.collectImports(file) }
         objects.forEach { it.collectImports(file) }
         functions.forEach { it.collectImports(file) }
+        constructor.collectImports(file)
         secondaries.forEach { it.collectImports(file) }
         parentClass?.let { file.resolve(it) }
-        parentInterfaces.forEach { file.resolve(it) }
     }
 
 }

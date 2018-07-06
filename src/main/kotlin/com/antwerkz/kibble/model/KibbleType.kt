@@ -22,12 +22,14 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
                                            override val typeParameters: MutableList<TypeParameter> = mutableListOf(),
                                            val nullable: Boolean = false) : GenericCapable, Comparable<KibbleType> {
 
-    internal constructor(type: KibbleType) : this(type.pkgName, type.className, type.typeParameters, type.nullable)
+    internal constructor(type: KibbleType, nullable: Boolean = false) : this(type.pkgName, type.className, type.typeParameters, nullable)
 
     companion object {
         private val AUTOIMPORTS = listOf("Any", "Unit", "Nothing", "Byte", "Short", "Int", "Long", "Float", "Double",
                 "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString")
         private val AUTOIMPORTED = mutableSetOf<String>()
+
+        fun from(type: Class<Any>) = KibbleType(pkgName = type.`package`.name, className = type.simpleName)
 
         fun from(type: String) = if (!type.contains("*") && (type.contains(".") || type.contains("<"))) {
             Kibble.parseSource("val temp: $type").properties[0].type!!

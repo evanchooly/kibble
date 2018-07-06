@@ -27,7 +27,8 @@ class Factory(val type: String) {
     fun imports() {
         val file = KibbleFile()
         val temp = file.addClass("temp")
-        temp.addProperty("temp", "com.foo.Bob", constructorParam = true)
+        temp.addProperty("val temp: com.foo.Bob")
+                .constructorParam = true
         temp.addSecondaryConstructor()
                 .addParameter("foo", "org.box.Bla")
 

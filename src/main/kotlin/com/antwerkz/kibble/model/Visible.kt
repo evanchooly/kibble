@@ -13,9 +13,6 @@ import org.jetbrains.kotlin.com.intellij.psi.PsiElement
  * @property visibility the visibility
  */
 interface Visible {
-    companion object {
-    }
-
     var visibility: Visibility
 
     /**

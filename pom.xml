@@ -23,7 +23,7 @@
     </scm>
 
     <properties>
-        <kotlin.version>1.2.41</kotlin.version>
+        <kotlin.version>1.2.50</kotlin.version>
         <slf4j.version>1.7.25</slf4j.version>
         <testng.version>6.11</testng.version>
         <jacoco.version>0.7.7.201606060606</jacoco.version>
@@ -64,7 +64,7 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jre8</artifactId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
     </dependencies>

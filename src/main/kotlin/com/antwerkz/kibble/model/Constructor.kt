@@ -2,7 +2,6 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 
 /**
  * Defines a constructor for a Class
@@ -12,20 +11,9 @@ import org.jetbrains.kotlin.psi.KtPrimaryConstructor
  * @property body the constructor body
  */
 open class Constructor internal constructor() : Visible, ParameterHolder, KibbleElement {
-    internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this() {
-        kt.valueParameters.forEach {
-            val kibbleProperty = KibbleProperty(it)
-            if (it.hasValOrVar()) {
-                kibbleProperty.constructorParam = true
-                klass.properties += kibbleProperty
-            }
-            parameters.add(kibbleProperty)
-        }
-        body = kt.bodyExpression?.text ?: ""
-    }
 
-    override var visibility: Visibility = PUBLIC
-    override var parameters: MutableList<KibbleParameter> = mutableListOf()
+    override var visibility= PUBLIC
+    override val parameters = mutableListOf<KibbleParameter>()
     var body: String? = null
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
