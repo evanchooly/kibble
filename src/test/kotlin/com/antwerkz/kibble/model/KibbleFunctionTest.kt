@@ -29,12 +29,12 @@ class KibbleFunctionTest {
 
         var kibbleFunction = file.functions[0]
         Assert.assertEquals("T", kibbleFunction.typeParameters[0].type.fqcn)
-        Assert.assertNull(kibbleFunction.typeParameters[0].modifier)
+        Assert.assertNull(kibbleFunction.typeParameters[0].kind)
         Assert.assertNull(kibbleFunction.typeParameters[0].bounds)
 
         kibbleFunction = file.functions[1]
         Assert.assertEquals("K", kibbleFunction.typeParameters[0].type.fqcn)
-        Assert.assertEquals(ParameterModifier.OUT, kibbleFunction.typeParameters[0].modifier)
+        Assert.assertEquals(TypeParameterKind.OUT, kibbleFunction.typeParameters[0].kind)
         Assert.assertEquals(KibbleType.from("Bar"), kibbleFunction.typeParameters[0].bounds)
 
         val foo = KibbleFunction("foo")

@@ -10,6 +10,7 @@ class FunctionHolderTest {
     fun expression() {
         @Language("kotlin")
         val source = """fun expression(name: String?, value: String?, userName: String?) = Foo(name ?: "")
+
 fun body() {
     print()
 }
@@ -18,10 +19,9 @@ fun body() {
         val file = Kibble.parseSource(source)
         var kibbleFunction = file.functions[0]
         Assert.assertEquals(kibbleFunction.body, """Foo(name ?: "")""")
-        Assert.assertEquals(kibbleFunction.toString(), source.split("\n")[0])
 
         kibbleFunction = file.functions[1]
-        Assert.assertEquals(kibbleFunction.body, """print()""")
+        Assert.assertEquals(kibbleFunction.body, """    print()""")
     }
 
     @Test

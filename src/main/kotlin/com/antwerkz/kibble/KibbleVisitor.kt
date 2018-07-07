@@ -7,6 +7,7 @@ import com.antwerkz.kibble.model.KibbleArgument
 import com.antwerkz.kibble.model.KibbleClass
 import com.antwerkz.kibble.model.KibbleFile
 import com.antwerkz.kibble.model.KibbleFunction
+import com.antwerkz.kibble.model.KibbleFunctionType
 import com.antwerkz.kibble.model.KibbleImport
 import com.antwerkz.kibble.model.KibbleObject
 import com.antwerkz.kibble.model.KibbleParameter
@@ -16,6 +17,7 @@ import com.antwerkz.kibble.model.Modality
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability
 import com.antwerkz.kibble.model.Mutability.NEITHER
+import com.antwerkz.kibble.model.TypeParameterKind
 import com.antwerkz.kibble.model.SecondaryConstructor
 import com.antwerkz.kibble.model.SuperCall
 import com.antwerkz.kibble.model.TypeParameter
@@ -90,6 +92,7 @@ import org.jetbrains.kotlin.psi.KtParenthesizedExpression
 import org.jetbrains.kotlin.psi.KtPostfixExpression
 import org.jetbrains.kotlin.psi.KtPrefixExpression
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
+import org.jetbrains.kotlin.psi.KtProjectionKind.*
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 import org.jetbrains.kotlin.psi.KtPropertyDelegate
@@ -222,11 +225,12 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
         kibbleClass.constructor.parameters.forEachIndexed { index, it ->
             if(it.mutability != NEITHER) {
-                val prop = KibbleProperty(it.name, it.type, it.initializer, constructorParam = true).also { prop ->
-                    prop.annotations += it.annotations
-                    prop.mutability = it.mutability
-                    prop.typeParameters = it.typeParameters
-                }
+                val prop = KibbleProperty(it.name ?: "", it.type, it.initializer, constructorParam = true)
+                        .also { prop ->
+                            prop.annotations += it.annotations
+                            prop.mutability = it.mutability
+                            prop.typeParameters = it.typeParameters
+                        }
                 kibbleClass.constructor.parameters[index] = prop
                 kibbleClass.properties += prop
             }
@@ -381,7 +385,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitParameter(parameter: KtParameter) {
-        val name = parameter.name as String
+        val name = parameter.name
         val type = parameter.typeReference?.evaluate<KibbleType>(this)
         val defaultValue = parameter.defaultValue?.evaluate<String>(this)
         val kibbleParameter = KibbleParameter(name, type, defaultValue, parameter.isVarArg)
@@ -442,7 +446,9 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitTypeReference(typeReference: KtTypeReference) {
-        typeReference.typeElement?.accept(this)
+        typeReference.typeElement?.evaluate<Any>(this)?.let {
+            context.push(it)
+        }
     }
 
     override fun visitValueArgumentList(list: KtValueArgumentList) {
@@ -674,10 +680,9 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitUserType(type: KtUserType) {
-        type.typeArguments.forEach {
-            TODO("handle type arguments: $it")
-        }
-        context.push(KibbleType(type.qualifier?.text,  type.referencedName!!))
+        val value = KibbleType(type.qualifier?.text, type.referencedName!!)
+        value.typeParameters += type.typeArguments.evaluate(this)
+        context.push(value)
     }
 
     override fun visitDynamicType(type: KtDynamicType) {
@@ -685,7 +690,11 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitFunctionType(type: KtFunctionType) {
-        this.visitTypeElement(type)
+        val parameters = type.parameterList?.evaluate<List<KibbleParameter>>(this) ?: listOf()
+        val receiver = type.receiver?.evaluate<KibbleType>(this)
+        val returnType = type.returnTypeReference?.evaluate<KibbleType>(this)
+
+        context.push(KibbleFunctionType(type.name ?: "", parameters, returnType, receiver))
     }
 
     override fun visitSelfType(type: KtSelfType) {
@@ -714,7 +723,19 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitTypeProjection(typeProjection: KtTypeProjection) {
-        this.visitKtElement(typeProjection)
+        val value = typeProjection.typeReference?.evaluate<KibbleType>(this)
+        value?.let {
+            val modifier = when (typeProjection.projectionKind) {
+                IN -> TypeParameterKind.IN
+                OUT -> TypeParameterKind.OUT
+                STAR -> TypeParameterKind.STAR
+                NONE -> null
+            }
+            val bounds: KibbleType? = typeProjection.projectionToken?.let {
+                TODO("handle projection tokens")
+            }
+            context.push(TypeParameter(value, modifier, bounds))
+        }
     }
 
     override fun visitWhenEntry(jetWhenEntry: KtWhenEntry) {

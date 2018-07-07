@@ -1,8 +1,8 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.model.ParameterModifier.IN
-import com.antwerkz.kibble.model.ParameterModifier.OUT
+import com.antwerkz.kibble.model.TypeParameterKind.IN
+import com.antwerkz.kibble.model.TypeParameterKind.OUT
 import org.intellij.lang.annotations.Language
 import org.testng.Assert
 import org.testng.annotations.Test

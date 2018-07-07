@@ -4,7 +4,6 @@ import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability.VAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.psi.KtExpression
 
 /**
  * Defines a property on a file, class, or object
@@ -25,8 +24,6 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
         visibility = PUBLIC
         mutability = VAL
     }
-
-//    internal constructor(kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference), kt.defaultValue?.text) {
 
 /*
         annotations.addAll(KibbleExtractor.extractAnnotations(kt.annotationEntries))
@@ -64,7 +61,7 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
             writer.write("lateinit ")
         }
         writer.write(mutability.toString())
-        name.let { writer.write(name) }
+        name?.let { writer.write(name) }
         type?.let {
             writer.write(": ")
             writer.write(it.toString())

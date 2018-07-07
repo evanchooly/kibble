@@ -12,7 +12,7 @@ import com.antwerkz.kibble.model.Visibility.NONE
  * @property type the parameter type
  * @property initializer the parameter initializer
  */
-open class KibbleParameter internal constructor(val name: String, val type: KibbleType?,
+open class KibbleParameter internal constructor(val name: String? = null, val type: KibbleType? = null,
                                                 var initializer: String? = null,
                                                 var vararg: Boolean = false)
     : KibbleElement, AnnotationHolder, GenericCapable, Mutable, Visible {
@@ -49,9 +49,10 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
         if(vararg) {
             writer.write("vararg ")
         }
-        name.let { writer.write(name) }
+        name?.let { writer.write(name) }
         type?.let {
-            writer.write(": $it")
+            name?.let { writer.write(": ") }
+            writer.write("$it")
         }
         initializer?.let {
             writer.write(" = $it")
@@ -82,7 +83,7 @@ open class KibbleParameter internal constructor(val name: String, val type: Kibb
      * @return the hash code
      */
     override fun hashCode(): Int {
-        var result = name.hashCode()
+        var result = name?.hashCode() ?: 0
         result = 31 * result + (type?.hashCode() ?: 0)
         result = 31 * result + (initializer?.hashCode() ?: 0)
         result = 31 * result + mutability.hashCode()
