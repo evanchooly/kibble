@@ -1,6 +1,5 @@
 package com.antwerkz.kibble
 
-import com.antwerkz.kibble.model.ClassOrObjectHolder
 import com.antwerkz.kibble.model.Constructor
 import com.antwerkz.kibble.model.KibbleAnnotation
 import com.antwerkz.kibble.model.KibbleArgument
@@ -248,8 +247,34 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitObjectDeclaration(declaration: KtObjectDeclaration) {
-        if (true) TODO("this.visitClassOrObject(declaration)")
-        context.peek<ClassOrObjectHolder>().objects.add(context.pop())
+        val kibbleObject = KibbleObject(declaration.name ?: "",
+                declaration.isCompanion())
+
+        declaration.getSuperTypeList()?.evaluate<List<Any>>(this)
+                ?.forEach {
+                    when (it) {
+                        is SuperCall -> {
+                            kibbleObject.extends(it.type, it.arguments)
+                        }
+                        is KibbleType -> kibbleObject.implements(it)
+                        else -> TODO("handled this type: $it")
+                    }
+                }
+        kibbleObject.annotations += declaration.annotationEntries.evaluate(this)
+        kibbleObject.visibility = declaration.visibilityModifier().toVisibility()
+
+        declaration.declarations.forEach {
+            val declaration = it.evaluate<Any>(this)
+            when (declaration) {
+                is KibbleFunction -> kibbleObject.functions += declaration
+                is KibbleClass -> kibbleObject.classes += declaration
+                is KibbleObject -> kibbleObject.objects += declaration
+                is KibbleProperty -> kibbleObject.properties += declaration
+                else -> TODO("handle declaration type $declaration")
+            }
+        }
+
+        context.push(kibbleObject)
     }
 
     override fun visitClassOrObject(classOrObject: KtClassOrObject) {

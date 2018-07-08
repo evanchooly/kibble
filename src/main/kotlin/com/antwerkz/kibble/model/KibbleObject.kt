@@ -18,7 +18,7 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
     val implements: MutableList<KibbleType> = mutableListOf()
 
     override var visibility: Visibility = PUBLIC
-    override var annotations = mutableListOf<KibbleAnnotation>()
+    override val annotations = mutableListOf<KibbleAnnotation>()
     override val classes = mutableListOf<KibbleClass>()
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()

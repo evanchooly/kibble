@@ -11,7 +11,7 @@ class KibbleInterfaceTest {
         |}""".trimMargin())
 
         Assert.assertTrue(file.classes.any { it.isInterface })
-        Assert.assertTrue(file.classes.isEmpty())
+        Assert.assertFalse(file.classes.any { !it.isInterface })
         Assert.assertTrue(file.objects.isEmpty())
         Assert.assertTrue(file.functions.isEmpty())
         Assert.assertTrue(file.properties.isEmpty())
@@ -45,7 +45,7 @@ class KibbleInterfaceTest {
 }""".trim()
         val file = Kibble.parseSource(source)
 
-        Assert.assertEquals(file.toSource().toString().trim(), source.trim())
+        Assert.assertEquals(file.classes[0].implements[0].fqcn, "java.lang.Runnable")
 
     }
 }
