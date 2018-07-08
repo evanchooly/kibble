@@ -13,9 +13,9 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
 class KibbleObject internal constructor(val name: String? = null, val companion: Boolean = false)
     : KibbleElement, ClassOrObjectHolder, PropertyHolder, FunctionHolder, AnnotationHolder, Polymorphic, Visible {
 
-    var superTypes = mutableListOf<KibbleType>()
-    var superType: KibbleType? = null
-    var superCallArgs = mutableListOf<KibbleArgument>()
+    val superCallArgs = mutableListOf<KibbleArgument>()
+    var extends: KibbleType? = null
+    val implements: MutableList<KibbleType> = mutableListOf()
 
     override var visibility: Visibility = PUBLIC
     override var annotations = mutableListOf<KibbleAnnotation>()
@@ -23,19 +23,11 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
-    val implements = mutableListOf<KibbleType>()
     var initBlock: String? = null
 
-    override fun addSuperType(type: KibbleType) {
-        TODO("not implemented")
-    }
-
-    override fun addSuperCallArg(argument: KibbleArgument) {
-        superCallArgs.add(argument)
-    }
-
-    override fun extends(type: KibbleType, vararg arguments: String) {
-        TODO("not implemented")
+    override fun extends(type: KibbleType, arguments: List<KibbleArgument>) {
+        extends = type
+        superCallArgs += arguments
     }
 
     override fun implements(type: KibbleType) {
@@ -98,12 +90,12 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
         name?.let {
             writer.write(" $it")
         }
-        superType?.let {
+        extends?.let {
             writer.write(": $it")
             writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))
         }
-        if (!superTypes.isEmpty()) {
-            writer.write(superTypes.joinToString(prefix = ", "))
+        if (!implements.isEmpty()) {
+            writer.write(implements.joinToString(prefix = ", "))
         }
         if (!properties.isEmpty() || !functions.isEmpty() || !classes.isEmpty()) {
             writer.writeln(" {")
@@ -132,45 +124,42 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
         return writer
     }
 
-    /**
-     * @return true if `other` is equal to this
-     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other?.javaClass != javaClass) return false
+        if (javaClass != other?.javaClass) return false
 
         other as KibbleObject
 
         if (name != other.name) return false
         if (companion != other.companion) return false
-        if (superTypes != other.superTypes) return false
-        if (superType != other.superType) return false
         if (superCallArgs != other.superCallArgs) return false
+        if (extends != other.extends) return false
+        if (implements != other.implements) return false
         if (visibility != other.visibility) return false
-        if (functions != other.functions) return false
-        if (properties != other.properties) return false
         if (annotations != other.annotations) return false
         if (classes != other.classes) return false
         if (objects != other.objects) return false
+        if (functions != other.functions) return false
+        if (properties != other.properties) return false
+        if (initBlock != other.initBlock) return false
 
         return true
     }
 
-    /**
-     * @return the hash code
-     */
     override fun hashCode(): Int {
         var result = name?.hashCode() ?: 0
         result = 31 * result + companion.hashCode()
-        result = 31 * result + superTypes.hashCode()
-        result = 31 * result + (superType?.hashCode() ?: 0)
         result = 31 * result + superCallArgs.hashCode()
+        result = 31 * result + (extends?.hashCode() ?: 0)
+        result = 31 * result + implements.hashCode()
         result = 31 * result + visibility.hashCode()
-        result = 31 * result + functions.hashCode()
-        result = 31 * result + properties.hashCode()
         result = 31 * result + annotations.hashCode()
         result = 31 * result + classes.hashCode()
         result = 31 * result + objects.hashCode()
+        result = 31 * result + functions.hashCode()
+        result = 31 * result + properties.hashCode()
+        result = 31 * result + (initBlock?.hashCode() ?: 0)
         return result
     }
+
 }

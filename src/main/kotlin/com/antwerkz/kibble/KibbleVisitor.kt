@@ -17,10 +17,10 @@ import com.antwerkz.kibble.model.Modality
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability
 import com.antwerkz.kibble.model.Mutability.NEITHER
-import com.antwerkz.kibble.model.TypeParameterKind
 import com.antwerkz.kibble.model.SecondaryConstructor
 import com.antwerkz.kibble.model.SuperCall
 import com.antwerkz.kibble.model.TypeParameter
+import com.antwerkz.kibble.model.TypeParameterVariance
 import com.antwerkz.kibble.model.Visibility
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 import org.jetbrains.kotlin.com.intellij.psi.PsiElement
@@ -92,7 +92,10 @@ import org.jetbrains.kotlin.psi.KtParenthesizedExpression
 import org.jetbrains.kotlin.psi.KtPostfixExpression
 import org.jetbrains.kotlin.psi.KtPrefixExpression
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
-import org.jetbrains.kotlin.psi.KtProjectionKind.*
+import org.jetbrains.kotlin.psi.KtProjectionKind.IN
+import org.jetbrains.kotlin.psi.KtProjectionKind.NONE
+import org.jetbrains.kotlin.psi.KtProjectionKind.OUT
+import org.jetbrains.kotlin.psi.KtProjectionKind.STAR
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 import org.jetbrains.kotlin.psi.KtPropertyDelegate
@@ -141,6 +144,7 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.hasActualModifier
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
+import org.jetbrains.kotlin.types.Variance
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid() {
@@ -148,7 +152,8 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         val kibbleFile = KibbleFile()
 
         kibbleFile.sourceTimestamp = kt.virtualFile.modificationStamp
-        kibbleFile.pkgName = kt.packageDirective?.evaluate(this)
+        val directive = kt.packageDirective?.fqName?.asString()
+        kibbleFile.pkgName = if(directive != "") directive else null
         kibbleFile.imports.addAll(kt.importList?.evaluate(this) ?: listOf())
 
         kt.declarations.forEach {
@@ -183,7 +188,8 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
             is KtObjectDeclaration -> visitObjectDeclaration(dcl)
             is KtNamedFunction -> visitNamedFunction(dcl)
             is KtProperty -> visitProperty(dcl)
-            else -> throw RuntimeException("Unprocessed declaration: ${dcl.name}")
+            is KtTypeParameter -> visitTypeParameter(dcl)
+            else -> TODO("Unprocessed declaration: $dcl")
         }
     }
 
@@ -193,6 +199,9 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 kt.visibilityModifier().toVisibility())
 
         kibbleClass.isInterface = kt.isInterface()
+        kibbleClass.enum = kt.isEnum()
+        kibbleClass.data = kt.isData()
+        kibbleClass.sealed = kt.isSealed()
 
         kibbleClass.typeParameters += kt.typeParameterList?.evaluate<List<TypeParameter>>(this) ?: listOf()
 
@@ -200,10 +209,9 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 ?.forEach {
                     when (it) {
                         is SuperCall -> {
-                            kibbleClass.parentClass = it.type
-                            kibbleClass.superCallArgs += it.arguments
+                            kibbleClass.extends(it.type, it.arguments)
                         }
-                        is KibbleType -> kibbleClass.addSuperType(it)
+                        is KibbleType -> kibbleClass.implements(it)
                         else -> TODO("handled this type: $it")
                     }
                 }
@@ -369,11 +377,20 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitTypeParameterList(list: KtTypeParameterList) {
-        this.visitKtElement(list)
+        context.push(list.parameters.evaluate<TypeParameter>(this))
     }
 
     override fun visitTypeParameter(parameter: KtTypeParameter) {
-        this.visitNamedDeclaration(parameter)
+        val bounds: KibbleType? = parameter.extendsBound?.evaluate(this)
+
+        val variance = when (parameter.variance) {
+            Variance.INVARIANT -> null
+            Variance.IN_VARIANCE -> TypeParameterVariance.IN
+            Variance.OUT_VARIANCE -> TypeParameterVariance.OUT
+        }
+
+        val value = KibbleType.from(parameter.name ?: "")
+        context.push(TypeParameter(value, variance, bounds))
     }
 
     override fun visitEnumEntry(enumEntry: KtEnumEntry) {
@@ -726,9 +743,9 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         val value = typeProjection.typeReference?.evaluate<KibbleType>(this)
         value?.let {
             val modifier = when (typeProjection.projectionKind) {
-                IN -> TypeParameterKind.IN
-                OUT -> TypeParameterKind.OUT
-                STAR -> TypeParameterKind.STAR
+                IN -> TypeParameterVariance.IN
+                OUT -> TypeParameterVariance.OUT
+                STAR -> TypeParameterVariance.STAR
                 NONE -> null
             }
             val bounds: KibbleType? = typeProjection.projectionToken?.let {
@@ -783,7 +800,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitPackageDirective(directive: KtPackageDirective) {
-        context.push(directive.fqName.asString())
+        TODO("process the directive directly since nulls aren't allowed on the stack")
     }
 
     private fun KtModifierListOwner.isOverridden(): Boolean {

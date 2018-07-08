@@ -19,9 +19,8 @@ class KibbleClass internal constructor(var name: String = "",
         GenericCapable, Visible, Modal<KibbleClass> {
 
     val superCallArgs = mutableListOf<KibbleArgument>()
-    var superTypes = mutableListOf<KibbleType>()
-    var parentClass: KibbleType? = null
-//    val parentInterfaces: MutableList<KibbleType>
+    var extends: KibbleType? = null
+    val implements: MutableList<KibbleType> = mutableListOf()
 
     override val typeParameters = mutableListOf<TypeParameter>()
     override val annotations = mutableListOf<KibbleAnnotation>()
@@ -29,7 +28,6 @@ class KibbleClass internal constructor(var name: String = "",
     override val objects = mutableListOf<KibbleObject>()
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
-    val implements: MutableList<KibbleType> = mutableListOf()
 
     var initBlock: String? = null
 
@@ -37,52 +35,17 @@ class KibbleClass internal constructor(var name: String = "",
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
 
     var enum = false
+    var data = false
+    var sealed = false
     var isInterface = false
 
-/*
-    internal constructor(kt: KtClass) : this(*/
-/*file,*//*
- kt.name ?: "") {
-        modality = kt.modalityModifier().toModality()
-        visibility = Visible.apply(kt.visibilityModifier())
-        typeParameters = GenericCapable.extractFromTypeParameters(kt.typeParameters)
-        enum = kt.isEnum()
-
-        kt.primaryConstructor?.let {
-            constructor = Constructor(this, it)
-        }
-        kt.secondaryConstructors.forEach {
-            secondaries += SecondaryConstructor(it)
-        }
-
-        parentClass = extractSuperType(kt.superTypeListEntries)
-        parentInterfaces += extractSuperTypes(kt.superTypeListEntries)
-        superCallArgs += extractSuperCallArgs(kt.superTypeListEntries)
-        annotations += extractAnnotations(kt.annotationEntries)
-
-        classes += extractClasses(kt.declarations)
-        objects += extractObjects(kt.declarations)
-        functions += extractFunctions(kt.declarations)
-        properties += extractProperties(kt.declarations)
-
-    }
-*/
-
-    override fun extends(type: KibbleType, vararg arguments: String) {
-        parentClass = type
-        superCallArgs.addAll(arguments.map { KibbleArgument(it) })
+    override fun extends(type: KibbleType, arguments: List<KibbleArgument>) {
+        extends = type
+        superCallArgs += arguments
     }
 
     override fun implements(type: KibbleType) {
         implements += type
-    }
-
-    override fun addSuperType(type: KibbleType) {
-        superTypes.add(type)
-    }
-
-    override fun addSuperCallArg(argument: KibbleArgument) {
-        superCallArgs.add(argument)
     }
 
     /**
@@ -170,14 +133,12 @@ class KibbleClass internal constructor(var name: String = "",
         }
 
         val extends = mutableListOf<String>()
-        parentClass?.let {
+        this.extends?.let {
             extends += "$it${superCallArgs.joinToString(prefix = "(", postfix = ")")}"
         }
-/*
-        if (!parentInterfaces.isEmpty()) {
-            extends += parentInterfaces.joinToString(", ")
+        if (!implements.isEmpty()) {
+            extends += implements.joinToString(", ")
         }
-*/
         if (extends.isNotEmpty()) {
             writer.write(": ")
             writer.write(extends.joinToString(", "))
@@ -230,7 +191,8 @@ class KibbleClass internal constructor(var name: String = "",
         functions.forEach { it.collectImports(file) }
         constructor.collectImports(file)
         secondaries.forEach { it.collectImports(file) }
-        parentClass?.let { file.resolve(it) }
+        extends?.let { file.resolve(it) }
+        implements.forEach { file.resolve(it) }
     }
 
 }

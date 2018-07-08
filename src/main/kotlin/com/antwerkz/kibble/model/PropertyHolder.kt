@@ -18,7 +18,11 @@ interface PropertyHolder {
      * @return the new property
      */
     fun addProperty(property: String): KibbleProperty {
-        return Kibble.parseSource(property).properties.first().also { properties += it }
+        return try {
+            Kibble.parseSource(property).properties.first().also { properties += it }
+        } catch(e: Exception) {
+            throw IllegalArgumentException("Invalid value for a property", e)
+        }
     }
 
 /*

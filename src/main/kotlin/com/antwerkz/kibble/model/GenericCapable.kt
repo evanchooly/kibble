@@ -3,12 +3,12 @@ package com.antwerkz.kibble.model
 interface GenericCapable {
     val typeParameters: MutableList<TypeParameter>
 
-    fun addTypeParameter(type: String, kind: TypeParameterKind? = null, bounds: String? = null) {
-        addTypeParameter(KibbleType.from(type), kind, bounds)
+    fun addTypeParameter(type: String, variance: TypeParameterVariance? = null, bounds: String? = null) {
+        addTypeParameter(KibbleType.from(type), variance, bounds)
     }
 
-    fun addTypeParameter(type: KibbleType, kind: TypeParameterKind? = null, bounds: String? = null) {
-        typeParameters += TypeParameter(type, kind, bounds?.let { KibbleType.from(it)})
+    fun addTypeParameter(type: KibbleType, variance: TypeParameterVariance? = null, bounds: String? = null) {
+        typeParameters += TypeParameter(type, variance, bounds?.let { KibbleType.from(it)})
     }
 }
 
@@ -16,14 +16,14 @@ interface GenericCapable {
  * Defines a type parameter for an element
  *
  * @property type the type name
- * @property kind in/out
+ * @property variance in/out
  * @property bounds the type bounds of the parameter
  */
-class TypeParameter internal constructor(val type: KibbleType, val kind: TypeParameterKind? = null,
+class TypeParameter internal constructor(val type: KibbleType, val variance: TypeParameterVariance? = null,
                                          val bounds: KibbleType? = null) {
 
     override fun toString(): String {
-        return (kind?.let { "$it " } ?: "") + type + (bounds?.let { ": $it" } ?: "")
+        return (variance?.let { "$it " } ?: "") + type + (bounds?.let { ": $it" } ?: "")
     }
 
     fun collectImports(file: KibbleFile) {
@@ -32,7 +32,7 @@ class TypeParameter internal constructor(val type: KibbleType, val kind: TypePar
     }
 }
 
-enum class TypeParameterKind {
+enum class TypeParameterVariance {
     IN,
     OUT,
     STAR;

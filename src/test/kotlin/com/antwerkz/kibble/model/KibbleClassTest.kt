@@ -1,8 +1,8 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.model.TypeParameterKind.IN
-import com.antwerkz.kibble.model.TypeParameterKind.OUT
+import com.antwerkz.kibble.model.TypeParameterVariance.IN
+import com.antwerkz.kibble.model.TypeParameterVariance.OUT
 import org.intellij.lang.annotations.Language
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -40,7 +40,7 @@ class KibbleClassTest {
         val nested = kibbleClass.addClass("Nested")
 
         nested.extends("Foo", "\"bar\"")
-//        nested.parentInterfaces += KibbleType.from("Interface")
+        nested.implements(KibbleType.from("Interface"))
 
         nested.addSecondaryConstructor("blarg", "\"nargle\"")
 
@@ -100,9 +100,9 @@ open class Person : AbstractKotlinPerson {
 
     var last: String? = null
 } """)
-        Assert.assertNull(file.classes[0].parentClass)
+        Assert.assertNull(file.classes[0].extends)
 //        Assert.assertTrue(file.classes[0].parentInterfaces.isEmpty())
-        Assert.assertNull(file.classes[1].parentClass)
+        Assert.assertNull(file.classes[1].extends)
 //        Assert.assertEquals(file.classes[1].parentInterfaces.size, 1)
 //        Assert.assertEquals(file.classes[1].parentInterfaces[0], KibbleType("critter.test.source", "AbstractKotlinPerson"))
     }
