@@ -29,7 +29,7 @@ class KibbleClass internal constructor(var name: String = "",
     override val functions = mutableListOf<KibbleFunction>()
     override val properties = mutableListOf<KibbleProperty>()
 
-    var initBlock: String? = null
+    var initBlock: InitBlock? = null
 
     var constructor = Constructor()
     val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
@@ -151,11 +151,7 @@ class KibbleClass internal constructor(var name: String = "",
 
         secondaries.forEach { it.toSource(writer, level + 1) }
         initBlock?.let {
-            writer.writeln("init {", level + 1)
-            it.trimIndent().split("\n").forEach {
-                writer.writeln(it, level + 2)
-            }
-            writer.writeln("}", level + 1)
+            it.toSource(writer, level + 1)
             writer.writeln()
         }
         properties.filter { !it.constructorParam }

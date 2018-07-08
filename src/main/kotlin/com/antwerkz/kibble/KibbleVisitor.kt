@@ -1,6 +1,7 @@
 package com.antwerkz.kibble
 
 import com.antwerkz.kibble.model.Constructor
+import com.antwerkz.kibble.model.InitBlock
 import com.antwerkz.kibble.model.KibbleAnnotation
 import com.antwerkz.kibble.model.KibbleArgument
 import com.antwerkz.kibble.model.KibbleClass
@@ -140,7 +141,6 @@ import org.jetbrains.kotlin.psi.KtWhenEntry
 import org.jetbrains.kotlin.psi.KtWhenExpression
 import org.jetbrains.kotlin.psi.KtWhileExpression
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
-import org.jetbrains.kotlin.psi.psiUtil.hasActualModifier
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.jetbrains.kotlin.types.Variance
@@ -224,6 +224,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 is KibbleObject -> kibbleClass.objects += declaration
                 is KibbleProperty -> kibbleClass.properties += declaration
                 is SecondaryConstructor -> kibbleClass.secondaries += declaration
+                is InitBlock -> kibbleClass.initBlock = declaration
                 else -> TODO("handle declaration type $declaration")
             }
         }
@@ -315,17 +316,17 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         context.push(kibbleFunction)
     }
 
-    fun <T> KtElement.evaluate(visitor: KibbleVisitor): T {
+    private fun <T> KtElement.evaluate(visitor: KibbleVisitor): T {
         this.accept(visitor)
         return visitor.context.pop()
     }
 
-    fun <T> PsiElement.evaluate(visitor: KibbleVisitor): T {
+    private fun <T> PsiElement.evaluate(visitor: KibbleVisitor): T {
         this.accept(visitor)
         return visitor.context.pop()
     }
 
-    fun <T> List<KtElement>.evaluate(visitor: KibbleVisitor): List<T> {
+    private fun <T> List<KtElement>.evaluate(visitor: KibbleVisitor): List<T> {
         return map { it.evaluate<T>(visitor) }
     }
 
@@ -338,7 +339,8 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 property.isOverridden())
         kibbleProperty.visibility = visibility
         kibbleProperty.annotations += property.annotationEntries.evaluate(this)
-
+        val modifiers = property.modifierList?.evaluate<List<String>>(this) ?: listOf()
+        kibbleProperty.lateInit = "lateinit" in modifiers
 
         context.push(kibbleProperty)
     }
@@ -378,9 +380,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitModifierList(list: KtModifierList) {
-        val hasActualModifier = list.hasActualModifier()
-        println("hasActualModifier = $hasActualModifier")
-        context.push(listOf<Any>())
+        context.push(list.allChildren.map { it.text }.toList())
     }
 
     override fun visitAnnotation(annotation: KtAnnotation) {
@@ -517,7 +517,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitSimpleNameExpression(expression: KtSimpleNameExpression) {
-        this.visitReferenceExpression(expression)
+        context.push(expression.getReferencedName())
     }
 
     override fun visitReferenceExpression(expression: KtReferenceExpression) {
@@ -698,7 +698,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitClassInitializer(initializer: KtClassInitializer) {
-        this.visitAnonymousInitializer(initializer)
+        context.push(InitBlock(initializer.body?.evaluate(this) ?: ""))
     }
 
     override fun visitPropertyAccessor(accessor: KtPropertyAccessor) {

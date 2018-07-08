@@ -44,7 +44,7 @@ class KibbleClassTest {
 
         nested.addSecondaryConstructor("blarg", "\"nargle\"")
 
-        nested.initBlock = """println()"""
+        nested.initBlock = InitBlock("println()")
         nested.addProperty("val foo: Bob")
                 .constructorParam = true
         nested.addProperty("val property: String")
