@@ -4,9 +4,13 @@ import com.antwerkz.kibble.SourceWriter
 
 class InitBlock(val body: String): KibbleElement {
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.write("init {", level)
-        writer.write(body)
-        writer.write("}", level)
+        writer.writeln("init {", level)
+        body.trimIndent()
+                .lines()
+                .forEach {
+                    writer.writeln(it, level + 1)
+                }
+        writer.writeln("}", level)
 
         return writer
     }

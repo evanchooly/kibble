@@ -124,8 +124,7 @@ class KibbleClass internal constructor(var name: String = "",
             writer.write(typeParameters.joinToString(", ", prefix = "<", postfix = ">"))
         }
 
-        val ctorParams: MutableList<KibbleParameter> = properties.filter { it.constructorParam }.toMutableList()
-        ctorParams.addAll(constructor.parameters)
+        val ctorParams = constructor.parameters
         if (ctorParams.size != 0) {
             writer.write("(")
             writer.write(ctorParams.joinToString(", "))

@@ -145,7 +145,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
             it.toSource(writer, level)
         }
 
-        if (!inBetween && !block.isEmpty()) {
+        if (!block.isEmpty()) {
             writer.writeln()
         }
     }

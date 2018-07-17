@@ -15,6 +15,8 @@ data class KibbleArgument(val name: String? = null, val value: Any): KibbleEleme
         return writer
     }
 
+    override fun toString() = toSource().toString()
+
     override fun collectImports(file: KibbleFile) {
     }
 }

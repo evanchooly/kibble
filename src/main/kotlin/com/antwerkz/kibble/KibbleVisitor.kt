@@ -17,6 +17,8 @@ import com.antwerkz.kibble.model.Modality
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability
 import com.antwerkz.kibble.model.Mutability.NEITHER
+import com.antwerkz.kibble.model.Mutability.VAL
+import com.antwerkz.kibble.model.Mutability.VAR
 import com.antwerkz.kibble.model.SecondaryConstructor
 import com.antwerkz.kibble.model.SuperCall
 import com.antwerkz.kibble.model.TypeParameter
@@ -338,6 +340,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 property.initializer?.evaluate(this), property.modalityModifier().toModality(),
                 property.isOverridden())
         kibbleProperty.visibility = visibility
+        kibbleProperty.mutability = if(property.isVar) VAR else VAL
         kibbleProperty.annotations += property.annotationEntries.evaluate(this)
         val modifiers = property.modifierList?.evaluate<List<String>>(this) ?: listOf()
         kibbleProperty.lateInit = "lateinit" in modifiers
