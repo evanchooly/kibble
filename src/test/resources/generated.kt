@@ -7,6 +7,7 @@ open class KibbleTest {
         return 0.0
     }
 }
+
 fun bareMethod() {
     println("hi")
 }

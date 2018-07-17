@@ -14,7 +14,7 @@ class Factory(val type: String) {
         """).classes.iterator()
 
         val klass = classes.next()
-        Assert.assertEquals("type", klass.constructor.parameters[0].name)
+        Assert.assertTrue(klass.constructor.parameters.isEmpty())
         Assert.assertEquals("type", klass.properties[0].name)
 
         val secondaries = klass.secondaries.iterator()

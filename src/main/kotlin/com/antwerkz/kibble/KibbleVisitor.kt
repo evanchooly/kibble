@@ -233,19 +233,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
         kt.primaryConstructor?.evaluate<Constructor>(this)?.let { kibbleClass.constructor = it }
 
-        kibbleClass.constructor.parameters.forEachIndexed { index, it ->
-            if(it.mutability != NEITHER) {
-                val prop = KibbleProperty(it.name ?: "", it.type, it.initializer, constructorParam = true)
-                        .also { prop ->
-                            prop.annotations += it.annotations
-                            prop.mutability = it.mutability
-                            prop.typeParameters = it.typeParameters
-                        }
-                kibbleClass.constructor.parameters[index] = prop
-                kibbleClass.properties += prop
-            }
-        }
-
+        kibbleClass.properties += kibbleClass.constructor.filterProperties()
         context.push(kibbleClass)
     }
 

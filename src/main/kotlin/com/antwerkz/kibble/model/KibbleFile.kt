@@ -138,15 +138,15 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     }
 
     private fun writeBlock(writer: SourceWriter, level: Int, inBetween: Boolean, block: Collection<KibbleElement>) {
+        if (!block.isEmpty()) {
+            writer.writeln()
+        }
+
         block.forEachIndexed { i, it ->
             if (inBetween && i != 0) {
                 writer.writeln()
             }
             it.toSource(writer, level)
-        }
-
-        if (!block.isEmpty()) {
-            writer.writeln()
         }
     }
 

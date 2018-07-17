@@ -2,6 +2,7 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
+import com.antwerkz.kibble.model.Mutability.NEITHER
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 
 /**
@@ -90,22 +91,6 @@ class KibbleClass internal constructor(var name: String = "",
         }
     }
 
-/*
-    override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
-                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
-        TODO("maybe remove?")
-        return KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
-            it.visibility = visibility
-            it.mutability = mutability
-            it.constructorParam = constructorParam
-            if (constructorParam) {
-                constructor.parameters.add(it)
-            }
-            properties += it
-        }
-    }
-*/
-
     fun isEnum() = enum
 
     /**
@@ -124,7 +109,8 @@ class KibbleClass internal constructor(var name: String = "",
             writer.write(typeParameters.joinToString(", ", prefix = "<", postfix = ">"))
         }
 
-        val ctorParams = constructor.parameters
+        val ctorParams: MutableList<KibbleParameter> = properties.filter { it.constructorParam }.toMutableList()
+        ctorParams.addAll(constructor.parameters)
         if (ctorParams.size != 0) {
             writer.write("(")
             writer.write(ctorParams.joinToString(", "))
@@ -189,5 +175,4 @@ class KibbleClass internal constructor(var name: String = "",
         extends?.let { file.resolve(it) }
         implements.forEach { file.resolve(it) }
     }
-
 }

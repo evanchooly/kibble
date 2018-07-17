@@ -38,7 +38,7 @@ return "hi"""")
         Assert.assertTrue(klass.isInternal())
         Assert.assertTrue(klass.hasAnnotation(Generated::class.java))
         Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
-        Assert.assertEquals(klass.constructor.parameters.size, 2, klass.constructor.parameters.toString())
+        Assert.assertEquals(klass.constructor.parameters.size, 1, klass.constructor.parameters.toString())
 
         listOf("cost", "name", "age", "list", "map", "time", "random").forEach {
             Assert.assertNotNull(klass.properties.firstOrNull { p -> p.name == it}, "Should find '$it: "
@@ -94,10 +94,11 @@ return 0.0""")
         """.trimIndent())
 
         Assert.assertTrue(file.classes.size == 1)
-        val parameters = file.classes[0].constructor.parameters
-        Assert.assertTrue(parameters.size == 1)
-        Assert.assertEquals(parameters[0].name, "num")
-        Assert.assertEquals(parameters[0].type.toString(), "Int")
+        Assert.assertTrue(file.classes[0].constructor.parameters.size == 0)
+        val properties = file.classes[0].properties
+        Assert.assertTrue(properties.size == 1)
+        Assert.assertEquals(properties[0].name, "num")
+        Assert.assertEquals(properties[0].type.toString(), "Int")
     }
     @Test
     fun secondaryConstructors() {
