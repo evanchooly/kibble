@@ -20,7 +20,13 @@ class KibbleContext {
                 .firstOrNull { it.name == type.className }
 
     fun fileList(): List<KibbleFile> {
-        return files.values.flatMap { it.toList() }
+        return files.values
+                .flatMap { it.toList() }
+                .also {
+                    it.forEach {file ->
+                        file.toSource()
+                    }
+                }
     }
 
     fun push(value: Any) {

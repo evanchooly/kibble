@@ -16,7 +16,6 @@ import com.antwerkz.kibble.model.KibbleType
 import com.antwerkz.kibble.model.Modality
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability
-import com.antwerkz.kibble.model.Mutability.NEITHER
 import com.antwerkz.kibble.model.Mutability.VAL
 import com.antwerkz.kibble.model.Mutability.VAR
 import com.antwerkz.kibble.model.SecondaryConstructor
@@ -709,11 +708,16 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 ////            is KtUserType -> visitUserType(type)
 //            else -> throw RuntimeException("unknown type: ${type}")
 //        }
-        throw RuntimeException("unhandled type: $type")
+        TODO("unhandled type: $type")
     }
 
     override fun visitUserType(type: KtUserType) {
-        val value = KibbleType(type.qualifier?.text, type.referencedName!!)
+        val qualifier = type.qualifier?.text?.split(".") ?: listOf()
+        val pkgName = qualifier.takeWhile { it[0].isLowerCase() }
+                .joinToString(".")
+        val className: String = (qualifier.takeWhile { it[0].isUpperCase() } + type.referencedName!!)
+                .joinToString(".")
+        val value = KibbleType(pkgName, className)
         value.typeParameters += type.typeArguments.evaluate(this)
         context.push(value)
     }
@@ -757,18 +761,13 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitTypeProjection(typeProjection: KtTypeProjection) {
         val value = typeProjection.typeReference?.evaluate<KibbleType>(this)
-        value?.let {
-            val modifier = when (typeProjection.projectionKind) {
-                IN -> TypeParameterVariance.IN
-                OUT -> TypeParameterVariance.OUT
-                STAR -> TypeParameterVariance.STAR
-                NONE -> null
-            }
-            val bounds: KibbleType? = typeProjection.projectionToken?.let {
-                TODO("handle projection tokens")
-            }
-            context.push(TypeParameter(value, modifier, bounds))
+        val modifier = when (typeProjection.projectionKind) {
+            IN -> TypeParameterVariance.IN
+            OUT -> TypeParameterVariance.OUT
+            STAR -> TypeParameterVariance.STAR
+            NONE -> null
         }
+        context.push(TypeParameter(value, modifier))
     }
 
     override fun visitWhenEntry(jetWhenEntry: KtWhenEntry) {

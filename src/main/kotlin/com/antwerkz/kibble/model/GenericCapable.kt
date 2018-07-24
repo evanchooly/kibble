@@ -19,25 +19,25 @@ interface GenericCapable {
  * @property variance in/out
  * @property bounds the type bounds of the parameter
  */
-class TypeParameter internal constructor(val type: KibbleType, val variance: TypeParameterVariance? = null,
+class TypeParameter internal constructor(val type: KibbleType?, val variance: TypeParameterVariance? = null,
                                          val bounds: KibbleType? = null) {
 
     override fun toString(): String {
-        return (variance?.let { "$it " } ?: "") + type + (bounds?.let { ": $it" } ?: "")
+        return ((variance?.let { "$it " } ?: "") + (type ?: "")).trim() + (bounds?.let { ": $it" } ?: "")
     }
 
     fun collectImports(file: KibbleFile) {
-        file.resolve(type)
+        type?.let { file.resolve(type) }
         bounds?.let { file.resolve(it) }
     }
 }
 
-enum class TypeParameterVariance {
-    IN,
-    OUT,
-    STAR;
+enum class TypeParameterVariance(val label: String) {
+    IN("in"),
+    OUT("out"),
+    STAR("*");
 
     override fun toString(): String {
-        return name.toLowerCase()
+        return label
     }
 }

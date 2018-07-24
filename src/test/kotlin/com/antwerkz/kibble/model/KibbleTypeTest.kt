@@ -22,13 +22,18 @@ class KibbleTypeTest {
                 .properties[0]
                 .type!!
 
-        Assert.assertEquals(type.toString(), "com.foo.bar.SomeType<String, Double>?")
+        Assert.assertEquals(type.toString(), "com.foo.bar.SomeType<kotlin.String, kotlin.Double>?")
         Assert.assertEquals(type.className, "SomeType")
         Assert.assertEquals(type.pkgName, "com.foo.bar")
         Assert.assertTrue(type.nullable)
         Assert.assertEquals(type.typeParameters.size, 2)
-        Assert.assertEquals(type.typeParameters[0].type.toString(), "String")
-        Assert.assertEquals(type.typeParameters[1].type.toString(), "Double")
+        Assert.assertEquals(type.typeParameters[0].type.toString(), "kotlin.String")
+        Assert.assertEquals(type.typeParameters[1].type.toString(), "kotlin.Double")
+
+        val kibbleClass = Kibble.parseSource("class Foo<T: Runnable")
+                .classes[0]
+        Assert.assertEquals(kibbleClass.typeParameters[0].bounds.toString(), "Runnable")
+        Assert.assertEquals(kibbleClass.typeParameters[0].type.toString(), "T")
     }
 
     fun fullyQualified() {
@@ -59,11 +64,11 @@ class KibbleTypeTest {
                 mutableListOf(TypeParameter(from("K")),
                 TypeParameter(from("V"))), true))
 
-        Assert.assertEquals(type.fqcn, "this.is.the.package.Class")
+        Assert.assertEquals(type.fqcn(), "this.is.the.package.Class")
         Assert.assertEquals(type.toString(), "Class<K, V>?")
 
         val list = file.resolve(from("java.util.List<com.foo.Bar, out K>"))
-        Assert.assertEquals(list.fqcn, "java.util.List")
+        Assert.assertEquals(list.fqcn(), "java.util.List")
         Assert.assertEquals(list.toString(), "List<Bar, out K>")
     }
 
@@ -98,6 +103,6 @@ class Main {
 
     private fun check(property: KibbleProperty, fqcn: String) {
         val type = property.type!!
-        Assert.assertEquals(type.fqcn, fqcn)
+        Assert.assertEquals(type.fqcn(), fqcn)
     }
 }

@@ -47,12 +47,13 @@ class KibblePropertyTest {
         val fqcn = """import com.foo.Bar
 val list: List<Bar>"""
         val kibbleFile = Kibble.parseSource(fqcn)
+        kibbleFile.toSource()
         val list = kibbleFile.properties[0]
         Assert.assertEquals(list.type?.className, "List")
         Assert.assertEquals(list.type?.typeParameters?.size, 1)
         val typeParameter: TypeParameter = list.type?.typeParameters!![0]
-        Assert.assertEquals(typeParameter.type.fqcn, "com.foo.Bar")
-        Assert.assertEquals(typeParameter.type.pkgName, "com.foo")
-        Assert.assertEquals(typeParameter.type.className, "Bar")
+        Assert.assertEquals(typeParameter.type?.fqcn(), "com.foo.Bar")
+        Assert.assertEquals(typeParameter.type?.pkgName, "com.foo")
+        Assert.assertEquals(typeParameter.type?.className, "Bar")
     }
 }

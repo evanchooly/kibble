@@ -19,25 +19,24 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
     companion object {
         fun from(type: Class<Any>) = KibbleType(pkgName = type.`package`.name, className = type.simpleName)
 
-        fun from(type: String) = if (!type.contains("*") && (type.contains(".") || type.contains("<"))) {
-            Kibble.parseSource("val temp: $type").properties[0].type!!
-        } else {
-            KibbleType(className = type)
+        fun from(type: String): KibbleType {
+            return if (!type.contains("*") && (type.contains(".") || type.contains("<"))) {
+                Kibble.parseSource("val temp: $type").properties[0].type!!
+            } else {
+                KibbleType(className = type)
+            }
         }
     }
 
-    var pkgName = pkgName
-        set(value) {
-            field = value
-            fqcn = "$pkgName.$className"
-        }
+    var pkgName: String? = pkgName
+        get() = if(field != "") field else null
+
     /**
      * Gives the fully qualified class name for this type
      */
-    var fqcn = (pkgName?.let { "$pkgName." } ?: "") + className
-        private set
+    fun fqcn() = (pkgName?.let { "$pkgName." } ?: "") + className
 
-    internal var resolved = fqcn
+    internal var resolved = fqcn()
 
     /**
      * @return the string/source form of this type
@@ -51,7 +50,7 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
     }
 
     override fun compareTo(other: KibbleType): Int {
-        return fqcn.compareTo(other.fqcn)
+        return fqcn().compareTo(other.fqcn())
     }
 
     override fun equals(other: Any?): Boolean {

@@ -166,7 +166,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
 
     fun resolve(type: KibbleType): KibbleType {
         val imported = imports.firstOrNull {
-            type.fqcn == it.type.fqcn || type.className == it.type.className || type.className == it.alias
+            type.fqcn() == it.type.fqcn() || type.className == it.type.className || type.className == it.alias
         }
         if (imported == null) {
             if (type.pkgName != pkgName) {
@@ -174,7 +174,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
             } else {
                 type.resolved = type.className
             }
-        } else if (imported.type.fqcn == type.fqcn) {
+        } else if (imported.type.fqcn() == type.fqcn()) {
             type.resolved = imported.alias ?: type.className
         } else if (imported.alias == type.className) {
             type.resolved = type.className
@@ -185,7 +185,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         }
 
         type.typeParameters.forEach {
-            resolve(it.type)
+            it.type?.let { resolve(it) }
         }
         return type
     }

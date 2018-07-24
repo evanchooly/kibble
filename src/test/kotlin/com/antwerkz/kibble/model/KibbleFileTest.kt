@@ -10,8 +10,7 @@ import java.sql.ResultSet
 class KibbleFileTest {
     @Test(expectedExceptions = arrayOf(IllegalArgumentException::class))
     fun constructorProperties() {
-        KibbleFile().addProperty("name").
-                constructorParam = true
+        KibbleFile().addProperty("name").constructorParam = true
     }
 
     @Test
@@ -38,11 +37,11 @@ import java.sql.ResultSet as aliasName""")
         file.addImport("java.util.HashMap", "HMap")
 
         val iterator = file.imports.iterator()
-        Assert.assertEquals(iterator.next().type.fqcn, "java.util.ArrayList")
+        Assert.assertEquals(iterator.next().type.fqcn(), "java.util.ArrayList")
         val next = iterator.next()
-        Assert.assertEquals(next.type.fqcn, "java.util.HashMap")
+        Assert.assertEquals(next.type.fqcn(), "java.util.HashMap")
         Assert.assertEquals(next.alias, "HMap")
-        Assert.assertEquals(iterator.next().type.fqcn, "javax.annotation.Generated")
+        Assert.assertEquals(iterator.next().type.fqcn(), "javax.annotation.Generated")
     }
 
     @Test
@@ -57,35 +56,37 @@ import java.sql.ResultSet as aliasName""")
     @Test
     fun resolve() {
         @Language("kotlin")
-        val source = """package com.antwerkz.testing
+        val source = """
+            package com.antwerkz.testing
 
-import com.foo.Bar
-import com.zorg.Flur
+            import com.foo.Bar
+            import com.zorg.Flur
 
-class Main {
-    val s: Second = Second()
-    val t: Third = Third.HI
-    val b: Bar = Bar()
-    val f: com.zorg.Flur = com.zorg.Flur()
-    val g: Generic<Int>
-}
+            class Main {
+                val s: Second = Second()
+                val t: Third = Third.HI
+                val b: Bar = Bar()
+                val f: com.zorg.Flur = com.zorg.Flur()
+                val g: Generic<Int>
+            }
 
-class Second""".trim()
+            class Second""".trimIndent()
 
         @Language("kotlin")
-        val source2 = """package com.antwerkz.testing
+        val source2 = """
+            package com.antwerkz.testing
 
-enum class Third {
-    HI
-}
+            enum class Third {
+                HI
+            }
 
-class Generic<T>"""
+            class Generic<T>""".trimIndent()
 
         val file = Kibble.parseSource(source)
         Kibble.parseSource(source2, file.context)
         val props = file.classes[0].properties.iterator()
 
-        check(props.next(), "com.antwerkz.testing.Second", "com.antwerkz.testing.Second")
+        check(props.next(), "Second", "com.antwerkz.testing.Second")
         check(props.next(), "com.antwerkz.testing.Third", "com.antwerkz.testing.Third")
         check(props.next(), "com.foo.Bar", "com.foo.Bar")
         check(props.next(), "com.zorg.Flur", "com.zorg.Flur")
@@ -134,7 +135,7 @@ class Second""".trim())
     private fun check(property: KibbleProperty, expectedName: String, fqcn: String) {
         val type = property.type!!
         Assert.assertEquals(type.toString(), expectedName)
-        Assert.assertEquals(type.fqcn, fqcn)
+        Assert.assertEquals(type.fqcn(), fqcn)
     }
 
     @Test
@@ -157,7 +158,7 @@ class Second""".trim())
         Assert.assertEquals(bareList.resolved, "List")
         assertImport(file, "java.util.List")
 
-        val set = file.resolve(KibbleType.from("java.util.  Set"))
+        val set = file.resolve(KibbleType.from("java.util.Set"))
         Assert.assertEquals(set.toString(), "Set")
         Assert.assertEquals(set.resolved, "Set")
         assertImport(file, "java.util.Set")
@@ -185,7 +186,7 @@ class Second""".trim())
 
     private fun assertImport(file: KibbleFile, fqcn: String, alias: String? = null) {
         Assert.assertEquals(file.imports.filter {
-            it.type.fqcn == fqcn
+            it.type.fqcn() == fqcn
         }.size, 1, "Should have found an import for $fqcn")
 
         alias?.let {
@@ -197,7 +198,7 @@ class Second""".trim())
 
     private fun assertNoImport(file: KibbleFile, fqcn: String, alias: String? = null) {
         Assert.assertEquals(file.imports.filter {
-            it.type.fqcn == fqcn
+            it.type.fqcn() == fqcn
         }.size, 0, "Should not have found an import for $fqcn")
 
         alias?.let {

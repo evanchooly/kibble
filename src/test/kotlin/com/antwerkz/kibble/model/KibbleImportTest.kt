@@ -53,22 +53,22 @@ class KibbleImportTest {
 
     private fun tryImport(file: KibbleFile, type: String, alias: String? = null) {
         val from = KibbleType.from(type)
-        val fqcn = from.fqcn
+        val fqcn = from.fqcn()
 
         file.addImport(from, alias)
-        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.alias == alias}, 1)
+        Assert.assertEquals(file.imports.count { it.type.fqcn() == fqcn && it.alias == alias}, 1)
 
         file.addImport(type)
-        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.alias == alias}, 1)
+        Assert.assertEquals(file.imports.count { it.type.fqcn() == fqcn && it.alias == alias}, 1)
     }
 
     private fun tryImport(file: KibbleFile, type: Class<*>, alias: String? = null) {
-        val fqcn = KibbleImport(KibbleType.from(type.name), alias).type.fqcn
+        val fqcn = KibbleImport(KibbleType.from(type.name), alias).type.fqcn()
 
         file.addImport(type, alias)
-        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.alias == alias }, 1)
+        Assert.assertEquals(file.imports.count { it.type.fqcn() == fqcn && it.alias == alias }, 1)
 
         file.addImport(type, alias)
-        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.alias == alias }, 1)
+        Assert.assertEquals(file.imports.count { it.type.fqcn() == fqcn && it.alias == alias }, 1)
     }
 }
