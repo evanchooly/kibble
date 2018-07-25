@@ -1,7 +1,6 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import org.jetbrains.kotlin.psi.KtImportDirective
 
 /**
  * Defines an import directive in a file
@@ -11,7 +10,7 @@ import org.jetbrains.kotlin.psi.KtImportDirective
 data class KibbleImport internal constructor(val type: KibbleType,  val alias: String? = null) : KibbleElement, Comparable<KibbleImport> {
 
     init {
-        type.resolved = alias ?: type.className
+        type.resolvedName = alias ?: type.className
     }
 
     override fun compareTo(other: KibbleImport): Int {

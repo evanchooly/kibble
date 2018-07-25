@@ -86,11 +86,13 @@ import java.sql.ResultSet as aliasName""")
         Kibble.parseSource(source2, file.context)
         val props = file.classes[0].properties.iterator()
 
+        file.collectImports(file)
+
         check(props.next(), "Second", "com.antwerkz.testing.Second")
-        check(props.next(), "com.antwerkz.testing.Third", "com.antwerkz.testing.Third")
-        check(props.next(), "com.foo.Bar", "com.foo.Bar")
-        check(props.next(), "com.zorg.Flur", "com.zorg.Flur")
-        check(props.next(), "com.antwerkz.testing.Generic<Int>", "com.antwerkz.testing.Generic")
+        check(props.next(), "Third", "com.antwerkz.testing.Third")
+        check(props.next(), "Bar", "com.foo.Bar")
+        check(props.next(), "Flur", "com.zorg.Flur")
+        check(props.next(), "Generic", "com.antwerkz.testing.Generic")
 
     }
 
@@ -134,8 +136,8 @@ class Second""".trim())
 
     private fun check(property: KibbleProperty, expectedName: String, fqcn: String) {
         val type = property.type!!
-        Assert.assertEquals(type.toString(), expectedName)
-        Assert.assertEquals(type.fqcn(), fqcn)
+        Assert.assertEquals(type.resolvedName, expectedName, "The resolved name for $property should match")
+        Assert.assertEquals(type.fqcn(), fqcn, "The FQCN for $property should match")
     }
 
     @Test
@@ -144,42 +146,42 @@ class Second""".trim())
 
         val list = file.resolve(KibbleType.from("java.util.List"))
         Assert.assertEquals(list.toString(), "List")
-        Assert.assertEquals(list.resolved, "List")
+        Assert.assertEquals(list.resolvedName, "List")
         Assert.assertNotNull(file.imports.firstOrNull { "List" == it.alias || "List" == it.type.className })
         assertImport(file, "java.util.List")
 
         val resolve = file.resolve(list)
         Assert.assertEquals(resolve.toString(), "List")
-        Assert.assertEquals(resolve.resolved, "List")
+        Assert.assertEquals(resolve.resolvedName, "List")
         assertImport(file, "java.util.List")
 
         val bareList = file.resolve(KibbleType.from("List"))
         Assert.assertEquals(bareList.toString(), "List")
-        Assert.assertEquals(bareList.resolved, "List")
+        Assert.assertEquals(bareList.resolvedName, "List")
         assertImport(file, "java.util.List")
 
         val set = file.resolve(KibbleType.from("java.util.Set"))
         Assert.assertEquals(set.toString(), "Set")
-        Assert.assertEquals(set.resolved, "Set")
+        Assert.assertEquals(set.resolvedName, "Set")
         assertImport(file, "java.util.Set")
 
         file.addImport(java.awt.List::class.java, "awtList")
         val awt = file.resolve(KibbleType.from("java.awt.List"))
         Assert.assertEquals(awt.toString(), "awtList")
-        Assert.assertEquals(awt.resolved, "awtList")
+        Assert.assertEquals(awt.resolvedName, "awtList")
         assertImport(file, "java.awt.List", "awtList")
 
         val awt2 = file.resolve(KibbleType.from("awtList"))
         Assert.assertEquals(awt2.toString(), "awtList")
-        Assert.assertEquals(awt2.resolved, "awtList")
+        Assert.assertEquals(awt2.resolvedName, "awtList")
 
         val entry = file.resolve(KibbleType.from("Map.Entry"))
         Assert.assertEquals(entry.toString(), "Map.Entry")
-        Assert.assertEquals(entry.resolved, "Map.Entry")
+        Assert.assertEquals(entry.resolvedName, "Map.Entry")
 
         val bob = file.resolve(KibbleType.from("Bob"))
         Assert.assertEquals(bob.toString(), "Bob")
-        Assert.assertEquals(bob.resolved, "Bob")
+        Assert.assertEquals(bob.resolvedName, "Bob")
         assertNoImport(file, "Bob", null)
     }
 

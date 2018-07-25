@@ -165,23 +165,28 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     }
 
     fun resolve(type: KibbleType): KibbleType {
-        val imported = imports.firstOrNull {
-            type.fqcn() == it.type.fqcn() || type.className == it.type.className || type.className == it.alias
-        }
-        if (imported == null) {
-            if (type.pkgName != pkgName) {
-                addImport(type)
-            } else {
-                type.resolved = type.className
+        val namespace = imports.groupBy { it.alias ?: it.type.className }
+                .mapValues { it.value[0] }
+
+        val imported = namespace[type.className]
+        when {
+            imported != null -> {
+                if (type.pkgName == null) {
+                    type.pkgName = imported.type.pkgName
+                }
+                type.resolvedName = type.className
             }
-        } else if (imported.type.fqcn() == type.fqcn()) {
-            type.resolved = imported.alias ?: type.className
-        } else if (imported.alias == type.className) {
-            type.resolved = type.className
-        } else if (imported.type.className == type.className && type.pkgName == null) {
-            type.pkgName = imported.type.pkgName
-        } else {
-            throw IllegalStateException("what got me here? type = $type,  import = $imported")
+
+            imported == null -> when {
+                type.pkgName == null /*&& classes.any { it.name == type.className }*/-> {
+                    type.pkgName = pkgName
+                    type.resolvedName = type.className
+                }
+                type.pkgName != pkgName -> addImport(type)
+                else -> type.resolvedName = type.className
+            }
+
+            else -> throw RuntimeException("how did I get here?  type = $type, file = $this") // type.resolvedName = type.fqcn()
         }
 
         type.typeParameters.forEach {

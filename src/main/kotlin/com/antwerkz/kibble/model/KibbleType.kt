@@ -36,13 +36,13 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
      */
     fun fqcn() = (pkgName?.let { "$pkgName." } ?: "") + className
 
-    internal var resolved = fqcn()
+    internal var resolvedName = fqcn()
 
     /**
      * @return the string/source form of this type
      */
     override fun toString(): String {
-        val list = mutableListOf(resolved)
+        val list = mutableListOf(resolvedName)
         var base = list.joinToString(".") +
                 (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "")
         if (nullable) base += "?"

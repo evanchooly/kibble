@@ -717,7 +717,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 .joinToString(".")
         val className: String = (qualifier.takeWhile { it[0].isUpperCase() } + type.referencedName!!)
                 .joinToString(".")
-        val value = KibbleType(pkgName, className)
+        val value = KibbleType(if(pkgName == "") null else pkgName, className)
         value.typeParameters += type.typeArguments.evaluate(this)
         context.push(value)
     }
