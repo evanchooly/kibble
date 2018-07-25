@@ -154,7 +154,9 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         kibbleFile.sourceTimestamp = kt.virtualFile.modificationStamp
         val directive = kt.packageDirective?.fqName?.asString()
         kibbleFile.pkgName = if(directive != "") directive else null
-        kibbleFile.imports.addAll(kt.importList?.evaluate(this) ?: listOf())
+        kt.importList?.evaluate<List<KibbleImport>>(this)?.forEach {
+            kibbleFile.addImport(it)
+        }
 
         kt.declarations.forEach {
             val declaration = it.evaluate<Any>(this)

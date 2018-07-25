@@ -109,7 +109,7 @@ class Second""".trim()
         val file = Kibble.parseSource(source)
         val props = file.classes[0].properties.iterator()
 
-        check(props.next(), "com.antwerkz.testing.Second", "com.antwerkz.testing.Second")
+        check(props.next(), "Second", "com.antwerkz.testing.Second")
     }
 
     @Test

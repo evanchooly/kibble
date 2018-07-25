@@ -9,18 +9,21 @@ import java.io.File
  *
  * @property name the name of the physical kotlin file
  * @property pkgName the package name
- * @property imports the imports defined in the file
+ * @property importDirectives the imports defined in the file
  */
 class KibbleFile(val name: String? = null, var pkgName: String? = null,
                  val context: KibbleContext = KibbleContext()) :
         KibbleElement, ClassOrObjectHolder, PropertyHolder, FunctionHolder {
 
-    val imports = sortedSetOf<KibbleImport>()
+    private val importDirectives = sortedMapOf<String, KibbleImport>()
+    val imports
+        get() = importDirectives.values.toSet()
+
 
     override val classes = mutableListOf<KibbleClass>()
-    override val objects= mutableListOf<KibbleObject>()
-    override val functions= mutableListOf<KibbleFunction>()
-    override val properties= mutableListOf<KibbleProperty>()
+    override val objects = mutableListOf<KibbleObject>()
+    override val functions = mutableListOf<KibbleFunction>()
+    override val properties = mutableListOf<KibbleProperty>()
 
     var sourceTimestamp: Long = 0
 
@@ -46,26 +49,6 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
             functions += it
         }
     }
-
-/*
-    override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
-                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
-        TODO("maybe remove?")
-*/
-/*
-        if (constructorParam) {
-            throw IllegalArgumentException("File level properties can not also be constructor parameters")
-        }
-        val property = KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit)
-
-        property.visibility = visibility
-        property.mutability = mutability
-        properties += property
-        return property
-*//*
-
-    }
-*/
 
     /**
      * Adds an import to this file
@@ -98,7 +81,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     }
 
     fun addImport(kibbleImport: KibbleImport) {
-        imports.add(kibbleImport)
+        importDirectives[kibbleImport.type.fqcn()] = kibbleImport
     }
 
     /**
@@ -165,20 +148,24 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     }
 
     fun resolve(type: KibbleType): KibbleType {
-        val namespace = imports.groupBy { it.alias ?: it.type.className }
-                .mapValues { it.value[0] }
-
-        val imported = namespace[type.className]
+//        val namespace = imports.groupBy { it.alias ?: it.type.className }
+//                .mapValues { it.value[0] }
+//
+        val imported = importDirectives[type.fqcn()] ?: importDirectives
+                .filterValues { it.alias == type.className || it.type.className == type.className }
+                .map { it.value }
+                .firstOrNull()
+//        importDirectives[type.resolvedName]
         when {
             imported != null -> {
                 if (type.pkgName == null) {
                     type.pkgName = imported.type.pkgName
                 }
-                type.resolvedName = type.className
+                type.resolvedName = imported.alias ?: imported.type.resolvedName
             }
 
             imported == null -> when {
-                type.pkgName == null /*&& classes.any { it.name == type.className }*/-> {
+                type.pkgName == null /*&& classes.any { it.name == type.className }*/ -> {
                     type.pkgName = pkgName
                     type.resolvedName = type.className
                 }
