@@ -25,26 +25,6 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
         mutability = VAL
     }
 
-/*
-        annotations.addAll(KibbleExtractor.extractAnnotations(kt.annotationEntries))
-        modality = Modal.apply(kt.modalityModifier())
-        visibility = Visible.apply(kt.visibilityModifier())
-        mutability = Mutable.apply(kt.valOrVarKeyword)
-    }
-
-    internal constructor(kt: KtProperty) : this(kt.name!!, KibbleType.from(kt.typeReference), kt.initializer?.text) {
-
-        annotations.addAll(KibbleExtractor.extractAnnotations(kt.annotationEntries))
-        modality = Modal.apply(kt.modalityModifier())
-        visibility = Visible.apply(kt.visibilityModifier())
-        lateInit = kt.modifierList?.allChildren?.find { it.text == "lateinit" } != null
-
-        if (kt.isVar || lateInit) {
-            mutability = VAR
-        }
-    }
-*/
-
     override val annotations: MutableList<KibbleAnnotation> = mutableListOf()
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {

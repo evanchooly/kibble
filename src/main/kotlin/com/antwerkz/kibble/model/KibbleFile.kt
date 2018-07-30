@@ -4,6 +4,7 @@ import com.antwerkz.kibble.KibbleContext
 import com.antwerkz.kibble.SourceWriter
 import java.io.File
 
+
 /**
  * Defines a kotlin source file model
  *
@@ -81,7 +82,9 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     }
 
     fun addImport(kibbleImport: KibbleImport) {
-        importDirectives[kibbleImport.type.fqcn()] = kibbleImport
+        if (importDirectives[kibbleImport.type.fqcn()] == null) {
+            importDirectives[kibbleImport.type.fqcn()] = kibbleImport
+        }
     }
 
     /**
@@ -99,38 +102,46 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         return File(directory, fileName)
     }
 
-    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        pkgName?.let {
-            writer.writeln("package $it")
-            writer.writeln()
-        }
-
+    fun collectImports() {
         properties.forEach { it.collectImports(this) }
         objects.forEach { it.collectImports(this) }
         classes.forEach { it.collectImports(this) }
         functions.forEach { it.collectImports(this) }
+    }
 
-        writeBlock(writer, level, false, imports)
-        writeBlock(writer, level, false, properties)
-        writeBlock(writer, level, true, classes.filter { it.isInterface })
-        writeBlock(writer, level, true, classes.filter { !it.isInterface })
-        writeBlock(writer, level, true, objects)
-        writeBlock(writer, level, true, functions)
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
+        collectImports()
+
+        val interfaces = classes.filter { it.isInterface }
+        val classes = classes.filter { !it.isInterface }
+
+        pkgName?.let {
+            writer.writeln("package $it")
+        }
+
+        var previousWritten = writeBlock(writer, level, pkgName?.isNotEmpty() ?: false, imports, false)
+
+        for(block: List<KibbleElement> in listOf<List<KibbleElement>>(properties, interfaces, classes, objects, functions)) {
+            previousWritten = writeBlock(writer, level, previousWritten, block)
+        }
 
         return writer
     }
 
-    private fun writeBlock(writer: SourceWriter, level: Int, inBetween: Boolean, block: Collection<KibbleElement>) {
-        if (!block.isEmpty()) {
-            writer.writeln()
-        }
-
-        block.forEachIndexed { i, it ->
-            if (inBetween && i != 0) {
+    private fun writeBlock(writer: SourceWriter, level: Int, previousWritten: Boolean, block: Collection<KibbleElement>,
+                           spaceBetween: Boolean = true): Boolean {
+        return if (block.isNotEmpty()) {
+            if (previousWritten) {
                 writer.writeln()
             }
-            it.toSource(writer, level)
-        }
+            block.forEachIndexed { i, it ->
+                if (i != 0 && spaceBetween) {
+                    writer.writeln()
+                }
+                it.toSource(writer, level)
+            }
+            true
+        } else previousWritten
     }
 
     override fun collectImports(file: KibbleFile) {
@@ -148,14 +159,10 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     }
 
     fun resolve(type: KibbleType): KibbleType {
-//        val namespace = imports.groupBy { it.alias ?: it.type.className }
-//                .mapValues { it.value[0] }
-//
         val imported = importDirectives[type.fqcn()] ?: importDirectives
                 .filterValues { it.alias == type.className || it.type.className == type.className }
                 .map { it.value }
                 .firstOrNull()
-//        importDirectives[type.resolvedName]
         when {
             imported != null -> {
                 if (type.pkgName == null) {
@@ -166,7 +173,9 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
 
             imported == null -> when {
                 type.pkgName == null /*&& classes.any { it.name == type.className }*/ -> {
-                    type.pkgName = pkgName
+                    if (!type.isAutoImported()) {
+                        type.pkgName = pkgName
+                    }
                     type.resolvedName = type.className
                 }
                 type.pkgName != pkgName -> addImport(type)

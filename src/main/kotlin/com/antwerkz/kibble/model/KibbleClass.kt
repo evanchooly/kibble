@@ -166,6 +166,7 @@ class KibbleClass internal constructor(var name: String = "",
     }
 
     override fun collectImports(file: KibbleFile) {
+        annotations.forEach { it.collectImports(file) }
         properties.forEach { it.collectImports(file) }
         classes.forEach { it.collectImports(file) }
         objects.forEach { it.collectImports(file) }

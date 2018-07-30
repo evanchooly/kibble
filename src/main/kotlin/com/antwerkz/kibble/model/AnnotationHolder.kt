@@ -29,7 +29,7 @@ interface AnnotationHolder {
      */
     fun getAnnotation(annotation: Class<out Annotation>): KibbleAnnotation? {
         return annotations.firstOrNull {
-            it.type.className == annotation.simpleName || it.type.className == annotation.name
+            it.type.fqcn() == annotation.name || it.type.isAutoImported() && (it.type.resolvedName == annotation.simpleName)
         }
     }
 }

@@ -8,7 +8,7 @@ import java.io.File
 import java.sql.ResultSet
 
 class KibbleFileTest {
-    @Test(expectedExceptions = arrayOf(IllegalArgumentException::class))
+    @Test(expectedExceptions = [IllegalArgumentException::class])
     fun constructorProperties() {
         KibbleFile().addProperty("name").constructorParam = true
     }
@@ -110,28 +110,6 @@ class Second""".trim()
         val props = file.classes[0].properties.iterator()
 
         check(props.next(), "Second", "com.antwerkz.testing.Second")
-    }
-
-    @Test
-    fun resolveClassesInAnotherFile() {
-
-        val sourceFile1 = createTempFile("source1", ".kt").also {
-            it.writeText("""package com.antwerkz.testing
-
-class Main {
-    val s: Second = Second()
-}""")
-        }
-        val sourceFile2 = createTempFile("source2", ".kt").also {
-            it.writeText("""package com.antwerkz.testing
-
-class Second""".trim())
-        }
-
-        val files = Kibble.parse(listOf(sourceFile1, sourceFile2))
-        val props = files[0].classes[0].properties.iterator()
-
-        check(props.next(), "com.antwerkz.testing.Second", "com.antwerkz.testing.Second")
     }
 
     private fun check(property: KibbleProperty, expectedName: String, fqcn: String) {

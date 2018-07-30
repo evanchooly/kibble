@@ -4,6 +4,8 @@ import java.util.ArrayList
 import java.util.HashMap as HMap
 import javax.annotation.Generated
 
+val something: String = ""
+
 interface Dummy {
     fun what()
 }

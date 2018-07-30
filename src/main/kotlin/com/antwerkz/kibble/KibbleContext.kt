@@ -19,30 +19,21 @@ class KibbleContext {
                 .flatMap { it.classes }
                 .firstOrNull { it.name == type.className }
 
-    fun fileList(): List<KibbleFile> {
-        return files.values
-                .flatMap { it.toList() }
-                .also {
-                    it.forEach {file ->
-                        file.toSource()
-                    }
+    fun fileList(): List<KibbleFile> = files.values
+            .flatMap { it.toList() }
+            .also {
+                it.forEach {file ->
+                    file.collectImports()
                 }
-    }
+            }
 
     fun push(value: Any) {
         stack.push(value)
     }
-    
-    fun <T> pop(): T {
-        return stack.pop() as T
-    }
 
-    fun <T> peek(): T {
-        return (if (!stack.isEmpty()) stack.peek() else null) as T
-    }
+    fun <T> pop(): T = stack.pop() as T
 
-    override fun toString(): String {
-        return if (!stack.isEmpty()) peek<Any>().toString() else "{}"
-    }
+    fun <T> peek(): T = (if (!stack.isEmpty()) stack.peek() else null) as T
 
+    override fun toString() = if (!stack.isEmpty()) peek<Any>().toString() else "{}"
 }

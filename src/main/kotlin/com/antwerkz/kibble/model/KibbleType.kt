@@ -17,6 +17,10 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
     internal constructor(type: KibbleType, nullable: Boolean = false) : this(type.pkgName, type.className, type.typeParameters, nullable)
 
     companion object {
+        internal val AUTOIMPORTS = listOf("Any", "Unit", "Nothing", "Byte", "Short", "Int", "Long", "Float", "Double",
+                "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString")
+        internal val AUTOIMPORTED = mutableSetOf<String>()
+
         fun from(type: Class<Any>) = KibbleType(pkgName = type.`package`.name, className = type.simpleName)
 
         fun from(type: String): KibbleType {
@@ -73,5 +77,17 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
         result = 31 * result + typeParameters.hashCode()
         result = 31 * result + nullable.hashCode()
         return result
+    }
+
+    fun isAutoImported(): Boolean {
+            if (AUTOIMPORTED.contains(className)) {
+                return true
+            }
+            try {
+                Class.forName("java.lang.$className")
+                AUTOIMPORTED.add(className)
+            } catch (ignore: Exception) {
+            }
+            return className in AUTOIMPORTS || className in AUTOIMPORTED
     }
 }
