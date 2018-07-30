@@ -51,6 +51,7 @@ class AnnotationHolderTest {
 @Bob(name = Feller)
 @Retention
 fun foo()
+
 """.trimMargin())
     }
 

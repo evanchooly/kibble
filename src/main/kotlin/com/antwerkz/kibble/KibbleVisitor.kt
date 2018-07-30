@@ -650,7 +650,10 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitBlockExpression(expression: KtBlockExpression) {
-        context.push(expression.statements.evaluate<String>(this).joinToString("\n"))
+        context.push(expression.statements.evaluate<String>(this)
+                .joinToString("\n")
+                .trimIndent()
+                .trim())
     }
 
     override fun visitCatchSection(catchClause: KtCatchClause) {

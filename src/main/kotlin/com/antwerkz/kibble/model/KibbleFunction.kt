@@ -91,11 +91,12 @@ class KibbleFunction internal constructor(var name: String? = null,
                         .forEach { s ->
                             writer.writeln(s, level + 1)
                         }
-                writer.writeln("}", level)
+                writer.write("}", level)
             }
         } else {
-            writer.writeln(" = $body")
+            writer.write(" = $body")
         }
+        writer.writeln()
         return writer
     }
 

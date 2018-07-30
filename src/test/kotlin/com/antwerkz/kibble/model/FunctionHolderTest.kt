@@ -21,7 +21,7 @@ fun body() {
         Assert.assertEquals(kibbleFunction.body, """Foo(name ?: "")""")
 
         kibbleFunction = file.functions[1]
-        Assert.assertEquals(kibbleFunction.body, """    print()""")
+        Assert.assertEquals(kibbleFunction.body, """print()""")
     }
 
     @Test

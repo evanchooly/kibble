@@ -30,4 +30,3 @@ internal abstract class KotlinSampleClass(val cost: Double, ignored: Int): Paren
 
 open class ParentClass(val blurb: Int) {
 }
-

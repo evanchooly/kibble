@@ -41,6 +41,8 @@ class KibbleFunctionTest {
         foo.addParameter("t", "T")
         foo.addTypeParameter("T")
 
-        Assert.assertEquals(foo.toString(), "fun <T> foo(t: T)")
+        Assert.assertEquals(foo.toString(), """fun <T> foo(t: T)
+            |
+        """.trimMargin())
     }
 }
