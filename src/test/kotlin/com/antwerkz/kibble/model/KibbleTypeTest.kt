@@ -12,23 +12,23 @@ class KibbleTypeTest {
         val file = Kibble.parseSource("val foo: com.foo.bar.Type")
         val type = file.properties[0].type
 
-        Assert.assertEquals(type?.toString(), "com.foo.bar.Type")
+        Assert.assertEquals(type?.toString(), "Type")
         Assert.assertTrue(type?.typeParameters?.isEmpty() ?: false)
     }
 
     fun generics() {
-        val string = "com.foo.bar.SomeType<kotlin.String, kotlin.Double>?"
+        val string = "com.foo.bar.SomeType<String, Double>?"
         val type = Kibble.parseSource("val foo: $string")
                 .properties[0]
                 .type!!
 
-        Assert.assertEquals(type.toString(), "com.foo.bar.SomeType<kotlin.String, kotlin.Double>?")
+        Assert.assertEquals(type.toString(), "SomeType<String, Double>?")
         Assert.assertEquals(type.className, "SomeType")
         Assert.assertEquals(type.pkgName, "com.foo.bar")
         Assert.assertTrue(type.nullable)
         Assert.assertEquals(type.typeParameters.size, 2)
-        Assert.assertEquals(type.typeParameters[0].type.toString(), "kotlin.String")
-        Assert.assertEquals(type.typeParameters[1].type.toString(), "kotlin.Double")
+        Assert.assertEquals(type.typeParameters[0].type.toString(), "String")
+        Assert.assertEquals(type.typeParameters[1].type.toString(), "Double")
 
         val kibbleClass = Kibble.parseSource("class Foo<T: Runnable")
                 .classes[0]
@@ -37,11 +37,12 @@ class KibbleTypeTest {
     }
 
     fun fullyQualified() {
-
-        Assert.assertEquals(from("java.math.BigDecimal").toString(), "java.math.BigDecimal")
-        Assert.assertEquals(from("BigDecimal").toString(), "BigDecimal")
-        Assert.assertEquals(from("BigInteger").toString(), "BigInteger")
-        Assert.assertEquals(from("java.time.LocalDateTime").toString(), "java.time.LocalDateTime")
+        Assert.assertEquals(from("java.math.BigDecimal").fqcn(), "java.math.BigDecimal")
+        Assert.assertEquals(from("java.math.BigDecimal").toString(), "BigDecimal")
+        Assert.assertEquals(from("BigDecimal").fqcn(), "BigDecimal")
+        Assert.assertEquals(from("BigInteger").fqcn(), "BigInteger")
+        Assert.assertEquals(from("java.time.LocalDateTime").fqcn(), "java.time.LocalDateTime")
+        Assert.assertEquals(from("java.time.LocalDateTime").toString(), "LocalDateTime")
         Assert.assertEquals(KibbleType("java.util", "List", mutableListOf(TypeParameter(from("String")))).toString(), "java.util.List<String>")
     }
 

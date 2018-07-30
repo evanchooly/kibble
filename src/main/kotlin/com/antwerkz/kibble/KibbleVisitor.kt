@@ -5,6 +5,7 @@ import com.antwerkz.kibble.model.InitBlock
 import com.antwerkz.kibble.model.KibbleAnnotation
 import com.antwerkz.kibble.model.KibbleArgument
 import com.antwerkz.kibble.model.KibbleClass
+import com.antwerkz.kibble.model.KibbleElement
 import com.antwerkz.kibble.model.KibbleFile
 import com.antwerkz.kibble.model.KibbleFunction
 import com.antwerkz.kibble.model.KibbleFunctionType
@@ -256,13 +257,13 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         kibbleObject.visibility = declaration.visibilityModifier().toVisibility()
 
         declaration.declarations.forEach {
-            val declaration = it.evaluate<Any>(this)
-            when (declaration) {
-                is KibbleFunction -> kibbleObject.functions += declaration
-                is KibbleClass -> kibbleObject.classes += declaration
-                is KibbleObject -> kibbleObject.objects += declaration
-                is KibbleProperty -> kibbleObject.properties += declaration
-                else -> TODO("handle declaration type $declaration")
+            val element = it.evaluate<KibbleElement>(this)
+            when (element) {
+                is KibbleFunction -> kibbleObject.functions += element
+                is KibbleClass -> kibbleObject.classes += element
+                is KibbleObject -> kibbleObject.objects += element
+                is KibbleProperty -> kibbleObject.properties += element
+                else -> TODO("handle declaration type $element")
             }
         }
 
@@ -720,7 +721,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         val qualifier = type.qualifier?.text?.split(".") ?: listOf()
         val pkgName = qualifier.takeWhile { it[0].isLowerCase() }
                 .joinToString(".")
-        val className: String = (qualifier.takeWhile { it[0].isUpperCase() } + type.referencedName!!)
+        val className: String = (qualifier.takeLastWhile { it[0].isUpperCase() } + type.referencedName!!)
                 .joinToString(".")
         val value = KibbleType(if(pkgName == "") null else pkgName, className)
         value.typeParameters += type.typeArguments.evaluate(this)
