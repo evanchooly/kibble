@@ -1,25 +1,15 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import org.jetbrains.kotlin.psi.KtSecondaryConstructor
-import org.jetbrains.kotlin.psi.ValueArgument
 
 /**
  * Defines a secondary constructor for class
  *
  * @property delegationArguments the arguments to pass to the delegation constructor call
  */
-class SecondaryConstructor internal constructor(vararg arguments: String) : Constructor() {
-    internal constructor(kt: KtSecondaryConstructor) : this() {
-        kt.valueParameters.forEach {
-            parameters.add(KibbleParameter(it))
-        }
-        body = kt.bodyExpression?.text
-        val valueArguments: MutableList<out ValueArgument> = kt.getDelegationCall().valueArguments
-        delegationArguments += valueArguments.map { it.getArgumentExpression()?.text ?: "" }
-    }
+class SecondaryConstructor internal constructor(vararg arguments: KibbleArgument) : Constructor() {
 
-    private val delegationArguments = mutableListOf<String>()
+    val delegationArguments = mutableListOf<KibbleArgument>()
 
     init {
         delegationArguments += arguments

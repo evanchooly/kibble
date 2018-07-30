@@ -40,35 +40,37 @@ class KibbleImportTest {
 
     @Test
     fun starImport() {
-        tryImport(KibbleFile("Foo.kt"), "com.foo.*")
+        tryImport("com.foo.*")
     }
 
     @Test
     fun duplicateImport() {
-        tryImport(KibbleFile("Foo.kt"), "com.foo.Bar")
-        tryImport(KibbleFile("Foo.kt"), "com.foo.Bar", "Second")
-        tryImport(KibbleFile("Foo.kt"), String::class.java)
-        tryImport(KibbleFile("Foo.kt"), String::class.java, "Second")
+        tryImport("com.foo.Bar")
+        tryImport("com.foo.Bar", "Second")
+        tryImport(String::class.java)
+        tryImport(String::class.java, "Second")
     }
 
-    private fun tryImport(file: KibbleFile, type: String, alias: String? = null) {
+    private fun tryImport(type: String, alias: String? = null) {
         val from = KibbleType.from(type)
-        val fqcn = from.fqcn
+        val fqcn = from.fqcn()
+        val file = KibbleFile("Foo.kt")
 
         file.addImport(from, alias)
-        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.alias == alias}, 1)
+        Assert.assertEquals(file.imports.count { it.type.fqcn() == fqcn && it.alias == alias}, 1)
 
         file.addImport(type)
-        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.alias == alias}, 1)
+        Assert.assertEquals(file.imports.count { it.type.fqcn() == fqcn && it.alias == alias}, 1)
     }
 
-    private fun tryImport(file: KibbleFile, type: Class<*>, alias: String? = null) {
-        val fqcn = KibbleImport(KibbleType.from(type.name), alias).type.fqcn
+    private fun tryImport(type: Class<*>, alias: String? = null) {
+        val fqcn = KibbleImport(KibbleType.from(type.name), alias).type.fqcn()
+        val file = KibbleFile("Foo.kt")
 
         file.addImport(type, alias)
-        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.alias == alias }, 1)
+        Assert.assertEquals(file.imports.count { it.type.fqcn() == fqcn && it.alias == alias }, 1)
 
         file.addImport(type, alias)
-        Assert.assertEquals(file.imports.count { it.type.fqcn == fqcn && it.alias == alias }, 1)
+        Assert.assertEquals(file.imports.count { it.type.fqcn() == fqcn && it.alias == alias }, 1)
     }
 }

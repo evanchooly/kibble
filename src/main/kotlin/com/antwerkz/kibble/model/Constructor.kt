@@ -1,8 +1,8 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
+import com.antwerkz.kibble.model.Mutability.NEITHER
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 
 /**
  * Defines a constructor for a Class
@@ -12,21 +12,24 @@ import org.jetbrains.kotlin.psi.KtPrimaryConstructor
  * @property body the constructor body
  */
 open class Constructor internal constructor() : Visible, ParameterHolder, KibbleElement {
-    internal constructor(klass: KibbleClass, kt: KtPrimaryConstructor) : this() {
-        kt.valueParameters.forEach {
-            val kibbleProperty = KibbleProperty(it)
-            if (it.hasValOrVar()) {
-                kibbleProperty.constructorParam = true
-                klass.properties += kibbleProperty
-            }
-            parameters.add(kibbleProperty)
-        }
-        body = kt.bodyExpression?.text ?: ""
-    }
 
-    override var visibility: Visibility = PUBLIC
-    override var parameters: MutableList<KibbleParameter> = mutableListOf()
+    override var visibility = PUBLIC
+    override val parameters = mutableListOf<KibbleParameter>()
     var body: String? = null
+
+    internal fun filterProperties(): List<KibbleProperty> {
+        val groupBy = parameters.groupBy { it.mutability == NEITHER }
+        parameters.clear()
+        parameters += groupBy[true] ?: listOf()
+
+        return groupBy[false]?.map {
+            KibbleProperty(it.name ?: "", it.type, it.initializer, constructorParam = true).also { prop ->
+                prop.annotations += it.annotations
+                prop.mutability = it.mutability
+                prop.typeParameters = it.typeParameters
+            }
+        } ?: listOf()
+    }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         if (parameters.size != 0) {

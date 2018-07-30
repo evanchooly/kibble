@@ -2,68 +2,44 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.KibbleContext
 import com.antwerkz.kibble.SourceWriter
-import com.antwerkz.kibble.model.KibbleExtractor.extractClasses
-import com.antwerkz.kibble.model.KibbleExtractor.extractFunctions
-import com.antwerkz.kibble.model.KibbleExtractor.extractInterfaces
-import com.antwerkz.kibble.model.KibbleExtractor.extractObjects
-import com.antwerkz.kibble.model.KibbleExtractor.extractProperties
-import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
+
 
 /**
  * Defines a kotlin source file model
  *
  * @property name the name of the physical kotlin file
  * @property pkgName the package name
- * @property imports the imports defined in the file
+ * @property importDirectives the imports defined in the file
  */
 class KibbleFile(val name: String? = null, var pkgName: String? = null,
                  val context: KibbleContext = KibbleContext()) :
-        KibbleElement, PropertyHolder, ClassOrObjectHolder {
+        KibbleElement, ClassOrObjectHolder, PropertyHolder, FunctionHolder {
 
-    val imports = sortedSetOf<KibbleImport>()
+    private val importDirectives = sortedMapOf<String, KibbleImport>()
+    val imports
+        get() = importDirectives.values.toSet()
+
 
     override val classes = mutableListOf<KibbleClass>()
-    override val interfaces = mutableListOf<KibbleInterface>()
-    override val objects= mutableListOf<KibbleObject>()
-    override val functions= mutableListOf<KibbleFunction>()
-    override val properties= mutableListOf<KibbleProperty>()
+    override val objects = mutableListOf<KibbleObject>()
+    override val functions = mutableListOf<KibbleFunction>()
+    override val properties = mutableListOf<KibbleProperty>()
 
-    private var kt: KtFile? = null
-    val sourceTimestamp = kt?.originalFile?.modificationStamp ?: Long.MIN_VALUE
-
-    internal constructor(kt: KtFile, context: KibbleContext) : this(kt.name, kt.packageDirective?.fqName.toString(), context) {
-        this.kt = kt
-        kt.virtualFile.modificationStamp
-        pkgName = kt.extractPackage()
-        kt.importDirectives.forEach {
-            imports += KibbleImport(it)
-        }
-        interfaces += extractInterfaces(this, kt.declarations)
-        classes += extractClasses(this, kt.declarations)
-        objects += extractObjects(this, kt.declarations)
-        functions += extractFunctions(kt.declarations)
-        properties += extractProperties(kt.declarations)
-    }
-
+    var sourceTimestamp: Long = 0
 
     init {
         context.register(this)
     }
 
     override fun addClass(name: String): KibbleClass {
-        return KibbleClass(this, name).also {
+        return KibbleClass(name).also {
             classes += it
-        }
-    }
-    override fun addInterface(name: String): KibbleInterface {
-        return KibbleInterface(this, name).also {
-            interfaces += it
         }
     }
 
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
-        return KibbleObject(this, name, isCompanion).also {
+        return KibbleObject(name, isCompanion).also {
             objects += it
         }
 
@@ -73,19 +49,6 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         return KibbleFunction(name, type = KibbleType.from(type), body = body).also {
             functions += it
         }
-    }
-
-    override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
-                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
-        if (constructorParam) {
-            throw IllegalArgumentException("File level properties can not also be constructor parameters")
-        }
-        val property = KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit)
-
-        property.visibility = visibility
-        property.mutability = mutability
-        properties += property
-        return property
     }
 
     /**
@@ -114,10 +77,13 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
 
     fun addImport(type: KibbleType, alias: String? = null) {
         if (type.pkgName != null || type.className.endsWith(".*")) {
-            KibbleImport(type, alias).also {
-                imports.add(it)
-                type.resolved = alias ?: type.className
-            }
+            addImport(KibbleImport(type, alias))
+        }
+    }
+
+    fun addImport(kibbleImport: KibbleImport) {
+        if (importDirectives[kibbleImport.type.fqcn()] == null) {
+            importDirectives[kibbleImport.type.fqcn()] = kibbleImport
         }
     }
 
@@ -136,38 +102,46 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         return File(directory, fileName)
     }
 
-    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        pkgName?.let {
-            writer.writeln("package $it")
-            writer.writeln()
-        }
-
+    fun collectImports() {
         properties.forEach { it.collectImports(this) }
         objects.forEach { it.collectImports(this) }
         classes.forEach { it.collectImports(this) }
         functions.forEach { it.collectImports(this) }
+    }
 
-        writeBlock(writer, level, false, imports)
-        writeBlock(writer, level, false, properties)
-        writeBlock(writer, level, true, interfaces)
-        writeBlock(writer, level, true, classes)
-        writeBlock(writer, level, true, objects)
-        writeBlock(writer, level, true, functions)
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
+        collectImports()
+
+        val interfaces = classes.filter { it.isInterface }
+        val classes = classes.filter { !it.isInterface }
+
+        pkgName?.let {
+            writer.writeln("package $it")
+        }
+
+        var previousWritten = writeBlock(writer, level, pkgName?.isNotEmpty() ?: false, imports, false)
+
+        for(block: List<KibbleElement> in listOf<List<KibbleElement>>(properties, interfaces, classes, objects, functions)) {
+            previousWritten = writeBlock(writer, level, previousWritten, block)
+        }
 
         return writer
     }
 
-    private fun writeBlock(writer: SourceWriter, level: Int, inBetween: Boolean, block: Collection<KibbleElement>) {
-        block.forEachIndexed { i, it ->
-            if (inBetween && i != 0) {
+    private fun writeBlock(writer: SourceWriter, level: Int, previousWritten: Boolean, block: Collection<KibbleElement>,
+                           spaceBetween: Boolean = true): Boolean {
+        return if (block.isNotEmpty()) {
+            if (previousWritten) {
                 writer.writeln()
             }
-            it.toSource(writer, level)
-        }
-
-        if (!inBetween && !block.isEmpty()) {
-            writer.writeln()
-        }
+            block.forEachIndexed { i, it ->
+                if (i != 0 && spaceBetween) {
+                    writer.writeln()
+                }
+                it.toSource(writer, level)
+            }
+            true
+        } else previousWritten
     }
 
     override fun collectImports(file: KibbleFile) {
@@ -175,7 +149,6 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         classes.forEach { it.collectImports(file) }
         objects.forEach { it.collectImports(file) }
         functions.forEach { it.collectImports(file) }
-        interfaces.forEach { it.collectImports(file) }
     }
 
     /**
@@ -186,27 +159,34 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     }
 
     fun resolve(type: KibbleType): KibbleType {
-        val imported = imports.firstOrNull {
-            type.fqcn == it.type.fqcn || type.className == it.type.className || type.className == it.alias
-        }
-        if (imported == null) {
-            if (type.pkgName != pkgName) {
-                addImport(type)
-            } else {
-                type.resolved = type.className
+        val imported = importDirectives[type.fqcn()] ?: importDirectives
+                .filterValues { it.alias == type.className || it.type.className == type.className }
+                .map { it.value }
+                .firstOrNull()
+        when {
+            imported != null -> {
+                if (type.pkgName == null) {
+                    type.pkgName = imported.type.pkgName
+                }
+                type.resolvedName = imported.alias ?: imported.type.resolvedName
             }
-        } else if (imported.type.fqcn == type.fqcn) {
-            type.resolved = imported.alias ?: type.className
-        } else if (imported.alias == type.className) {
-            type.resolved = type.className
-        } else if (imported.type.className == type.className && type.pkgName == null) {
-            type.pkgName = imported.type.pkgName
-        } else {
-            throw IllegalStateException("what got me here? type = $type,  import = $imported")
+
+            imported == null -> when {
+                type.pkgName == null /*&& classes.any { it.name == type.className }*/ -> {
+                    if (!type.isAutoImported()) {
+                        type.pkgName = pkgName
+                    }
+                    type.resolvedName = type.className
+                }
+                type.pkgName != pkgName -> addImport(type)
+                else -> type.resolvedName = type.className
+            }
+
+            else -> throw RuntimeException("how did I get here?  type = $type, file = $this") // type.resolvedName = type.fqcn()
         }
 
         type.typeParameters.forEach {
-            resolve(it.type)
+            it.type?.let { resolve(it) }
         }
         return type
     }

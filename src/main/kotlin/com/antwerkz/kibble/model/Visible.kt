@@ -13,14 +13,6 @@ import org.jetbrains.kotlin.com.intellij.psi.PsiElement
  * @property visibility the visibility
  */
 interface Visible {
-    companion object {
-        internal fun apply(modifier: PsiElement?): Visibility {
-            return modifier?.text?.let {
-                valueOf(it.toUpperCase())
-            } ?: PUBLIC
-        }
-    }
-
     var visibility: Visibility
 
     /**

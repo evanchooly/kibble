@@ -10,9 +10,6 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
  */
 interface Overridable {
     companion object {
-        internal fun apply(kt: KtModifierListOwner): Boolean {
-            return kt.modifierList?.allChildren?.find { it.text == "override" } != null
-        }
     }
 
     var overriding: Boolean

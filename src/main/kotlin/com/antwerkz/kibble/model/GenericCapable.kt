@@ -1,41 +1,14 @@
 package com.antwerkz.kibble.model
 
-import org.jetbrains.kotlin.com.intellij.psi.impl.source.tree.LeafPsiElement
-import org.jetbrains.kotlin.psi.KtTypeParameter
-import org.jetbrains.kotlin.psi.KtTypeProjection
-import org.jetbrains.kotlin.psi.psiUtil.allChildren
-
 interface GenericCapable {
-    companion object {
-        internal fun extractFromTypeParameters(parameters: MutableList<KtTypeParameter>): MutableList<TypeParameter> {
-            return parameters.map {
-                val modifier: ParameterModifier? = it.modifierList
-                        ?.allChildren
-                        ?.filterIsInstance<LeafPsiElement>()
-                        ?.map { ParameterModifier.valueOf(it.text.toUpperCase()) }
-                        ?.firstOrNull()
-
-                TypeParameter(KibbleType.from(it.name!!), modifier, it.extendsBound?.let { KibbleType.from(it.text) })
-            }
-                    .toMutableList()
-        }
-
-        internal fun extractFromTypeProjections(parameters: List<KtTypeProjection>): MutableList<TypeParameter> {
-            return parameters.map {
-                TypeParameter(KibbleType.from(it), it.modifierList?.let { ParameterModifier.valueOf(it.text.toUpperCase()) })
-            }.toMutableList()
-        }
-
-    }
-
     val typeParameters: MutableList<TypeParameter>
 
-    fun addTypeParameter(type: String, modifier: ParameterModifier? = null, bounds: String? = null) {
-        addTypeParameter(KibbleType.from(type), modifier, bounds)
+    fun addTypeParameter(type: String, variance: TypeParameterVariance? = null, bounds: String? = null) {
+        addTypeParameter(KibbleType.from(type), variance, bounds)
     }
 
-    fun addTypeParameter(type: KibbleType, modifier: ParameterModifier? = null, bounds: String? = null) {
-        typeParameters += TypeParameter(type, modifier, bounds?.let { KibbleType.from(it)})
+    fun addTypeParameter(type: KibbleType, variance: TypeParameterVariance? = null, bounds: String? = null) {
+        typeParameters += TypeParameter(type, variance, bounds?.let { KibbleType.from(it)})
     }
 }
 
@@ -43,27 +16,28 @@ interface GenericCapable {
  * Defines a type parameter for an element
  *
  * @property type the type name
- * @property modifier in/out
+ * @property variance in/out
  * @property bounds the type bounds of the parameter
  */
-class TypeParameter internal constructor(val type: KibbleType, val modifier: ParameterModifier? = null,
+class TypeParameter internal constructor(val type: KibbleType?, val variance: TypeParameterVariance? = null,
                                          val bounds: KibbleType? = null) {
 
     override fun toString(): String {
-        return (modifier?.let { "$it " } ?: "") + type + (bounds?.let { ": $it" } ?: "")
+        return ((variance?.let { "$it " } ?: "") + (type ?: "")).trim() + (bounds?.let { ": $it" } ?: "")
     }
 
     fun collectImports(file: KibbleFile) {
-        file.resolve(type)
+        type?.let { file.resolve(type) }
         bounds?.let { file.resolve(it) }
     }
 }
 
-enum class ParameterModifier {
-    IN,
-    OUT;
+enum class TypeParameterVariance(val label: String) {
+    IN("in"),
+    OUT("out"),
+    STAR("*");
 
     override fun toString(): String {
-        return name.toLowerCase()
+        return label
     }
 }

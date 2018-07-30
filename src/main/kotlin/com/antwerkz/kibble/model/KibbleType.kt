@@ -2,14 +2,6 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
 
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtFunctionType
-import org.jetbrains.kotlin.psi.KtImportDirective
-import org.jetbrains.kotlin.psi.KtNullableType
-import org.jetbrains.kotlin.psi.KtTypeProjection
-import org.jetbrains.kotlin.psi.KtTypeReference
-import org.jetbrains.kotlin.psi.KtUserType
-
 /**
  * Specifies the type information of a property or parameter
  *
@@ -22,102 +14,39 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
                                            override val typeParameters: MutableList<TypeParameter> = mutableListOf(),
                                            val nullable: Boolean = false) : GenericCapable, Comparable<KibbleType> {
 
-    internal constructor(type: KibbleType) : this(type.pkgName, type.className, type.typeParameters, type.nullable)
+    internal constructor(type: KibbleType, nullable: Boolean = false) : this(type.pkgName, type.className, type.typeParameters, nullable)
 
     companion object {
-        private val AUTOIMPORTS = listOf("Any", "Unit", "Nothing", "Byte", "Short", "Int", "Long", "Float", "Double",
+        internal val AUTOIMPORTS = listOf("Any", "Unit", "Nothing", "Byte", "Short", "Int", "Long", "Float", "Double",
                 "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString")
-        private val AUTOIMPORTED = mutableSetOf<String>()
+        internal val AUTOIMPORTED = mutableSetOf<String>()
 
-        fun from(type: String) = if (!type.contains("*") && (type.contains(".") || type.contains("<"))) {
-            Kibble.parseSource("val temp: $type").properties[0].type!!
-        } else {
-            KibbleType(className = type)
-        }
+        fun from(type: Class<Any>) = KibbleType(pkgName = type.`package`.name, className = type.simpleName)
 
-        internal fun from(type: KtTypeProjection) = if (type.text == "*") KibbleType(className = "*") else from(type.typeReference)!!
-
-        internal fun from(kt: KtTypeReference?): KibbleType? {
-            return kt?.typeElement.let {
-                when (it) {
-                    is KtUserType -> extractType(it)
-                    is KtNullableType -> extractType(it.innerType as KtUserType, true)
-                    is KtFunctionType -> KibbleFunctionType(it)
-                    else -> it?.let { throw IllegalArgumentException("unknown type $it") }
-                }
-            }
-        }
-
-        internal fun from(kt: KtImportDirective): KibbleType {
-            val fqName = kt.importedFqName!!
-            return KibbleType(fqName.parent().asString(), fqName.shortName().identifier)
-        }
-
-        internal fun extractType(typeElement: KtUserType, nullable: Boolean = false): KibbleType {
-
-            val parameters = GenericCapable.extractFromTypeProjections(typeElement.typeArguments)
-
-            val value = (typeElement.qualifier?.text?.let { "$it." } ?: "") +
-                    (typeElement.referencedName ?: "")
-            var (className, pkgName) = extractPkgAndClassName(value.substringBefore("<"), typeElement.findFile())
-
-            return KibbleType(pkgName, className, parameters, nullable)
-        }
-
-        private fun extractPkgAndClassName(raw: String, f: KtFile): Pair<String, String?> {
-            if (isAutoImported(raw)) {
-                return raw to null
-            }
-            var pkgName: String?
-            val className: String
-            if (raw.contains(".")) {
-                val name = raw.split(".")
-                        .dropLastWhile { it.isEmpty() || it[0].isUpperCase() }
-                        .filter { it != "" }
-                        .joinToString(".")
-                pkgName = if (name != "") name else f.extractPackage()
-                className = pkgName?.let { raw.substring(it.length + 1) } ?: raw
+        fun from(type: String): KibbleType {
+            return if (!type.contains("*") && (type.contains(".") || type.contains("<"))) {
+                Kibble.parseSource("val temp: $type").properties[0].type!!
             } else {
-                pkgName = f.findImport(raw) ?: f.extractPackage()
-                className = raw
+                KibbleType(className = type)
             }
-            if (pkgName == "kotlin") {
-                pkgName = null
-            }
-            return Pair(className, pkgName)
-        }
-
-        private fun isAutoImported(raw: String): Boolean {
-            if (AUTOIMPORTED.contains(raw)) {
-                return true
-            }
-            try {
-                Class.forName("java.lang.$raw")
-                AUTOIMPORTED.add(raw)
-            } catch (ignore: Exception) {
-            }
-            return raw in AUTOIMPORTS || raw in AUTOIMPORTED
         }
     }
 
-    var pkgName = pkgName
-        set(value) {
-            field = value
-            fqcn = "$pkgName.$className"
-        }
+    var pkgName: String? = pkgName
+        get() = if(field != "") field else null
+
     /**
      * Gives the fully qualified class name for this type
      */
-    var fqcn = (pkgName?.let { "$pkgName." } ?: "") + className
-        private set
+    fun fqcn() = (pkgName?.let { "$pkgName." } ?: "") + className
 
-    internal var resolved = fqcn
+    internal var resolvedName = fqcn()
 
     /**
      * @return the string/source form of this type
      */
     override fun toString(): String {
-        val list = mutableListOf(resolved)
+        val list = mutableListOf(resolvedName)
         var base = list.joinToString(".") +
                 (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "")
         if (nullable) base += "?"
@@ -125,7 +54,7 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
     }
 
     override fun compareTo(other: KibbleType): Int {
-        return fqcn.compareTo(other.fqcn)
+        return fqcn().compareTo(other.fqcn())
     }
 
     override fun equals(other: Any?): Boolean {
@@ -150,4 +79,15 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
         return result
     }
 
+    fun isAutoImported(): Boolean {
+            if (AUTOIMPORTED.contains(className)) {
+                return true
+            }
+            try {
+                Class.forName("java.lang.$className")
+                AUTOIMPORTED.add(className)
+            } catch (ignore: Exception) {
+            }
+            return className in AUTOIMPORTS || className in AUTOIMPORTED
+    }
 }

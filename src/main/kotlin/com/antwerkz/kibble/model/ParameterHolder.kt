@@ -1,5 +1,7 @@
 package com.antwerkz.kibble.model
 
+import com.antwerkz.kibble.Kibble
+
 /**
  * Defines a type capable of holding parameters
  *

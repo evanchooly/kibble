@@ -26,7 +26,7 @@ class SourceWriter {
     /**
      * Dumps the content of this SourceWriter to a file
      *
-     * @param the file to use
+     * @param file the file to use
      */
     fun toFile(file: File) {
         file.writeText(toString())

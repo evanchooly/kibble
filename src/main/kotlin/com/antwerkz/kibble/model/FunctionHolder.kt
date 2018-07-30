@@ -6,7 +6,7 @@ package com.antwerkz.kibble.model
  * @property functions the list of functions held by this type
  */
 interface FunctionHolder {
-    val functions: List<KibbleFunction>
+    val functions: MutableList<KibbleFunction>
 
     /**
      * Adds a new function to this type

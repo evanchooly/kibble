@@ -3,13 +3,7 @@ package com.antwerkz.kibble.model
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Mutability.VAL
-import com.antwerkz.kibble.model.Mutability.VAR
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.psi.KtParameter
-import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.kotlin.psi.psiUtil.allChildren
-import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
-import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
 /**
  * Defines a property on a file, class, or object
@@ -31,27 +25,7 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
         mutability = VAL
     }
 
-    internal constructor(kt: KtParameter) : this(kt.name!!, KibbleType.from(kt.typeReference), kt.defaultValue?.text) {
-
-        annotations.addAll(KibbleExtractor.extractAnnotations(kt.annotationEntries))
-        modality = Modal.apply(kt.modalityModifier())
-        visibility = Visible.apply(kt.visibilityModifier())
-        mutability = Mutable.apply(kt.valOrVarKeyword)
-    }
-
-    internal constructor(kt: KtProperty) : this(kt.name!!, KibbleType.from(kt.typeReference), kt.initializer?.text) {
-
-        annotations.addAll(KibbleExtractor.extractAnnotations(kt.annotationEntries))
-        modality = Modal.apply(kt.modalityModifier())
-        visibility = Visible.apply(kt.visibilityModifier())
-        lateInit = kt.modifierList?.allChildren?.find { it.text == "lateinit" } != null
-
-        if (kt.isVar || lateInit) {
-            mutability = VAR
-        }
-    }
-
-    override var annotations: MutableList<KibbleAnnotation> = mutableListOf()
+    override val annotations: MutableList<KibbleAnnotation> = mutableListOf()
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         annotations.forEach {
@@ -67,7 +41,7 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
             writer.write("lateinit ")
         }
         writer.write(mutability.toString())
-        name.let { writer.write(name) }
+        name?.let { writer.write(name) }
         type?.let {
             writer.write(": ")
             writer.write(it.toString())
