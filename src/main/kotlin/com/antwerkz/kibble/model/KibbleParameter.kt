@@ -28,13 +28,6 @@ open class KibbleParameter internal constructor(val name: String? = null, val ty
         }
     override var typeParameters = mutableListOf<TypeParameter>()
 
-    /**
-     * @return the string/source form of this type
-     */
-    override fun toString(): String {
-        return toSource().toString()
-    }
-
     override fun collectImports(file: KibbleFile) {
         type?.let { file.resolve(it) }
         annotations.forEach { it.collectImports(file) }
@@ -45,15 +38,17 @@ open class KibbleParameter internal constructor(val name: String? = null, val ty
      * @return the string/source form of this type
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.write("$visibility$mutability")
+        writer.write(visibility)
+        writer.write(mutability)
         if(vararg) {
             writer.write("vararg ")
         }
         name?.let { writer.write(name) }
-        type?.let {
-            name?.let { writer.write(": ") }
-            writer.write("$it")
-        }
+        writer.writeType(type)
+//        type?.let {
+//            name?.let { writer.write(": ") }
+//            writer.write("$it")
+//        }
         initializer?.let {
             writer.write(" = $it")
         }
@@ -89,5 +84,9 @@ open class KibbleParameter internal constructor(val name: String? = null, val ty
         result = 31 * result + mutability.hashCode()
         result = 31 * result + visibility.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return "KibbleParameter(name=$name, type=$type, initializer=$initializer, vararg=$vararg, annotations=$annotations, mutability=$mutability, visibility=$visibility, typeParameters=$typeParameters)"
     }
 }

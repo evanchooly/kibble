@@ -1,6 +1,7 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import com.antwerkz.kibble.SourceWriter
 
 /**
  * Specifies the type information of a property or parameter
@@ -12,7 +13,8 @@ import com.antwerkz.kibble.Kibble
  */
 open class KibbleType internal constructor(pkgName: String? = null, val className: String,
                                            override val typeParameters: MutableList<TypeParameter> = mutableListOf(),
-                                           val nullable: Boolean = false) : GenericCapable, Comparable<KibbleType> {
+                                           val nullable: Boolean = false) : GenericCapable, Comparable<KibbleType>,
+        KibbleElement {
 
     internal constructor(type: KibbleType, nullable: Boolean = false) : this(type.pkgName, type.className, type.typeParameters, nullable)
 
@@ -33,7 +35,7 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
     }
 
     var pkgName: String? = pkgName
-        get() = if(field != "") field else null
+        get() = if (field != "") field else null
 
     /**
      * Gives the fully qualified class name for this type
@@ -80,14 +82,24 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
     }
 
     fun isAutoImported(): Boolean {
-            if (AUTOIMPORTED.contains(className)) {
-                return true
-            }
-            try {
-                Class.forName("java.lang.$className")
-                AUTOIMPORTED.add(className)
-            } catch (ignore: Exception) {
-            }
-            return className in AUTOIMPORTS || className in AUTOIMPORTED
+        if (AUTOIMPORTED.contains(className)) {
+            return true
+        }
+        try {
+            Class.forName("java.lang.$className")
+            AUTOIMPORTED.add(className)
+        } catch (ignore: Exception) {
+        }
+        return className in AUTOIMPORTS || className in AUTOIMPORTED
+    }
+
+    override fun collectImports(file: KibbleFile) {
+        file.resolve(this)
+    }
+
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
+        return writer {
+            write(resolvedName)
+        }
     }
 }

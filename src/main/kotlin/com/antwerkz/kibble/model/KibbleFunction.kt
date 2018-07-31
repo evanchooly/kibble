@@ -3,9 +3,6 @@ package com.antwerkz.kibble.model
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
-import org.jetbrains.kotlin.psi.KtFunction
-import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
-import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 
 /**
  * Defines a function
@@ -73,28 +70,24 @@ class KibbleFunction internal constructor(var name: String? = null,
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         annotations.forEach {
             it.toSource(writer, level)
-            writer.writeln()
         }
-        writer.write("", level)
-        val returnType = if (type != null && type?.toString() != "Unit") ": $type" else ""
-        if (overriding) {
-            writer.write("override ")
-        }
-        val paramList = parameters.joinToString(", ")
-        val types = if(typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = "> ") else ""
-        writer.write("${visibility}fun $types$modality$name($paramList)$returnType")
-        if (bodyBlock) {
-            if (body.isNotBlank()) {
-                writer.writeln(" {")
-                body.trimIndent()
-                        .split("\n")
-                        .forEach { s ->
-                            writer.writeln(s, level + 1)
-                        }
-                writer.write("}", level)
+        writer {
+            write("", level)
+            if (overriding) {
+                write("override ")
             }
-        } else {
-            writer.write(" = $body")
+            write(visibility)
+            write("fun ")
+            writeTypeParameters(typeParameters)
+            write(modality)
+            write(name ?: "")
+            writeParameters(parameters)
+            writeType(type)
+            if (bodyBlock) {
+                writeBlock(body, level)
+            } else {
+                writer.write(" = $body")
+            }
         }
         writer.writeln()
         return writer

@@ -32,12 +32,7 @@ open class Constructor internal constructor() : Visible, ParameterHolder, Kibble
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        if (parameters.size != 0) {
-            writer.write("(")
-            writer.write(parameters.joinToString(", "))
-            writer.write(")")
-        }
-
+        writer.writeParameters(parameters)
         return writer
     }
 

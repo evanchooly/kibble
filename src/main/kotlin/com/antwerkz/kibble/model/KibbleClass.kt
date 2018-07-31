@@ -101,58 +101,49 @@ class KibbleClass internal constructor(var name: String = "",
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        annotations.forEach { writer.writeln(it.toString(), level) }
-        writer.write("$visibility${modality}", level)
-        writer.write(if (isInterface) "interface " else "class ")
-        writer.write(name)
-        if (!typeParameters.isEmpty()) {
-            writer.write(typeParameters.joinToString(", ", prefix = "<", postfix = ">"))
+        writer {
+            annotations.forEach { it.toSource(this, level) }
+            write(visibility)
+            write(modality)
+            write(if (isInterface) "interface " else "class ")
+            write(name)
+            writeTypeParameters(typeParameters)
+
+            val ctorParams: MutableList<KibbleParameter> = properties.filter { it.constructorParam }.toMutableList()
+            ctorParams.addAll(constructor.parameters)
+            writeParameters(ctorParams)
+
+            if (extends != null || !implements.isEmpty()) {
+                write(": ")
+                writeSuperCall(this@KibbleClass.extends, superCallArgs)
+                if(extends != null) {
+                    write(", ")
+                }
+                write(implements.joinToString(", "))
+            }
+
+            writeln(" {")
+
+            objects.filter { it.companion }
+                    .forEach { it.toSource(writer, level + 1) }
+
+            secondaries.forEach { it.toSource(writer, level + 1) }
+            initBlock?.toSource(writer, level + 1)
+            properties.filter { !it.constructorParam }
+                    .forEach { it.toSource(writer, level + 1) }
+
+            objects.filter { !it.companion }
+                    .forEach { it.toSource(writer, level + 1) }
+            classes.filter { it.isInterface }
+                    .forEach { it.toSource(writer, level + 1) }
+            classes.filter { !it.isInterface }
+                    .forEach { it.toSource(writer, level + 1) }
+            functions.forEach { it.toSource(writer, level + 1) }
+
+            write("}", level)
+
+            writeln()
         }
-
-        val ctorParams: MutableList<KibbleParameter> = properties.filter { it.constructorParam }.toMutableList()
-        ctorParams.addAll(constructor.parameters)
-        if (ctorParams.size != 0) {
-            writer.write("(")
-            writer.write(ctorParams.joinToString(", "))
-            writer.write(")")
-        }
-
-        val extends = mutableListOf<String>()
-        this.extends?.let {
-            extends += "$it${superCallArgs.joinToString(prefix = "(", postfix = ")")}"
-        }
-        if (!implements.isEmpty()) {
-            extends += implements.joinToString(", ")
-        }
-        if (extends.isNotEmpty()) {
-            writer.write(": ")
-            writer.write(extends.joinToString(", "))
-        }
-
-        writer.writeln(" {")
-
-        objects.filter { it.companion }
-                .forEach { it.toSource(writer, level + 1) }
-
-        secondaries.forEach { it.toSource(writer, level + 1) }
-        initBlock?.let {
-            it.toSource(writer, level + 1)
-            writer.writeln()
-        }
-        properties.filter { !it.constructorParam }
-                .forEach { it.toSource(writer, level + 1) }
-
-        objects.filter { !it.companion }
-                .forEach { it.toSource(writer, level + 1) }
-        classes.filter { it.isInterface }
-                .forEach { it.toSource(writer, level + 1) }
-        classes.filter { !it.isInterface }
-                .forEach { it.toSource(writer, level + 1) }
-        functions.forEach { it.toSource(writer, level + 1) }
-
-        writer.write("}", level)
-
-        writer.writeln()
         return writer
     }
 

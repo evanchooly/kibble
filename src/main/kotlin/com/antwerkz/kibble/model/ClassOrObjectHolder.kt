@@ -28,7 +28,7 @@ interface ClassOrObjectHolder {
     /**
      * Finds the named object if it exists
      *
-     * @param name the object name
+     * @param objName the object name
      * @return the object
      */
     fun getObject(objName: String): KibbleObject? {
@@ -38,7 +38,7 @@ interface ClassOrObjectHolder {
     /**
      * Finds the named class if it exists
      * 
-     * @param name the class name
+     * @param className the class name
      * @return the class 
      */
     fun getClass(className: String): KibbleClass? {

@@ -9,11 +9,7 @@ enum class Mutability {
      *
      * @see KibbleParameter
      */
-    NEITHER {
-        override fun toString(): String {
-            return ""
-        }
-    },
+    NEITHER,
     /**
      * Indicates an element is decorated as a `val`
      */
@@ -27,6 +23,6 @@ enum class Mutability {
      * @return the string/source form of this mutability modifier
      */
     override fun toString(): String {
-        return name.toLowerCase() + " "
+        return name.toLowerCase()
     }
 }

@@ -20,7 +20,7 @@ class KibbleAnnotation internal constructor(val type: KibbleType, val arguments:
         if (arguments.isNotEmpty()) {
             string += arguments.joinToString(prefix = "(", postfix = ")", transform = { it.toSource(SourceWriter(), level).toString() })
         }
-        writer.write(string, level)
+        writer.writeln(string, level)
         return writer
     }
 

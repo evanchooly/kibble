@@ -16,17 +16,16 @@ class SecondaryConstructor internal constructor(vararg arguments: KibbleArgument
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.write("""constructor(${parameters.joinToString(", ")}): this(${delegationArguments.joinToString(", ")})""", level)
-        body?.let {
-            writer.writeln("{")
-            val bodyText = it.trimIndent().split("\n")
-            bodyText.forEach { writer.writeln(it, level + 1) }
-            writer.write("}", level)
+        writer {
+            write("""constructor""", level)
+            writeParameters(parameters)
+            write(": this")
+            writeArguments(delegationArguments)
+            writeBlock(body, level)
+            writer.writeln()
+            writer.writeln()
         }
-        writer.writeln()
-        writer.writeln()
 
         return writer
-
     }
 }
