@@ -106,10 +106,12 @@ class SourceWriter {
         }
     }
 
-    fun writeTypeParameters(typeParameters: List<TypeParameter>) {
+    fun writeTypeParameters(typeParameters: List<TypeParameter>, buffer: Boolean = false) {
         if (typeParameters.isNotEmpty()) {
             write(typeParameters.joinToString(prefix = "<", postfix = ">"))
-            write(" ")
+            if(buffer) {
+                write(" ")
+            }
         }
     }
 

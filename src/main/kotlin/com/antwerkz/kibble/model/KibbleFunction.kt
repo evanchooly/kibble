@@ -78,7 +78,7 @@ class KibbleFunction internal constructor(var name: String? = null,
             }
             write(visibility)
             write("fun ")
-            writeTypeParameters(typeParameters)
+            writeTypeParameters(typeParameters, true)
             write(modality)
             write(name ?: "")
             writeParameters(parameters)

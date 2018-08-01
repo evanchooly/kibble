@@ -34,7 +34,8 @@ fun body() {
         val kibbleParameter = bloop.parameters[1]
         Assert.assertEquals(kibbleParameter.name, "converter")
         val type = kibbleParameter.type as KibbleFunctionType
-        Assert.assertEquals(type.parameters.map { it.type?.toSource().toString() }, listOf("String", "List<Double>"))
+        val list = type.parameters.map { it.type?.toSource().toString() }
+        Assert.assertEquals(list, listOf("String", "List<Double>"))
         Assert.assertEquals(type.type.toString(), "String")
     }
 }

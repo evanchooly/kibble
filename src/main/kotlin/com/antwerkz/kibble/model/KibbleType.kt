@@ -99,7 +99,13 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         return writer {
+            val list = mutableListOf(resolvedName)
+            var base = list.joinToString(".") +
+                    (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "")
+
             write(resolvedName)
+            writeTypeParameters(typeParameters)
+            if (nullable) write("?")
         }
     }
 }
