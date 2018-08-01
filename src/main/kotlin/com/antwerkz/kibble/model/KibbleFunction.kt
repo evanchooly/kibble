@@ -26,32 +26,6 @@ class KibbleFunction internal constructor(var name: String? = null,
     override val annotations = mutableListOf<KibbleAnnotation>()
     override val typeParameters = mutableListOf<TypeParameter>()
 
-/*
-    internal constructor(kt: KtFunction) : this(kt.name) {
-        kt.valueParameters.forEach {
-            parameters += KibbleParameter(it)
-        }
-        typeParameters += GenericCapable.extractFromTypeParameters(kt.typeParameters)
-        body = kt.bodyExpression?.text?.trim() ?: ""
-        bodyBlock = kt.hasBlockBody()
-        if (bodyBlock) {
-            body = (kt.bodyExpression?.text ?: "")
-                    .drop(1)
-                    .dropLast(1)
-                    .trimIndent()
-        }
-        kt.typeReference?.let {
-            type = KibbleType.from(it.text)
-        }
-        kt.modifierList
-        modality = Modal.apply(kt.modalityModifier())
-        visibility = Visible.apply(kt.visibilityModifier())
-        overriding = Overridable.apply(kt)
-        annotations += KibbleExtractor.extractAnnotations(kt.annotationEntries)
-    }
-*/
-
-
     /**
      * @return the string/source form of this type
      */

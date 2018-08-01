@@ -52,19 +52,6 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
         }
     }
 
-/*
-    override fun addProperty(name: String, type: String?, initializer: String?, modality: Modality, overriding: Boolean,
-                             visibility: Visibility, mutability: Mutability, lateInit: Boolean, constructorParam: Boolean): KibbleProperty {
-        if (constructorParam) {
-            throw IllegalArgumentException("Object properties can not also be constructor parameters")
-        }
-        return KibbleProperty(name, type?.let { KibbleType.from(type) }, initializer, modality, overriding, lateInit).also {
-            it.visibility = visibility
-            properties += it
-        }
-    }
-*/
-
     /**
      * @return the string/source form of this type
      */
