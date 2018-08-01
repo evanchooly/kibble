@@ -128,7 +128,7 @@ class KibbleClass internal constructor(var name: String = "",
             val nonInterfaces = classes.filter { !it.isInterface }
 
             previousWritten = previousWritten || initBlock != null
-            writeCollections(previousWritten, level, companions, bodyProperties, objects, interfaces, nonInterfaces, functions)
+            writeCollections(previousWritten, level + 1, companions, bodyProperties, objects, interfaces, nonInterfaces, functions)
 
             writeln("}", level)
         }
