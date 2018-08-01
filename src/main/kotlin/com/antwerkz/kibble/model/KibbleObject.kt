@@ -81,46 +81,37 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
      * @return the string/source form of this type
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        annotations.forEach { writer.writeln(it.toString(), level) }
-        writer.write(visibility.toString(), level)
-        if (companion) {
-            writer.write("companion ")
-        }
-        writer.write("object")
-        name?.let {
-            writer.write(" $it")
-        }
-        extends?.let {
-            writer.write(": $it")
-            writer.write(superCallArgs.joinToString(prefix = "(", postfix = ")"))
-        }
-        if (!implements.isEmpty()) {
-            writer.write(implements.joinToString(prefix = ", "))
-        }
-        if (!properties.isEmpty() || !functions.isEmpty() || !classes.isEmpty()) {
-            writer.writeln(" {")
+        writer {
 
-            properties.forEach { it.toSource(writer, level + 1) }
-            initBlock?.let {
-                writer.writeln("init {", level + 1)
-                it.trimIndent().split("\n").forEach {
-                    writer.writeln(it, level + 2)
-                }
-                writer.writeln("}", level + 1)
-                writer.writeln()
+            annotations.forEach { it.toSource(writer, level) }
+            writeIndent(level)
+            write(visibility)
+            if (companion) {
+                write("companion ")
             }
+            write("object")
+            name?.let {
+                write(" $it")
+            }
+            writeParentCalls(extends, implements, superCallArgs)
 
-            functions.forEach { it.toSource(writer, level + 1) }
-            classes
-                    .filter { it.isInterface }
-                    .forEach { it.toSource(writer, level + 1) }
-            classes
-                    .filter { !it.isInterface }
-                    .forEach { it.toSource(writer, level + 1) }
+            if (!properties.isEmpty() || !functions.isEmpty() || !classes.isEmpty() || !objects.isEmpty()) {
+                writeln(" {")
 
-            writer.write("}", level)
+                properties.forEach { it.toSource(writer, level + 1) }
+                writeBlock(initBlock, level)
+
+                functions.forEach { it.toSource(writer, level + 1) }
+                classes.filter { it.isInterface }
+                        .forEach { it.toSource(writer, level + 1) }
+                classes.filter { !it.isInterface }
+                        .forEach { it.toSource(writer, level + 1) }
+                objects.forEach { it.toSource(writer, level + 1) }
+
+                write("}", level)
+            }
+            writeln()
         }
-        writer.writeln()
         return writer
     }
 

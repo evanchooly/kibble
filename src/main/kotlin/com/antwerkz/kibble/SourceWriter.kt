@@ -1,6 +1,7 @@
 package com.antwerkz.kibble
 
 import com.antwerkz.kibble.model.KibbleArgument
+import com.antwerkz.kibble.model.KibbleElement
 import com.antwerkz.kibble.model.KibbleParameter
 import com.antwerkz.kibble.model.KibbleType
 import com.antwerkz.kibble.model.Modality
@@ -93,23 +94,28 @@ class SourceWriter {
         return this
     }
 
-    fun writeParameters(parameters: List<KibbleParameter>) {
-        write(parameters.joinToString(", ", "(", ")", transform = { it.toSource().toString() }))
+    fun writeParameters(parameters: List<KibbleParameter>, allowEmpty: Boolean = true) {
+        if (allowEmpty || parameters.isNotEmpty()) {
+            write(parameters.joinToString(", ", "(", ")", transform = { it.toSource().toString() }))
+        }
     }
 
     fun writeType(type: KibbleType?) {
-        write(if (type?.toString() != "Unit") ": $type" else "")
+        if (type != null) {
+            write(if (type.resolvedName != "Unit") ": $type" else "")
+        }
     }
 
     fun writeTypeParameters(typeParameters: List<TypeParameter>) {
         if (typeParameters.isNotEmpty()) {
-            write(typeParameters.joinToString(prefix = "<", postfix = "> "))
+            write(typeParameters.joinToString(prefix = "<", postfix = ">"))
+            write(" ")
         }
     }
 
     fun writeBlock(body: String?, level: Int) {
         if (body != null && body.isNotBlank()) {
-            writeln(" {")
+            writeOpeningBrace()
             writeln(body.prependIndent(indent * (level + 1)))
             writeln("}", level)
         }
@@ -137,4 +143,57 @@ class SourceWriter {
         initializer?.let { writer.write(" = $it") }
     }
 
+    fun current(): Char {
+        return stringWriter.buffer.last()
+    }
+
+    fun writeParentCalls(extends: KibbleType?, implements: List<KibbleType>, args: List<KibbleArgument>) {
+        if (extends != null || !implements.isEmpty()) {
+            write(": ")
+            writeSuperCall(extends, args)
+            if (extends != null) {
+                write(", ")
+            }
+            write(implements.joinToString(", "))
+        }
+    }
+
+    fun writeOpeningBrace() {
+        if (current() != ' ') {
+            write(" ")
+        }
+        writeln("{")
+    }
+
+    fun writeIndent(level: Int) {
+        write(indent * level)
+    }
+
+    fun writeCollections(previous: Boolean, level: Int, vararg blocks: List<KibbleElement>) {
+        var previousWritten = previous
+        blocks.forEach {
+            previousWritten = writeCollection(previousWritten, it, level)
+        }
+    }
+
+    fun writeCollection(previousWritten: Boolean, block: Collection<KibbleElement>, level: Int, spaceBetween: Boolean = true): Boolean {
+        return if (block.isNotEmpty()) {
+            if (previousWritten) {
+                writeln()
+            }
+            block.forEachIndexed { i, it ->
+                if (i != 0 && spaceBetween) {
+                    writeln()
+                }
+                it.toSource(this, level)
+            }
+            true
+        } else previousWritten
+    }
+
+    fun writePackage(name: String?) {
+        name?.let {
+            writeln("package $it")
+        }
+    }
 }

@@ -28,16 +28,23 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
     override val annotations: MutableList<KibbleAnnotation> = mutableListOf()
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        annotations.forEach { it.toSource(writer, level) }
+        writer {
 
-        writer.write(visibility)
-        writer.write(modality)
-        if (overriding) writer.write("override ")
-        if (lateInit) writer.write("lateinit ")
-        writer.write(mutability)
-        name?.let { writer.write(name) }
-        writer.writeType(type)
-        writer.writeInitializer(initializer)
+            annotations.forEach { it.toSource(writer, level) }
+
+            writeIndent(level)
+            write(visibility)
+            write(modality)
+            if (overriding) write("override ")
+            if (lateInit) write("lateinit ")
+            write(mutability)
+            name?.let { write(name) }
+            writeType(type)
+            writeInitializer(initializer)
+            if(!constructorParam) {
+                writeln()
+            }
+        }
 
         return writer
     }

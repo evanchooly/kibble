@@ -86,10 +86,12 @@ class KibbleFunction internal constructor(var name: String? = null,
             if (bodyBlock) {
                 writeBlock(body, level)
             } else {
-                writer.write(" = $body")
+                writer.writeln(" = $body")
+            }
+            if(current() != '\n') {
+                writeln()
             }
         }
-        writer.writeln()
         return writer
     }
 

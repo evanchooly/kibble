@@ -46,13 +46,14 @@ class AnnotationHolderTest {
         foo.addAnnotation(Retention::class.java)
         val source = file.toSource().toString()
         //language=kotlin
-        Assert.assertEquals(source, """import java.lang.annotation.Retention
+        Assert.assertEquals(source, """
+            import java.lang.annotation.Retention
 
-@Bob(name = Feller)
-@Retention
-fun foo()
+            @Bob(name = Feller)
+            @Retention
+            fun foo()
 
-""".trimMargin())
+""".trimIndent())
     }
 
     private fun verify(annotation: KibbleAnnotation) {

@@ -115,33 +115,15 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         val interfaces = classes.filter { it.isInterface }
         val classes = classes.filter { !it.isInterface }
 
-        pkgName?.let {
-            writer.writeln("package $it")
-        }
+        writer {
+            writePackage(pkgName)
 
-        var previousWritten = writeBlock(writer, level, pkgName?.isNotEmpty() ?: false, imports, false)
+            var previousWritten = writeCollection(pkgName?.isNotEmpty() ?: false, imports, level, false)
 
-        for(block: List<KibbleElement> in listOf<List<KibbleElement>>(properties, interfaces, classes, objects, functions)) {
-            previousWritten = writeBlock(writer, level, previousWritten, block)
+            writeCollections(previousWritten, level, properties, interfaces, classes, objects, functions)
         }
 
         return writer
-    }
-
-    private fun writeBlock(writer: SourceWriter, level: Int, previousWritten: Boolean, block: Collection<KibbleElement>,
-                           spaceBetween: Boolean = true): Boolean {
-        return if (block.isNotEmpty()) {
-            if (previousWritten) {
-                writer.writeln()
-            }
-            block.forEachIndexed { i, it ->
-                if (i != 0 && spaceBetween) {
-                    writer.writeln()
-                }
-                it.toSource(writer, level)
-            }
-            true
-        } else previousWritten
     }
 
     override fun collectImports(file: KibbleFile) {

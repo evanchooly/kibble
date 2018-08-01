@@ -9,24 +9,30 @@ import org.testng.annotations.Test
 
 class KibbleClassTest {
     @Language("kotlin")
-    private val source = """class Temp {
-    companion object {
-        val prop = 42
-    }
-    object temp
-    class Nested(val foo: Bob): Foo("bar"), Interface {
-        constructor(): this(blarg, "nargle")
+    private val source = """
+        class Temp {
+            companion object {
+                val prop = 42
+            }
 
-        init {
-            println()
+            object temp
+
+            class Nested(val foo: Bob): Foo("bar"), Interface {
+                constructor(): this(blarg, "nargle")
+
+                init {
+                    println()
+                }
+
+                val property: String
+
+                fun something(): Int {
+                    return 4
+                }
+            }
         }
 
-        val property: String
-        fun something(): Int {
-            return 4
-        }
-    }
-}""".trim()
+        """.trimIndent()
 
     @Test
     fun nested() {
@@ -59,7 +65,7 @@ class KibbleClassTest {
 
         Assert.assertTrue(kibbleClass.objects[0].companion)
         Assert.assertEquals(kibbleClass.objects[1].name, "temp")
-        Assert.assertEquals(file.toSource().toString().trim(), source.trim())
+        Assert.assertEquals(file.toSource().toString(), source)
     }
 
     @Test

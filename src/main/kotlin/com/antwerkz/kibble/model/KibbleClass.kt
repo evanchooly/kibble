@@ -2,7 +2,6 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
-import com.antwerkz.kibble.model.Mutability.NEITHER
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 
 /**
@@ -103,6 +102,7 @@ class KibbleClass internal constructor(var name: String = "",
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer {
             annotations.forEach { it.toSource(this, level) }
+            writeIndent(level)
             write(visibility)
             write(modality)
             write(if (isInterface) "interface " else "class ")
@@ -111,38 +111,26 @@ class KibbleClass internal constructor(var name: String = "",
 
             val ctorParams: MutableList<KibbleParameter> = properties.filter { it.constructorParam }.toMutableList()
             ctorParams.addAll(constructor.parameters)
-            writeParameters(ctorParams)
+            writeParameters(ctorParams, false)
 
-            if (extends != null || !implements.isEmpty()) {
-                write(": ")
-                writeSuperCall(this@KibbleClass.extends, superCallArgs)
-                if(extends != null) {
-                    write(", ")
-                }
-                write(implements.joinToString(", "))
-            }
+            writeParentCalls(extends, implements, superCallArgs)
 
-            writeln(" {")
+            writeOpeningBrace()
 
-            objects.filter { it.companion }
-                    .forEach { it.toSource(writer, level + 1) }
+            var previousWritten = writeCollection(false, secondaries, level + 1)
 
-            secondaries.forEach { it.toSource(writer, level + 1) }
             initBlock?.toSource(writer, level + 1)
-            properties.filter { !it.constructorParam }
-                    .forEach { it.toSource(writer, level + 1) }
 
-            objects.filter { !it.companion }
-                    .forEach { it.toSource(writer, level + 1) }
-            classes.filter { it.isInterface }
-                    .forEach { it.toSource(writer, level + 1) }
-            classes.filter { !it.isInterface }
-                    .forEach { it.toSource(writer, level + 1) }
-            functions.forEach { it.toSource(writer, level + 1) }
+            val companions = objects.filter { it.companion }
+            val bodyProperties = properties.filter { !it.constructorParam }
+            val objects = objects.filter { !it.companion }
+            val interfaces = classes.filter { it.isInterface }
+            val nonInterfaces = classes.filter { !it.isInterface }
 
-            write("}", level)
+            previousWritten = previousWritten || initBlock != null
+            writeCollections(previousWritten, level, companions, bodyProperties, objects, interfaces, nonInterfaces, functions)
 
-            writeln()
+            writeln("}", level)
         }
         return writer
     }
