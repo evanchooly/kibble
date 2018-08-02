@@ -1,7 +1,6 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import com.antwerkz.kibble.model.Mutability.NEITHER
 import com.antwerkz.kibble.model.Visibility.PUBLIC
 
 /**
@@ -11,29 +10,18 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
  * @property parameters the constructor parameters
  * @property body the constructor body
  */
-open class Constructor internal constructor() : Visible, ParameterHolder, KibbleElement {
+class Constructor internal constructor() : Visible, ParameterHolder, KibbleElement {
 
     override var visibility = PUBLIC
-    override val parameters = mutableListOf<KibbleParameter>()
-    var body: String? = null
+    override var parameters = listOf<KibbleParameter>()
+        private set
 
-    internal fun filterProperties(): List<KibbleProperty> {
-        val groupBy = parameters.groupBy { it.mutability == NEITHER }
-        parameters.clear()
-        parameters += groupBy[true] ?: listOf()
-
-        return groupBy[false]?.map {
-            KibbleProperty(it.name ?: "", it.type, it.initializer, constructorParam = true).also { prop ->
-                prop.annotations += it.annotations
-                prop.mutability = it.mutability
-                prop.typeParameters = it.typeParameters
-            }
-        } ?: listOf()
+    override fun addParameter(parameter: KibbleParameter) {
+        parameters += parameter
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.writeParameters(parameters)
-        return writer
+        TODO("should not be directly called")
     }
 
     override fun collectImports(file: KibbleFile) {

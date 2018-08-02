@@ -1,5 +1,6 @@
 package com.antwerkz.kibble
 
+import com.antwerkz.kibble.model.AnnotationHolder
 import com.antwerkz.kibble.model.Constructor
 import com.antwerkz.kibble.model.InitBlock
 import com.antwerkz.kibble.model.KibbleAnnotation
@@ -154,7 +155,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
         kibbleFile.sourceTimestamp = kt.virtualFile.modificationStamp
         val directive = kt.packageDirective?.fqName?.asString()
-        kibbleFile.pkgName = if(directive != "") directive else null
+        kibbleFile.pkgName = if (directive != "") directive else null
         kt.importList?.evaluate<List<KibbleImport>>(this)?.forEach {
             kibbleFile.addImport(it)
         }
@@ -162,10 +163,10 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         kt.declarations.forEach {
             val declaration = it.evaluate<Any>(this)
             when (declaration) {
-                is KibbleFunction -> kibbleFile.functions += declaration
-                is KibbleClass -> kibbleFile.classes += declaration
-                is KibbleObject -> kibbleFile.objects += declaration
-                is KibbleProperty -> kibbleFile.properties += declaration
+                is KibbleFunction -> kibbleFile.addFunction(declaration)
+                is KibbleClass -> kibbleFile.addClass(declaration)
+                is KibbleObject -> kibbleFile.addObject(declaration)
+                is KibbleProperty -> kibbleFile.addProperty(declaration)
                 else -> TODO("handle declaration type $declaration")
             }
         }
@@ -200,13 +201,16 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         val kibbleClass = KibbleClass(kt.name ?: "",
                 kt.modalityModifier().toModality(),
                 kt.visibilityModifier().toVisibility())
+        context.push(kibbleClass)
 
         kibbleClass.isInterface = kt.isInterface()
         kibbleClass.enum = kt.isEnum()
         kibbleClass.data = kt.isData()
         kibbleClass.sealed = kt.isSealed()
 
-        kibbleClass.typeParameters += kt.typeParameterList?.evaluate<List<TypeParameter>>(this) ?: listOf()
+        kt.typeParameterList?.evaluate<List<TypeParameter>>(this)?.forEach {
+            kibbleClass.addTypeParameter(it)
+        }
 
         kt.getSuperTypeList()?.evaluate<List<Any>>(this)
                 ?.forEach {
@@ -218,25 +222,24 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                         else -> TODO("handled this type: $it")
                     }
                 }
-        kibbleClass.annotations += kt.annotationEntries.evaluate(this)
+        kt.annotationEntries.evaluate<KibbleAnnotation>(this).forEach {
+            kibbleClass.addAnnotation(it)
+        }
 
         kt.declarations.forEach {
             val declaration = it.evaluate<Any>(this)
             when (declaration) {
-                is KibbleFunction -> kibbleClass.functions += declaration
-                is KibbleClass -> kibbleClass.classes += declaration
-                is KibbleObject -> kibbleClass.objects += declaration
-                is KibbleProperty -> kibbleClass.properties += declaration
-                is SecondaryConstructor -> kibbleClass.secondaries += declaration
+                is KibbleFunction -> kibbleClass.addFunction(declaration)
+                is KibbleClass -> kibbleClass.addClass(declaration)
+                is KibbleObject -> kibbleClass.addObject(declaration)
+                is KibbleProperty -> kibbleClass.addProperty(declaration)
+                is SecondaryConstructor -> kibbleClass.addSecondaryConstructor(declaration)
                 is InitBlock -> kibbleClass.initBlock = declaration
                 else -> TODO("handle declaration type $declaration")
             }
         }
 
         kt.primaryConstructor?.evaluate<Constructor>(this)?.let { kibbleClass.constructor = it }
-
-        kibbleClass.properties += kibbleClass.constructor.filterProperties()
-        context.push(kibbleClass)
     }
 
     override fun visitObjectDeclaration(declaration: KtObjectDeclaration) {
@@ -253,16 +256,19 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                         else -> TODO("handled this type: $it")
                     }
                 }
-        kibbleObject.annotations += declaration.annotationEntries.evaluate(this)
+        declaration.annotationEntries.evaluate<KibbleAnnotation>(this)
+                .forEach {
+                    kibbleObject.addAnnotation(it)
+                }
         kibbleObject.visibility = declaration.visibilityModifier().toVisibility()
 
         declaration.declarations.forEach {
             val element = it.evaluate<KibbleElement>(this)
             when (element) {
-                is KibbleFunction -> kibbleObject.functions += element
-                is KibbleClass -> kibbleObject.classes += element
-                is KibbleObject -> kibbleObject.objects += element
-                is KibbleProperty -> kibbleObject.properties += element
+                is KibbleFunction -> kibbleObject.addFunction(element)
+                is KibbleClass -> kibbleObject.addClass(element)
+                is KibbleObject -> kibbleObject.addObject(element)
+                is KibbleProperty -> kibbleObject.addProperty(element)
                 else -> TODO("handle declaration type $element")
             }
         }
@@ -274,33 +280,43 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         this.visitNamedDeclaration(classOrObject)
     }
 
-    override fun visitSecondaryConstructor(constructor: KtSecondaryConstructor) {
-        val ctor = SecondaryConstructor()
-        constructor.bodyExpression?.let {
-            ctor.body = it.evaluate<String>(this)
+    override fun visitSecondaryConstructor(secondary: KtSecondaryConstructor) {
+        val constructor = SecondaryConstructor()
+        secondary.bodyExpression?.let {
+            constructor.body = it.evaluate<String>(this)
         }
-        ctor.delegationArguments += constructor.getDelegationCall().evaluate<List<KibbleArgument>>(this)
-        ctor.parameters += constructor.valueParameters.evaluate(this)
-        context.push(ctor)
+        constructor.delegationArguments += secondary.getDelegationCall().evaluate<List<KibbleArgument>>(this)
+        secondary.valueParameters.evaluate<KibbleParameter>(this)
+                .forEach {
+                    constructor.addParameter(it)
+                }
+        context.push(constructor)
     }
 
-    override fun visitPrimaryConstructor(constructor: KtPrimaryConstructor) {
-        val ctor = Constructor()
-        constructor.bodyExpression?.let {
-            ctor.body = it.evaluate<String>(this)
+    override fun visitPrimaryConstructor(primary: KtPrimaryConstructor) {
+        val constructor = Constructor()
+/*
+        primary.bodyExpression?.let {
+            constructor.body = it.evaluate<String>(this)
         }
-        ctor.parameters += constructor.valueParameters.evaluate(this)
-        context.push(ctor)
+*/
+        primary.valueParameters.evaluate<KibbleElement>(this)
+                .forEach {
+                    when (it) {
+                        is KibbleProperty -> context.peek<KibbleClass>().addProperty(it)
+                        is KibbleParameter -> constructor.addParameter(it)
+                    }
+                }
+        context.push(constructor)
     }
 
     override fun visitNamedFunction(kt: KtNamedFunction) {
         val kibbleFunction = KibbleFunction(kt.name, kt.visibilityModifier().toVisibility(), kt.modalityModifier().toModality(),
                 overriding = kt.isOverridden())
 
-        kibbleFunction.parameters += kt.valueParameterList?.evaluate<List<KibbleParameter>>(this) ?: listOf()
-        kibbleFunction.typeParameters += kt.typeParameterList?.evaluate<List<TypeParameter>>(this) ?: listOf()
-        kibbleFunction.annotations += kt.annotationEntries
-                .map { it.evaluate<KibbleAnnotation>(this) }
+        kt.valueParameterList?.evaluate<List<KibbleParameter>>(this)?.forEach { kibbleFunction.addParameter(it) }
+        kt.typeParameterList?.evaluate<List<TypeParameter>>(this)?.forEach { kibbleFunction.addTypeParameter(it) }
+        kt.annotationEntries.map { it.evaluate<KibbleAnnotation>(this) }.forEach { kibbleFunction.addAnnotation(it) }
         kibbleFunction.body = kt.bodyExpression?.evaluate<String>(this) ?: ""
         kibbleFunction.type = kt.typeReference?.evaluate<KibbleType>(this)
 //        val modifiers = kt.modifierList?.evaluate<List<Any>>(this)
@@ -330,10 +346,13 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 property.initializer?.evaluate(this), property.modalityModifier().toModality(),
                 property.isOverridden())
         kibbleProperty.visibility = visibility
-        kibbleProperty.mutability = if(property.isVar) VAR else VAL
-        kibbleProperty.annotations += property.annotationEntries.evaluate(this)
+        kibbleProperty.mutability = if (property.isVar) VAR else VAL
+        property.annotationEntries.evaluate<KibbleAnnotation>(this).forEach {
+            kibbleProperty.addAnnotation(it)
+        }
         val modifiers = property.modifierList?.evaluate<List<String>>(this) ?: listOf()
         kibbleProperty.lateInit = "lateinit" in modifiers
+        kibbleProperty.modality = property.modalityModifier().toModality()
 
         context.push(kibbleProperty)
     }
@@ -423,15 +442,26 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         val name = parameter.name
         val type = parameter.typeReference?.evaluate<KibbleType>(this)
         val defaultValue = parameter.defaultValue?.evaluate<String>(this)
-        val kibbleParameter = KibbleParameter(name, type, defaultValue, parameter.isVarArg)
 
-        if (parameter.hasValOrVar()) {
+        val holder: AnnotationHolder = if (parameter.hasValOrVar()) {
             val valOrVarKeyword = parameter.valOrVarKeyword?.text ?: "NEITHER"
-            kibbleParameter.mutability = Mutability.valueOf(valOrVarKeyword.toUpperCase())
+            KibbleProperty(name!!, type, defaultValue).also {
+                it.mutability = Mutability.valueOf(valOrVarKeyword.toUpperCase())
+                it.visibility = parameter.visibilityModifier().toVisibility()
+                val modifiers = parameter.modifierList?.evaluate<List<String>>(this) ?: listOf()
+                it.lateInit = "lateinit" in modifiers
+                it.overriding = parameter.isOverridden()
+                it.constructorParam = true
+                it.modality = parameter.modalityModifier().toModality()
+            }
+        } else {
+            KibbleParameter(name, type, defaultValue, parameter.isVarArg)
         }
-        kibbleParameter.annotations += parameter.annotationEntries.evaluate(this)
+        parameter.annotationEntries.evaluate<KibbleAnnotation>(this).forEach {
+            holder.addAnnotation(it)
+        }
 
-        context.push(kibbleParameter)
+        context.push(holder)
     }
 
     override fun visitSuperTypeList(list: KtSuperTypeList) {
@@ -600,7 +630,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitAnnotatedExpression(expression: KtAnnotatedExpression) {
-        if(expression.annotationEntries.size != 1) {
+        if (expression.annotationEntries.size != 1) {
             throw RuntimeException("Should have found one entry")
         }
         context.push(expression.annotationEntries[0].evaluate(this))
@@ -723,7 +753,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 .joinToString(".")
         val className: String = (qualifier.takeLastWhile { it[0].isUpperCase() } + type.referencedName!!)
                 .joinToString(".")
-        val value = KibbleType(if(pkgName == "") null else pkgName, className)
+        val value = KibbleType(if (pkgName == "") null else pkgName, className)
         value.typeParameters += type.typeArguments.evaluate(this)
         context.push(value)
     }

@@ -11,18 +11,25 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
  * @property initBlock any custom init block for this class
  */
 class KibbleObject internal constructor(val name: String? = null, val companion: Boolean = false)
-    : KibbleElement, ClassOrObjectHolder, PropertyHolder, FunctionHolder, AnnotationHolder, Polymorphic, Visible {
+    : KibbleElement, TypeContainer, PropertyHolder, FunctionHolder, AnnotationHolder, Polymorphic, Visible {
+
+    var file: KibbleFile? = null
 
     val superCallArgs = mutableListOf<KibbleArgument>()
     var extends: KibbleType? = null
     val implements: MutableList<KibbleType> = mutableListOf()
 
     override var visibility: Visibility = PUBLIC
-    override val annotations = mutableListOf<KibbleAnnotation>()
-    override val classes = mutableListOf<KibbleClass>()
-    override val objects = mutableListOf<KibbleObject>()
-    override val functions = mutableListOf<KibbleFunction>()
-    override val properties = mutableListOf<KibbleProperty>()
+    override var annotations = mutableListOf<KibbleAnnotation>()
+        private set
+    override var classes = listOf<KibbleClass>()
+        private set
+    override var objects = listOf<KibbleObject>()
+        private set
+    override var functions = listOf<KibbleFunction>()
+        private set
+    override var properties = listOf<KibbleProperty>()
+        private set
     var initBlock: String? = null
 
     override fun extends(type: KibbleType, arguments: List<KibbleArgument>) {
@@ -35,15 +42,23 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
     }
 
     override fun addClass(name: String): KibbleClass {
-        return KibbleClass(name).also {
-            classes += it
-        }
+        return addClass(KibbleClass(name))
+    }
+
+    override fun addClass(klass: KibbleClass): KibbleClass {
+        classes += klass
+        klass.file = file
+        return klass
     }
 
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
-        return KibbleObject(name = name, companion = isCompanion).also {
-            objects += it
-        }
+        return addObject(KibbleObject(name = name, companion = isCompanion))
+    }
+
+    override fun addObject(obj: KibbleObject): KibbleObject {
+        objects += obj
+        obj.file = file
+        return obj
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
@@ -140,4 +155,24 @@ class KibbleObject internal constructor(val name: String? = null, val companion:
         return result
     }
 
+    @Suppress("UNCHECKED_CAST")
+    override fun addAnnotation(type: Class<out Annotation>, arguments: List<KibbleArgument>) {
+        annotations.add(KibbleAnnotation(KibbleType.from(type as Class<Any>), arguments))
+    }
+
+    override fun addAnnotation(type: String, arguments: List<KibbleArgument>) {
+        annotations.add(KibbleAnnotation(KibbleType.from(type), arguments))
+    }
+
+    override fun addAnnotation(annotation: KibbleAnnotation) {
+        annotations.add(annotation)
+    }
+
+    override fun addFunction(function: KibbleFunction) {
+        functions += function
+    }
+
+    override fun addProperty(property: KibbleProperty) {
+        properties += property
+    }
 }

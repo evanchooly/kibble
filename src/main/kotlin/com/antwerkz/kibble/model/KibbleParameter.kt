@@ -1,9 +1,6 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
-import com.antwerkz.kibble.model.Mutability.NEITHER
-import com.antwerkz.kibble.model.Mutability.VAL
-import com.antwerkz.kibble.model.Visibility.NONE
 
 /**
  * Defines a function parameter
@@ -12,21 +9,19 @@ import com.antwerkz.kibble.model.Visibility.NONE
  * @property type the parameter type
  * @property initializer the parameter initializer
  */
-open class KibbleParameter internal constructor(val name: String? = null, val type: KibbleType? = null,
-                                                var initializer: String? = null,
-                                                var vararg: Boolean = false)
-    : KibbleElement, AnnotationHolder, GenericCapable, Mutable, Visible {
+class KibbleParameter internal constructor(val name: String? = null, val type: KibbleType? = null,
+                                           var initializer: String? = null,
+                                           var vararg: Boolean = false)
+    : KibbleElement, AnnotationHolder, GenericCapable {
 
-    override val annotations =  mutableListOf<KibbleAnnotation>()
-    override var mutability: Mutability = NEITHER
-        set(value) {
-            field = if (value != NEITHER) value else VAL
-        }
-    override var visibility: Visibility = NONE
-        set(value) {
-            field = if (value != NEITHER) value else NONE
-        }
-    override var typeParameters = mutableListOf<TypeParameter>()
+    override var annotations = listOf<KibbleAnnotation>()
+        private set
+    override var typeParameters = listOf<TypeParameter>()
+        private set
+
+    override fun addAnnotation(annotation: KibbleAnnotation) {
+        annotations += annotation
+    }
 
     override fun collectImports(file: KibbleFile) {
         type?.let { file.resolve(it) }
@@ -38,22 +33,19 @@ open class KibbleParameter internal constructor(val name: String? = null, val ty
      * @return the string/source form of this type
      */
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        writer.write(visibility)
-        writer.write(mutability)
-        if(vararg) {
-            writer.write("vararg ")
+        writer {
+            if (vararg) {
+                write("vararg ")
+            }
+            name?.let { write(name) }
+            writeType(type)
+            writeInitializer(initializer)
         }
-        name?.let { writer.write(name) }
-        writer.writeType(type)
-//        type?.let {
-//            name?.let { writer.write(": ") }
-//            writer.write("$it")
-//        }
-        initializer?.let {
-            writer.write(" = $it")
-        }
-
         return writer
+    }
+
+    override fun addTypeParameter(type: TypeParameter) {
+        typeParameters += type
     }
 
     /**
@@ -68,8 +60,6 @@ open class KibbleParameter internal constructor(val name: String? = null, val ty
         if (name != other.name) return false
         if (type != other.type) return false
         if (initializer != other.initializer) return false
-        if (mutability != other.mutability) return false
-        if (visibility != other.visibility) return false
 
         return true
     }
@@ -81,12 +71,11 @@ open class KibbleParameter internal constructor(val name: String? = null, val ty
         var result = name?.hashCode() ?: 0
         result = 31 * result + (type?.hashCode() ?: 0)
         result = 31 * result + (initializer?.hashCode() ?: 0)
-        result = 31 * result + mutability.hashCode()
-        result = 31 * result + visibility.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "KibbleParameter(name=$name, type=$type, initializer=$initializer, vararg=$vararg, annotations=$annotations, mutability=$mutability, visibility=$visibility, typeParameters=$typeParameters)"
+        return "KibbleParameter(name=$name, type=$type, initializer=$initializer, vararg=$vararg, annotations=$annotations, typeParameters=$typeParameters)"
     }
+
 }

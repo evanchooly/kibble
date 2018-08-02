@@ -22,9 +22,12 @@ class KibbleFunction internal constructor(var name: String? = null,
                                           override var overriding: Boolean = false)
     : AnnotationHolder, Visible, Modal<KibbleFunction>, ParameterHolder, KibbleElement, Overridable, GenericCapable {
 
-    override val parameters = mutableListOf<KibbleParameter>()
-    override val annotations = mutableListOf<KibbleAnnotation>()
-    override val typeParameters = mutableListOf<TypeParameter>()
+    override var parameters = listOf<KibbleParameter>()
+        private set
+    override var annotations = listOf<KibbleAnnotation>()
+        private set
+    override var typeParameters = listOf<TypeParameter>()
+        private set
 
     /**
      * @return the string/source form of this type
@@ -55,7 +58,7 @@ class KibbleFunction internal constructor(var name: String? = null,
             writeTypeParameters(typeParameters, true)
             write(modality)
             write(name ?: "")
-            writeParameters(parameters)
+            writeParameters(listOf(), parameters)
             writeType(type)
             if (bodyBlock) {
                 writeBlock(body, level)
@@ -101,6 +104,18 @@ class KibbleFunction internal constructor(var name: String? = null,
         result = 31 * result + overriding.hashCode()
         result = 31 * result + parameters.hashCode()
         return result
+    }
+
+    override fun addAnnotation(annotation: KibbleAnnotation) {
+        annotations += annotation
+    }
+
+    override fun addParameter(parameter: KibbleParameter) {
+        parameters += parameter
+    }
+
+    override fun addTypeParameter(type: TypeParameter) {
+        typeParameters += type
     }
 }
 

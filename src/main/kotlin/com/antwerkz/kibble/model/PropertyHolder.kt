@@ -8,7 +8,7 @@ import com.antwerkz.kibble.Kibble
  * @property properties the properties held by this type
  */
 interface PropertyHolder {
-    val properties: MutableList<KibbleProperty>
+    val properties: List<KibbleProperty>
 
     /**
      * Adds new property to this type
@@ -19,11 +19,17 @@ interface PropertyHolder {
      */
     fun addProperty(property: String): KibbleProperty {
         return try {
-            Kibble.parseSource(property).properties.first().also { properties += it }
-        } catch(e: Exception) {
+            Kibble.parseSource(property).properties
+                    .first()
+                    .also {
+                        addProperty(it)
+                    }
+        } catch (e: Exception) {
             throw IllegalArgumentException("Invalid value for a property", e)
         }
     }
+
+    fun addProperty(property: KibbleProperty)
 
     /**
      * Gets a property by name if it exists

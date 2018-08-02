@@ -3,6 +3,7 @@ package com.antwerkz.kibble
 import com.antwerkz.kibble.model.KibbleArgument
 import com.antwerkz.kibble.model.KibbleElement
 import com.antwerkz.kibble.model.KibbleParameter
+import com.antwerkz.kibble.model.KibbleProperty
 import com.antwerkz.kibble.model.KibbleType
 import com.antwerkz.kibble.model.Modality
 import com.antwerkz.kibble.model.Modality.FINAL
@@ -78,10 +79,8 @@ class SourceWriter {
         }
     }
 
-    fun write(mutability: Mutability?) {
+    fun write(mutability: Mutability) {
         when (mutability) {
-            null -> {
-            }
             VAL, VAR -> {
                 write(mutability.toString())
                 write(" ")
@@ -94,9 +93,10 @@ class SourceWriter {
         return this
     }
 
-    fun writeParameters(parameters: List<KibbleParameter>, allowEmpty: Boolean = true) {
-        if (allowEmpty || parameters.isNotEmpty()) {
-            write(parameters.joinToString(", ", "(", ")", transform = { it.toSource().toString() }))
+    fun writeParameters(properties: List<KibbleProperty>, parameters: List<KibbleParameter>, allowEmpty: Boolean = true) {
+        val list: List<KibbleElement> = properties + parameters
+        if (allowEmpty || list.isNotEmpty()) {
+            write(list.joinToString(", ", "(", ")", transform = { it.toSource().toString() }))
         }
     }
 

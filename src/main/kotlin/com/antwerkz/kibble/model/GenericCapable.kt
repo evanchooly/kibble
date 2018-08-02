@@ -1,15 +1,21 @@
 package com.antwerkz.kibble.model
 
 interface GenericCapable {
-    val typeParameters: MutableList<TypeParameter>
+    val typeParameters: List<TypeParameter>
 
     fun addTypeParameter(type: String, variance: TypeParameterVariance? = null, bounds: String? = null) {
         addTypeParameter(KibbleType.from(type), variance, bounds)
     }
 
     fun addTypeParameter(type: KibbleType, variance: TypeParameterVariance? = null, bounds: String? = null) {
-        typeParameters += TypeParameter(type, variance, bounds?.let { KibbleType.from(it)})
+        addTypeParameter(TypeParameter(type, variance, bounds?.let { KibbleType.from(it)}))
     }
+
+    fun addTypeParameters(types: List<TypeParameter>) {
+        types.forEach { addTypeParameter(it) }
+    }
+
+    fun addTypeParameter(type: TypeParameter)
 }
 
 /**

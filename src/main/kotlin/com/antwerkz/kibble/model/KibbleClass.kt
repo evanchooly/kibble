@@ -15,24 +15,33 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
 class KibbleClass internal constructor(var name: String = "",
                                        override var modality: Modality = FINAL,
                                        override var visibility: Visibility = PUBLIC)
-    : KibbleElement, ClassOrObjectHolder, PropertyHolder, FunctionHolder, AnnotationHolder, Polymorphic,
+    : KibbleElement, TypeContainer, PropertyHolder, FunctionHolder, AnnotationHolder, Polymorphic,
         GenericCapable, Visible, Modal<KibbleClass> {
+
+    var file: KibbleFile? = null
 
     val superCallArgs = mutableListOf<KibbleArgument>()
     var extends: KibbleType? = null
     val implements: MutableList<KibbleType> = mutableListOf()
 
-    override val typeParameters = mutableListOf<TypeParameter>()
-    override val annotations = mutableListOf<KibbleAnnotation>()
-    override val classes = mutableListOf<KibbleClass>()
-    override val objects = mutableListOf<KibbleObject>()
-    override val functions = mutableListOf<KibbleFunction>()
-    override val properties = mutableListOf<KibbleProperty>()
+    override var typeParameters = listOf<TypeParameter>()
+        private set
+    override var annotations = listOf<KibbleAnnotation>()
+        private set
+    override var classes = listOf<KibbleClass>()
+        private set
+    override var objects = listOf<KibbleObject>()
+        private set
+    override var functions = listOf<KibbleFunction>()
+        private set
+    override var properties = listOf<KibbleProperty>()
+        private set
 
     var initBlock: InitBlock? = null
 
     var constructor = Constructor()
-    val secondaries: MutableList<SecondaryConstructor> = mutableListOf()
+    var secondaries: List<SecondaryConstructor> = listOf()
+        private set
 
     var enum = false
     var data = false
@@ -57,8 +66,12 @@ class KibbleClass internal constructor(var name: String = "",
         return SecondaryConstructor(*(arguments
                 .map { KibbleArgument(value = it) }
                 .toTypedArray())).also {
-            secondaries += it
+            addSecondaryConstructor(it)
         }
+    }
+
+    fun addSecondaryConstructor(secondary: SecondaryConstructor) {
+        secondaries += secondary
     }
 
     override fun addClass(name: String): KibbleClass {
@@ -67,6 +80,14 @@ class KibbleClass internal constructor(var name: String = "",
         }
     }
 
+    override fun addClass(klass: KibbleClass): KibbleClass {
+        classes += klass
+        klass.file = file
+        return klass
+    }
+
+    fun classes() = classes
+
     /**
      * Adds (or gets if it already exists) a companion object to this class
      *
@@ -74,19 +95,24 @@ class KibbleClass internal constructor(var name: String = "",
      */
     fun addCompanionObject(): KibbleObject {
         return companion() ?: KibbleObject(companion = true).also {
-            objects.add(it)
+            objects += it
+            it.file = file
         }
     }
 
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
-        return KibbleObject(name, isCompanion).also {
-            objects += it
-        }
+        return addObject(KibbleObject(name, isCompanion))
+    }
+
+    override fun addObject(obj: KibbleObject): KibbleObject {
+        objects += obj
+        obj.file = file
+        return obj
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
         return KibbleFunction(name = name, type = KibbleType.from(type), body = body).also {
-            functions += it
+            addFunction(it)
         }
     }
 
@@ -109,9 +135,8 @@ class KibbleClass internal constructor(var name: String = "",
             write(name)
             writeTypeParameters(typeParameters)
 
-            val ctorParams: MutableList<KibbleParameter> = properties.filter { it.constructorParam }.toMutableList()
-            ctorParams.addAll(constructor.parameters)
-            writeParameters(ctorParams, false)
+            val ctorProperties = properties.filter { it.constructorParam }.toMutableList()
+            writeParameters(ctorProperties, constructor.parameters, false)
 
             writeParentCalls(extends, implements, superCallArgs)
 
@@ -154,5 +179,21 @@ class KibbleClass internal constructor(var name: String = "",
         secondaries.forEach { it.collectImports(file) }
         extends?.let { file.resolve(it) }
         implements.forEach { file.resolve(it) }
+    }
+
+    override fun addAnnotation(annotation: KibbleAnnotation) {
+        annotations += annotation
+    }
+
+    override fun addFunction(function: KibbleFunction) {
+        functions += function
+    }
+
+    override fun addProperty(property: KibbleProperty) {
+        properties += property
+    }
+
+    override fun addTypeParameter(type: TypeParameter) {
+        typeParameters += type
     }
 }

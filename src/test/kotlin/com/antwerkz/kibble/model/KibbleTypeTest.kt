@@ -43,7 +43,9 @@ class KibbleTypeTest {
         Assert.assertEquals(from("BigInteger").fqcn(), "BigInteger")
         Assert.assertEquals(from("java.time.LocalDateTime").fqcn(), "java.time.LocalDateTime")
         Assert.assertEquals(from("java.time.LocalDateTime").toString(), "LocalDateTime")
-        Assert.assertEquals(KibbleType("java.util", "List", mutableListOf(TypeParameter(from("String")))).toString(), "java.util.List<String>")
+        Assert.assertEquals(KibbleType("java.util", "List").also {
+            it.addTypeParameters(listOf(TypeParameter(from("String"))))
+        }.toString(), "java.util.List<String>")
     }
 
     fun components() {
@@ -61,9 +63,9 @@ class KibbleTypeTest {
 
     fun values() {
         val file = KibbleFile(pkgName = "com.antwerkz.aliases")
-        val type = file.resolve(KibbleType("this.is.the.package", "Class",
-                mutableListOf(TypeParameter(from("K")),
-                TypeParameter(from("V"))), true))
+        val type = file.resolve(KibbleType("this.is.the.package", "Class", true).also {
+            it.addTypeParameters(listOf(TypeParameter(from("K")), TypeParameter(from("V"))))
+        })
 
         Assert.assertEquals(type.fqcn(), "this.is.the.package.Class")
         Assert.assertEquals(type.toString(), "Class<K, V>?")

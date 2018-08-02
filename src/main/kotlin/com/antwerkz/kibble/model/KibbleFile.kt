@@ -14,17 +14,21 @@ import java.io.File
  */
 class KibbleFile(val name: String? = null, var pkgName: String? = null,
                  val context: KibbleContext = KibbleContext()) :
-        KibbleElement, ClassOrObjectHolder, PropertyHolder, FunctionHolder {
+        KibbleElement, TypeContainer, PropertyHolder, FunctionHolder {
 
     private val importDirectives = sortedMapOf<String, KibbleImport>()
     val imports
         get() = importDirectives.values.toSet()
 
 
-    override val classes = mutableListOf<KibbleClass>()
-    override val objects = mutableListOf<KibbleObject>()
-    override val functions = mutableListOf<KibbleFunction>()
-    override val properties = mutableListOf<KibbleProperty>()
+    override var classes = listOf<KibbleClass>()
+        private set
+    override var objects = listOf<KibbleObject>()
+        private set
+    override var functions = listOf<KibbleFunction>()
+        private set
+    override var properties = listOf<KibbleProperty>()
+        private set
 
     var sourceTimestamp: Long = 0
 
@@ -33,16 +37,23 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
     }
 
     override fun addClass(name: String): KibbleClass {
-        return KibbleClass(name).also {
-            classes += it
-        }
+        return addClass(KibbleClass(name))
+    }
+
+    override fun addClass(klass: KibbleClass): KibbleClass {
+        classes += klass
+        klass.file = this
+        return klass
     }
 
     override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
-        return KibbleObject(name, isCompanion).also {
-            objects += it
-        }
+        return addObject(KibbleObject(name, isCompanion))
+    }
 
+    override fun addObject(obj: KibbleObject): KibbleObject {
+        objects += obj
+        obj.file = this
+        return obj
     }
 
     override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
@@ -153,7 +164,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
                 type.resolvedName = imported.alias ?: imported.type.resolvedName
             }
 
-            imported == null -> when {
+            else -> when {
                 type.pkgName == null /*&& classes.any { it.name == type.className }*/ -> {
                     if (!type.isAutoImported()) {
                         type.pkgName = pkgName
@@ -163,13 +174,19 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
                 type.pkgName != pkgName -> addImport(type)
                 else -> type.resolvedName = type.className
             }
-
-            else -> throw RuntimeException("how did I get here?  type = $type, file = $this") // type.resolvedName = type.fqcn()
         }
 
         type.typeParameters.forEach {
             it.type?.let { resolve(it) }
         }
         return type
+    }
+
+    override fun addFunction(function: KibbleFunction) {
+        functions += function
+    }
+
+    override fun addProperty(property: KibbleProperty) {
+        properties += property
     }
 }

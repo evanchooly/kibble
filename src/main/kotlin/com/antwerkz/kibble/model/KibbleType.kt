@@ -12,17 +12,17 @@ import com.antwerkz.kibble.SourceWriter
  * @property nullable does this type support null values?
  */
 open class KibbleType internal constructor(pkgName: String? = null, val className: String,
-                                           override val typeParameters: MutableList<TypeParameter> = mutableListOf(),
-                                           val nullable: Boolean = false) : GenericCapable, Comparable<KibbleType>,
-        KibbleElement {
+                                           val nullable: Boolean = false) : GenericCapable, Comparable<KibbleType>, KibbleElement {
 
-    internal constructor(type: KibbleType, nullable: Boolean = false) : this(type.pkgName, type.className, type.typeParameters, nullable)
+    internal constructor(type: KibbleType, nullable: Boolean = false) : this(type.pkgName, type.className, nullable) {
+        this.typeParameters = type.typeParameters
+    }
 
     companion object {
+
         internal val AUTOIMPORTS = listOf("Any", "Unit", "Nothing", "Byte", "Short", "Int", "Long", "Float", "Double",
                 "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString")
         internal val AUTOIMPORTED = mutableSetOf<String>()
-
         fun from(type: Class<Any>) = KibbleType(pkgName = type.`package`.name, className = type.simpleName)
 
         fun from(type: String): KibbleType {
@@ -32,10 +32,11 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
                 KibbleType(className = type)
             }
         }
-    }
 
+    }
     var pkgName: String? = pkgName
         get() = if (field != "") field else null
+    override var typeParameters: List<TypeParameter> = listOf()
 
     /**
      * Gives the fully qualified class name for this type
@@ -99,13 +100,13 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         return writer {
-            val list = mutableListOf(resolvedName)
-            var base = list.joinToString(".") +
-                    (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "")
-
             write(resolvedName)
             writeTypeParameters(typeParameters)
             if (nullable) write("?")
         }
+    }
+
+    override fun addTypeParameter(type: TypeParameter) {
+        typeParameters += type
     }
 }

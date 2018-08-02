@@ -6,16 +6,18 @@ package com.antwerkz.kibble.model
  * @property annotations the list of annotations on this type
  */
 interface AnnotationHolder {
-    val annotations: MutableList<KibbleAnnotation>
-
-    fun addAnnotation(type: Class<out Annotation>, arguments: List<KibbleArgument> = listOf()) {
-        annotations.add(KibbleAnnotation(KibbleType.from(type as Class<Any>), arguments))
-    }
+    val annotations: List<KibbleAnnotation>
 
     @Suppress("UNCHECKED_CAST")
-    fun addAnnotation(type: String, arguments: List<KibbleArgument> = listOf()) {
-        annotations.add(KibbleAnnotation(KibbleType.from(type), arguments))
+    fun addAnnotation(type: Class<out Annotation>, arguments: List<KibbleArgument> = listOf()) {
+        addAnnotation(KibbleAnnotation(KibbleType.from(type as Class<Any>), arguments))
     }
+
+    fun addAnnotation(type: String, arguments: List<KibbleArgument> = listOf()) {
+        addAnnotation(KibbleAnnotation(KibbleType.from(type), arguments))
+    }
+
+    fun addAnnotation(annotation: KibbleAnnotation)
 
     /**
      * Checks if this type has been annotated with a given Annotation

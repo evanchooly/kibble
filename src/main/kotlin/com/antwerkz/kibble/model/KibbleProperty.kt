@@ -2,8 +2,6 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
-import com.antwerkz.kibble.model.Mutability.VAL
-import com.antwerkz.kibble.model.Visibility.PUBLIC
 
 /**
  * Defines a property on a file, class, or object
@@ -15,17 +13,28 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
  * @property overriding true if this property is overriding a property in a parent type
  * @property constructorParam true if the property should be listed as a constructor parameter
  */
-class KibbleProperty internal constructor(name: String, type: KibbleType?, initializer: String? = null,
+class KibbleProperty internal constructor(val name: String, val type: KibbleType?, var initializer: String? = null,
                                           override var modality: Modality = FINAL, override var overriding: Boolean = false,
                                           var lateInit: Boolean = false, var constructorParam: Boolean = false)
-    : KibbleParameter(name, type, initializer), Visible, Mutable, Modal<KibbleProperty>, Overridable, AnnotationHolder {
+    : Visible, Mutable, Modal<KibbleProperty>, Overridable, AnnotationHolder,
+        KibbleElement, GenericCapable {
 
-    init {
-        visibility = PUBLIC
-        mutability = VAL
+    override var visibility = Visibility.PUBLIC
+    override var mutability= Mutability.VAL
+    override var typeParameters = listOf<TypeParameter>()
+        private set
+    override var annotations= listOf<KibbleAnnotation>()
+        private set
+
+    override fun addTypeParameter(type: TypeParameter) {
+        typeParameters += type
     }
 
-    override val annotations: MutableList<KibbleAnnotation> = mutableListOf()
+    override fun collectImports(file: KibbleFile) {
+        type?.let { file.resolve(it) }
+        annotations.forEach { it.collectImports(file) }
+        typeParameters.forEach { it.collectImports(file) }
+    }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         writer {
@@ -38,10 +47,10 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
             if (overriding) write("override ")
             if (lateInit) write("lateinit ")
             write(mutability)
-            name?.let { write(name) }
+            write(name)
             writeType(type)
             writeInitializer(initializer)
-            if(!constructorParam) {
+            if (!constructorParam) {
                 writeln()
             }
         }
@@ -51,6 +60,10 @@ class KibbleProperty internal constructor(name: String, type: KibbleType?, initi
 
     override fun toString(): String {
         return toSource().toString().trim()
+    }
+
+    override fun addAnnotation(annotation: KibbleAnnotation) {
+        annotations += annotation
     }
 }
 
