@@ -16,11 +16,12 @@ class KibbleAnnotation internal constructor(val type: KibbleType, val arguments:
     override fun toString() = toSource().toString()
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        var string = "@$type"
-        if (arguments.isNotEmpty()) {
-            string += arguments.joinToString(prefix = "(", postfix = ")", transform = { it.toSource(SourceWriter(), level).toString() })
+        writer {
+            write("@", level)
+            write(type.toSource().toString())
+            writeArguments(arguments, allowEmpty = false)
+            writer.writeln()
         }
-        writer.writeln(string, level)
         return writer
     }
 

@@ -19,8 +19,9 @@ class SecondaryConstructor internal constructor(vararg arguments: KibbleArgument
         delegationArguments += arguments
     }
 
-    override fun addParameter(parameter: KibbleParameter) {
+    override fun addParameter(parameter: KibbleParameter): KibbleParameter {
         parameters += parameter
+        return parameter
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {

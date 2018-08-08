@@ -18,10 +18,8 @@ interface ParameterHolder {
      * @param initializer the parameter initializer
      */
     fun addParameter(name: String, type: String?, initializer: String? = null, varargs: Boolean = false): KibbleParameter {
-        return KibbleParameter(name, type?.let { KibbleType.from(type) }, initializer, varargs).also {
-            addParameter(it)
-        }
+        return addParameter(KibbleParameter(name, type?.let { KibbleType.from(type) }, initializer, varargs))
     }
 
-    fun addParameter(parameter: KibbleParameter)
+    fun addParameter(parameter: KibbleParameter): KibbleParameter
 }

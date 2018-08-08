@@ -16,8 +16,9 @@ class Constructor internal constructor() : Visible, ParameterHolder, KibbleEleme
     override var parameters = listOf<KibbleParameter>()
         private set
 
-    override fun addParameter(parameter: KibbleParameter) {
+    override fun addParameter(parameter: KibbleParameter): KibbleParameter {
         parameters += parameter
+        return parameter
     }
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {

@@ -20,9 +20,10 @@ class KibbleTest {
         val file = Kibble.parse("src/test/resources/com/antwerkz/test/standalone.kt")
 
         Assert.assertEquals(file.functions.size, 1)
-        Assert.assertEquals(file.functions[0].visibility, Visibility.INTERNAL)
-        Assert.assertEquals(file.functions[0].type, KibbleType(className = "String"))
-        Assert.assertEquals(file.functions[0].body, """println("hi")
+        val first = file.functions.first()
+        Assert.assertEquals(first.visibility, Visibility.INTERNAL)
+        Assert.assertEquals(first.type, KibbleType(className = "String"))
+        Assert.assertEquals(first.body, """println("hi")
 return "hi"""")
     }
 
@@ -31,10 +32,10 @@ return "hi"""")
         val file = Kibble.parse(path)
 
         Assert.assertEquals(file.imports.size, 3)
-        Assert.assertEquals(file.classes.size, 3)
-        val klass = file.classes[1]
+        val classes = file.classes.iterator()
+        Assert.assertTrue(classes.next().isInterface)
 
-        Assert.assertTrue(file.classes[0].isInterface)
+        val klass = classes.next()
         Assert.assertTrue(klass.isInternal())
         Assert.assertTrue(klass.hasAnnotation(Generated::class.java))
         Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
@@ -68,7 +69,7 @@ return "hi"""")
 
     @Test
     fun create() {
-        val file = KibbleFile("create.kt")
+        val file = KibbleFile(File("create.kt"))
         val klass = file.addClass("KibbleTest")
                 .markOpen()
 
@@ -94,26 +95,27 @@ return 0.0""")
         """.trimIndent())
 
         Assert.assertTrue(file.classes.size == 1)
-        Assert.assertTrue(file.classes[0].constructor.parameters.size == 0)
-        val properties = file.classes[0].properties
+        Assert.assertTrue(file.classes.first().constructor.parameters.isEmpty())
+        val properties = file.classes.first().properties
         Assert.assertTrue(properties.size == 1)
         Assert.assertEquals(properties[0].name, "num")
-        Assert.assertEquals(properties[0].type.toString(), "Int")
+        Assert.assertEquals(properties[0].type?.toSource().toString(), "Int")
     }
     @Test
     fun secondaryConstructors() {
         val file = Kibble.parseSource("""
             class Simple(val num: Int) {
                 constructor(otherNum: Long): this(otherNum.toInt()) {
-                    println("yo")
+                    this.num = num
                 }
             }
         """.trimIndent())
 
-        val secondaryConstructor = file.classes[0].secondaries[0]
+        val secondaryConstructor = file.classes.first().secondaries[0]
         val parameters = secondaryConstructor.parameters
         Assert.assertEquals(parameters[0].name, "otherNum")
-        Assert.assertEquals(parameters[0].type.toString(), "Long")
+        Assert.assertEquals(parameters[0].type?.toSource().toString(), "Long")
         Assert.assertEquals(secondaryConstructor.delegationArguments, mutableListOf(KibbleArgument(value = "otherNum.toInt()")))
+        Assert.assertEquals(secondaryConstructor.body, "this.num = num")
     }
 }

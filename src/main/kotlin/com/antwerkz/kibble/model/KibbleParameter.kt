@@ -10,8 +10,7 @@ import com.antwerkz.kibble.SourceWriter
  * @property initializer the parameter initializer
  */
 class KibbleParameter internal constructor(val name: String? = null, val type: KibbleType? = null,
-                                           var initializer: String? = null,
-                                           var vararg: Boolean = false)
+                                           var initializer: String? = null, var vararg: Boolean = false)
     : KibbleElement, AnnotationHolder, GenericCapable {
 
     override var annotations = listOf<KibbleAnnotation>()
@@ -38,7 +37,7 @@ class KibbleParameter internal constructor(val name: String? = null, val type: K
                 write("vararg ")
             }
             name?.let { write(name) }
-            writeType(type)
+            writeType(type, name != null)
             writeInitializer(initializer)
         }
         return writer

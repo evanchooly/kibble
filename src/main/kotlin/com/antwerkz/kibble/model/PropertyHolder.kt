@@ -1,6 +1,7 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import com.antwerkz.kibble.model.KibbleType.Companion.from
 
 /**
  * Represents a type than hold properties
@@ -13,23 +14,47 @@ interface PropertyHolder {
     /**
      * Adds new property to this type
      *
-     * @param property the property name
+     * @param property the property declaration
+     * @param type the type of the property
+     *
+     * @return the new property
+     */
+    fun addProperty(name: String, type: Class<*>, init: KibbleProperty.() -> Unit = {}): KibbleProperty {
+        val property = KibbleProperty(name, from(type))
+        property.init()
+        return addProperty(property)
+    }
+
+    /**
+     * Adds new property to this type
+     *
+     * @param property the property declaration
+     * @param type the type of the property
+     *
+     * @return the new property
+     */
+    fun addProperty(name: String, type: String, init: KibbleProperty.() -> Unit = {}): KibbleProperty {
+        val property = KibbleProperty(name, from(type))
+        property.init()
+        return addProperty(property)
+    }
+
+    /**
+     * Adds new property to this type
+     *
+     * @param property the property declaration
      *
      * @return the new property
      */
     fun addProperty(property: String): KibbleProperty {
         return try {
-            Kibble.parseSource(property).properties
-                    .first()
-                    .also {
-                        addProperty(it)
-                    }
+            addProperty(Kibble.parseSource(property).properties[0])
         } catch (e: Exception) {
             throw IllegalArgumentException("Invalid value for a property", e)
         }
     }
 
-    fun addProperty(property: KibbleProperty)
+    fun addProperty(property: KibbleProperty): KibbleProperty
 
     /**
      * Gets a property by name if it exists

@@ -1,5 +1,7 @@
 package com.antwerkz.kibble.model
 
+import com.antwerkz.kibble.SourceWriter
+
 interface GenericCapable {
     val typeParameters: List<TypeParameter>
 
@@ -25,14 +27,33 @@ interface GenericCapable {
  * @property variance in/out
  * @property bounds the type bounds of the parameter
  */
-class TypeParameter internal constructor(val type: KibbleType?, val variance: TypeParameterVariance? = null,
-                                         val bounds: KibbleType? = null) {
+data class TypeParameter internal constructor(val type: KibbleType?, val variance: TypeParameterVariance? = null,
+                                         val bounds: KibbleType? = null): KibbleElement {
 
-    override fun toString(): String {
-        return ((variance?.let { "$it " } ?: "") + (type ?: "")).trim() + (bounds?.let { ": $it" } ?: "")
+    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
+        return writer {
+            variance?.let { write("$it") }
+            type?.let {
+                variance?.let { write(" ") }
+                it.toSource(this, level)
+            }
+            writeType(bounds)
+        }
     }
 
-    fun collectImports(file: KibbleFile) {
+    fun externalize(): String {
+        val writer = SourceWriter()
+        return writer {
+            variance?.let { write("$it") }
+            type?.let {
+                variance?.let { write(" ") }
+                write(it.externalize())
+            }
+            writeType(bounds)
+        }.toString()
+    }
+
+    override fun collectImports(file: KibbleFile) {
         type?.let { file.resolve(type) }
         bounds?.let { file.resolve(it) }
     }

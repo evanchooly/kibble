@@ -1,5 +1,6 @@
 package com.antwerkz.kibble.model
 
+import com.antwerkz.kibble.KibbleContext
 import com.antwerkz.kibble.SourceWriter
 import com.antwerkz.kibble.model.Modality.FINAL
 import com.antwerkz.kibble.model.Visibility.PUBLIC
@@ -14,11 +15,11 @@ import com.antwerkz.kibble.model.Visibility.PUBLIC
  */
 class KibbleClass internal constructor(var name: String = "",
                                        override var modality: Modality = FINAL,
-                                       override var visibility: Visibility = PUBLIC)
+                                       override var visibility: Visibility = PUBLIC,
+                                       override val context: KibbleContext)
     : KibbleElement, TypeContainer, PropertyHolder, FunctionHolder, AnnotationHolder, Polymorphic,
         GenericCapable, Visible, Modal<KibbleClass> {
-
-    var file: KibbleFile? = null
+    //    lateinit var file: KibbleFile
 
     val superCallArgs = mutableListOf<KibbleArgument>()
     var extends: KibbleType? = null
@@ -28,11 +29,13 @@ class KibbleClass internal constructor(var name: String = "",
         private set
     override var annotations = listOf<KibbleAnnotation>()
         private set
-    override var classes = listOf<KibbleClass>()
+    override var classes = listOf<KibbleClass>(/*Comparator { o1, o2 -> o1.name.compareTo(o2.name) }*/)
         private set
-    override var objects = listOf<KibbleObject>()
+    override var objects = listOf<KibbleObject>(
+            /*Comparator { o1, o2 -> o1.name?.compareTo(o2?.name ?: "") ?: 1}*/)
         private set
-    override var functions = listOf<KibbleFunction>()
+    override var functions = listOf<KibbleFunction>(
+            /*Comparator { o1, o2 -> o1.name?.compareTo(o2?.name ?: "") ?: 1}*/)
         private set
     override var properties = listOf<KibbleProperty>()
         private set
@@ -74,15 +77,9 @@ class KibbleClass internal constructor(var name: String = "",
         secondaries += secondary
     }
 
-    override fun addClass(name: String): KibbleClass {
-        return KibbleClass(name).also {
-            classes += it
-        }
-    }
-
     override fun addClass(klass: KibbleClass): KibbleClass {
         classes += klass
-        klass.file = file
+//        klass.file = file
         return klass
     }
 
@@ -94,26 +91,16 @@ class KibbleClass internal constructor(var name: String = "",
      * @return the companion object
      */
     fun addCompanionObject(): KibbleObject {
-        return companion() ?: KibbleObject(companion = true).also {
+        return companion() ?: KibbleObject(companion = true, context = context).also {
             objects += it
-            it.file = file
+//            it.file = file
         }
-    }
-
-    override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
-        return addObject(KibbleObject(name, isCompanion))
     }
 
     override fun addObject(obj: KibbleObject): KibbleObject {
         objects += obj
-        obj.file = file
+//        obj.file = file
         return obj
-    }
-
-    override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(name = name, type = KibbleType.from(type), body = body).also {
-            addFunction(it)
-        }
     }
 
     fun isEnum() = enum
@@ -185,12 +172,15 @@ class KibbleClass internal constructor(var name: String = "",
         annotations += annotation
     }
 
-    override fun addFunction(function: KibbleFunction) {
+    override fun addFunction(function: KibbleFunction): KibbleFunction {
         functions += function
+//        function.file = file
+        return function
     }
 
-    override fun addProperty(property: KibbleProperty) {
+    override fun addProperty(property: KibbleProperty): KibbleProperty {
         properties += property
+        return property
     }
 
     override fun addTypeParameter(type: TypeParameter) {

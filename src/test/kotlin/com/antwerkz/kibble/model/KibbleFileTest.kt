@@ -46,7 +46,7 @@ import java.sql.ResultSet as aliasName""")
 
     @Test
     fun outputFile() {
-        val file = KibbleFile("Foo.kt")
+        val file = KibbleFile(File("Foo.kt"))
         Assert.assertEquals(file.outputFile(File("/tmp/")), File("/tmp/Foo.kt"))
 
         file.pkgName = "com.antwerkz.kibble"
@@ -84,7 +84,7 @@ import java.sql.ResultSet as aliasName""")
 
         val file = Kibble.parseSource(source)
         Kibble.parseSource(source2, file.context)
-        val props = file.classes[0].properties.iterator()
+        val props = file.classes.first().properties.iterator()
 
         file.collectImports(file)
 
@@ -107,7 +107,7 @@ class Main {
 class Second""".trim()
 
         val file = Kibble.parseSource(source)
-        val props = file.classes[0].properties.iterator()
+        val props = file.classes.first().properties.iterator()
 
         check(props.next(), "Second", "com.antwerkz.testing.Second")
     }
@@ -120,7 +120,7 @@ class Second""".trim()
 
     @Test
     fun normalize() {
-        val file = KibbleFile("test.kt")
+        val file = KibbleFile(File("test.kt"))
 
         val list = file.resolve(KibbleType.from("java.util.List"))
         Assert.assertEquals(list.toString(), "List")

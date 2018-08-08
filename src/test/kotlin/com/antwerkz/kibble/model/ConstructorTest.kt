@@ -3,6 +3,7 @@ package com.antwerkz.kibble.model
 import com.antwerkz.kibble.Kibble
 import org.testng.Assert
 import org.testng.annotations.Test
+import java.io.File
 
 class ConstructorTest {
     @Test

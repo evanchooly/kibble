@@ -2,6 +2,7 @@ package com.antwerkz.kibble.model
 
 import org.testng.Assert
 import org.testng.annotations.Test
+import java.io.File
 
 class KibbleImportTest {
     @Test
@@ -54,7 +55,7 @@ class KibbleImportTest {
     private fun tryImport(type: String, alias: String? = null) {
         val from = KibbleType.from(type)
         val fqcn = from.fqcn()
-        val file = KibbleFile("Foo.kt")
+        val file = KibbleFile(File("Foo.kt"))
 
         file.addImport(from, alias)
         Assert.assertEquals(file.imports.count { it.type.fqcn() == fqcn && it.alias == alias}, 1)
@@ -65,7 +66,7 @@ class KibbleImportTest {
 
     private fun tryImport(type: Class<*>, alias: String? = null) {
         val fqcn = KibbleImport(KibbleType.from(type.name), alias).type.fqcn()
-        val file = KibbleFile("Foo.kt")
+        val file = KibbleFile(File("Foo.kt"))
 
         file.addImport(type, alias)
         Assert.assertEquals(file.imports.count { it.type.fqcn() == fqcn && it.alias == alias }, 1)

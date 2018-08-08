@@ -147,12 +147,13 @@ import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.modalityModifier
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.jetbrains.kotlin.types.Variance
+import java.io.File
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid() {
     override fun visitKtFile(kt: KtFile) {
-        val kibbleFile = KibbleFile()
-
+        val kibbleFile = KibbleFile(File(kt.virtualFilePath))
+//        context.push(kibbleFile)
         kibbleFile.sourceTimestamp = kt.virtualFile.modificationStamp
         val directive = kt.packageDirective?.fqName?.asString()
         kibbleFile.pkgName = if (directive != "") directive else null
@@ -200,7 +201,8 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     override fun visitClass(kt: KtClass) {
         val kibbleClass = KibbleClass(kt.name ?: "",
                 kt.modalityModifier().toModality(),
-                kt.visibilityModifier().toVisibility())
+                kt.visibilityModifier().toVisibility(), context)
+//        context.peek<TypeContainer>().addClass(kibbleClass)
         context.push(kibbleClass)
 
         kibbleClass.isInterface = kt.isInterface()
@@ -244,7 +246,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitObjectDeclaration(declaration: KtObjectDeclaration) {
         val kibbleObject = KibbleObject(declaration.name ?: "",
-                declaration.isCompanion())
+                declaration.isCompanion(), context)
 
         declaration.getSuperTypeList()?.evaluate<List<Any>>(this)
                 ?.forEach {
@@ -295,11 +297,6 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitPrimaryConstructor(primary: KtPrimaryConstructor) {
         val constructor = Constructor()
-/*
-        primary.bodyExpression?.let {
-            constructor.body = it.evaluate<String>(this)
-        }
-*/
         primary.valueParameters.evaluate<KibbleElement>(this)
                 .forEach {
                     when (it) {
@@ -312,12 +309,13 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitNamedFunction(kt: KtNamedFunction) {
         val kibbleFunction = KibbleFunction(kt.name, kt.visibilityModifier().toVisibility(), kt.modalityModifier().toModality(),
-                overriding = kt.isOverridden())
+                overriding = kt.isOverridden(), context = context)
+//        context.peek<FunctionHolder>().addFunction(kibbleFunction)
 
         kt.valueParameterList?.evaluate<List<KibbleParameter>>(this)?.forEach { kibbleFunction.addParameter(it) }
         kt.typeParameterList?.evaluate<List<TypeParameter>>(this)?.forEach { kibbleFunction.addTypeParameter(it) }
         kt.annotationEntries.map { it.evaluate<KibbleAnnotation>(this) }.forEach { kibbleFunction.addAnnotation(it) }
-        kibbleFunction.body = kt.bodyExpression?.evaluate<String>(this) ?: ""
+        kibbleFunction.body = kt.bodyExpression?.evaluate<String>(this)
         kibbleFunction.type = kt.typeReference?.evaluate<KibbleType>(this)
 //        val modifiers = kt.modifierList?.evaluate<List<Any>>(this)
 
@@ -570,7 +568,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitBinaryExpression(expression: KtBinaryExpression) {
-        this.visitExpression(expression)
+        context.push(expression.text)
     }
 
     override fun visitReturnExpression(expression: KtReturnExpression) {
@@ -614,7 +612,8 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitForExpression(expression: KtForExpression) {
-        this.visitLoopExpression(expression)
+        val loopText = expression.prevSibling.text.dropWhile { it == '\n' } + expression.text
+        context.push(loopText.trimIndent())
     }
 
     override fun visitWhileExpression(expression: KtWhileExpression) {
@@ -681,10 +680,11 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitBlockExpression(expression: KtBlockExpression) {
-        context.push(expression.statements.evaluate<String>(this)
-                .joinToString("\n")
+        val body = expression.text
+                .dropWhile { it == '{' /*|| it == '\n'*/ }
+                .dropLastWhile { it == '}' /*|| it == '\n'*/ }
                 .trimIndent()
-                .trim())
+        context.push(body)
     }
 
     override fun visitCatchSection(catchClause: KtCatchClause) {

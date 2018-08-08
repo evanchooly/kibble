@@ -36,10 +36,10 @@ class KibbleClassTest {
 
     @Test
     fun nested() {
-        var kibbleClass = Kibble.parseSource(source).classes[0]
+        var kibbleClass = Kibble.parseSource(source).classes.first()
 
         Assert.assertEquals(kibbleClass.classes.size, 1)
-        Assert.assertEquals(kibbleClass.classes[0].name, "Nested")
+        Assert.assertEquals(kibbleClass.classes.first().name, "Nested")
 
         val file = KibbleFile()
         kibbleClass = file.addClass("Temp")
@@ -61,16 +61,17 @@ class KibbleClassTest {
         kibbleClass.addObject("temp")
 
         Assert.assertEquals(kibbleClass.classes.size, 1)
-        Assert.assertEquals(kibbleClass.classes[0].name, "Nested")
+        Assert.assertEquals(kibbleClass.classes.first().name, "Nested")
 
-        Assert.assertTrue(kibbleClass.objects[0].companion)
-        Assert.assertEquals(kibbleClass.objects[1].name, "temp")
+        val objects = kibbleClass.objects.iterator()
+        Assert.assertTrue(objects.next().companion)
+        Assert.assertEquals(objects.next().name, "temp")
         Assert.assertEquals(file.toSource().toString(), source)
     }
 
     @Test
     fun members() {
-        val kibbleClass = Kibble.parseSource(source).classes[0]
+        val kibbleClass = Kibble.parseSource(source).classes.first()
 
         var obj = kibbleClass.companion()
         Assert.assertNotNull(obj, "Should find a companion object")
@@ -79,7 +80,7 @@ class KibbleClassTest {
         obj = kibbleClass.getObject("temp")
         Assert.assertNotNull(obj, "Should find an object named 'temp'")
 
-        val kibble = kibbleClass.getClass("Nested") as KibbleClass
+        val kibble = kibbleClass.getClass("Nested")
         Assert.assertNotNull(kibble.getProperty("property"), "Should find a property named 'property'")
         Assert.assertEquals(kibble.getFunctions("something").size, 1, "Should find one function named 'something'")
     }
@@ -106,11 +107,13 @@ open class Person : AbstractKotlinPerson {
 
     var last: String? = null
 } """)
-        Assert.assertNull(file.classes[0].extends)
-//        Assert.assertTrue(file.classes[0].parentInterfaces.isEmpty())
-        Assert.assertNull(file.classes[1].extends)
-//        Assert.assertEquals(file.classes[1].parentInterfaces.size, 1)
-//        Assert.assertEquals(file.classes[1].parentInterfaces[0], KibbleType("critter.test.source", "AbstractKotlinPerson"))
+        val classes = file.classes.iterator()
+        var clazz = classes.next()
+        Assert.assertNull(clazz.extends)
+        Assert.assertTrue(clazz.implements.isEmpty())
+        clazz = classes.next()
+        Assert.assertNull(clazz.extends)
+        Assert.assertEquals(clazz.implements.first(), KibbleType("critter.test.source", "AbstractKotlinPerson"))
     }
 
     @Test
@@ -118,7 +121,7 @@ open class Person : AbstractKotlinPerson {
         val source = """class NoGeneric {
 }
 """
-        val kibbleClass = Kibble.parseSource(source).classes[0]
+        val kibbleClass = Kibble.parseSource(source).classes.first()
         Assert.assertEquals(kibbleClass.toSource().toString(), source)
     }
 
@@ -127,7 +130,7 @@ open class Person : AbstractKotlinPerson {
         val source = """class Generic<out T> {
 }
 """
-        val kibbleClass = Kibble.parseSource(source).classes[0]
+        val kibbleClass = Kibble.parseSource(source).classes.first()
         Assert.assertEquals(kibbleClass.toSource().toString(), source)
 
         val file = KibbleFile()
@@ -169,7 +172,7 @@ open class Person : AbstractKotlinPerson {
         val source = """class Generic<out T: Comparable<T>> {
 }
 """
-        val kibbleClass = Kibble.parseSource(source).classes[0]
+        val kibbleClass = Kibble.parseSource(source).classes.first()
         Assert.assertEquals(kibbleClass.toSource().toString().trim(), source.trim())
     }
 
@@ -177,7 +180,7 @@ open class Person : AbstractKotlinPerson {
     fun abstractClasses() {
         @Language("kotlin")
         val source = """abstract class Abstract"""
-        val kibbleClass = Kibble.parseSource(source).classes[0]
+        val kibbleClass = Kibble.parseSource(source).classes.first()
         Assert.assertTrue(kibbleClass.isAbstract())
 
     }
@@ -186,13 +189,13 @@ open class Person : AbstractKotlinPerson {
     fun enumClasses() {
         @Language("kotlin")
         val source = """enum class Enum"""
-        val kibbleClass = Kibble.parseSource(source).classes[0]
+        val kibbleClass = Kibble.parseSource(source).classes.first()
         Assert.assertTrue(kibbleClass.enum)
     }
 
     @Test
     fun implements() {
-        val file = KibbleFile("temp.kt")
+        val file = KibbleFile()
         file.addClass("Temp").also {
             it.implements("java.lang.Runnable")
         }

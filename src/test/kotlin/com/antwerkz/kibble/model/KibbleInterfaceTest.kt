@@ -45,7 +45,7 @@ class KibbleInterfaceTest {
 }""".trim()
         val file = Kibble.parseSource(source)
 
-        Assert.assertEquals(file.classes[0].implements[0].fqcn(), "java.lang.Runnable")
+        Assert.assertEquals(file.classes.first().implements[0].fqcn(), "java.lang.Runnable")
 
     }
 }

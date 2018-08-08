@@ -11,7 +11,6 @@ class OverridableTest {
     override fun temp() {
     }
 """)
-        val temp = file.functions[0]
-        Assert.assertTrue(temp.isOverride())
+        Assert.assertTrue(file.functions.first().isOverride())
     }
 }

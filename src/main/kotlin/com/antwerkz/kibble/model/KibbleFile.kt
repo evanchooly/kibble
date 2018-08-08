@@ -12,8 +12,8 @@ import java.io.File
  * @property pkgName the package name
  * @property importDirectives the imports defined in the file
  */
-class KibbleFile(val name: String? = null, var pkgName: String? = null,
-                 val context: KibbleContext = KibbleContext()) :
+class KibbleFile(var file: File = File("${System.getProperty("java.io.tmpdir")}/temp.kt"), val name: String? = file.name,
+                 var pkgName: String? = null, override val context: KibbleContext = KibbleContext()) :
         KibbleElement, TypeContainer, PropertyHolder, FunctionHolder {
 
     private val importDirectives = sortedMapOf<String, KibbleImport>()
@@ -36,30 +36,16 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         context.register(this)
     }
 
-    override fun addClass(name: String): KibbleClass {
-        return addClass(KibbleClass(name))
-    }
-
     override fun addClass(klass: KibbleClass): KibbleClass {
         classes += klass
-        klass.file = this
+//        klass.file = this
         return klass
-    }
-
-    override fun addObject(name: String, isCompanion: Boolean): KibbleObject {
-        return addObject(KibbleObject(name, isCompanion))
     }
 
     override fun addObject(obj: KibbleObject): KibbleObject {
         objects += obj
-        obj.file = this
+//        obj.file = this
         return obj
-    }
-
-    override fun addFunction(name: String?, type: String, body: String): KibbleFunction {
-        return KibbleFunction(name, type = KibbleType.from(type), body = body).also {
-            functions += it
-        }
     }
 
     /**
@@ -165,7 +151,7 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
             }
 
             else -> when {
-                type.pkgName == null /*&& classes.any { it.name == type.className }*/ -> {
+                type.pkgName == null -> {
                     if (!type.isAutoImported()) {
                         type.pkgName = pkgName
                     }
@@ -182,11 +168,13 @@ class KibbleFile(val name: String? = null, var pkgName: String? = null,
         return type
     }
 
-    override fun addFunction(function: KibbleFunction) {
+    override fun addFunction(function: KibbleFunction): KibbleFunction {
         functions += function
+        return function
     }
 
-    override fun addProperty(property: KibbleProperty) {
+    override fun addProperty(property: KibbleProperty): KibbleProperty {
         properties += property
+        return property
     }
 }

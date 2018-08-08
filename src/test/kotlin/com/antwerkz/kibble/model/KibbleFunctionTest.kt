@@ -27,17 +27,17 @@ class KibbleFunctionTest {
             |fun <out K: Bar> bar(k: K)
         """.trimMargin())
 
-        var kibbleFunction = file.functions[0]
-        Assert.assertEquals("T", kibbleFunction.typeParameters[0].type?.fqcn())
+        var kibbleFunction = file.getFunctions("foo")[0]
+        Assert.assertEquals(kibbleFunction.typeParameters[0].type?.fqcn(), "T")
         Assert.assertNull(kibbleFunction.typeParameters[0].variance)
         Assert.assertNull(kibbleFunction.typeParameters[0].bounds)
 
-        kibbleFunction = file.functions[1]
-        Assert.assertEquals("K", kibbleFunction.typeParameters[0].type?.fqcn())
-        Assert.assertEquals(TypeParameterVariance.OUT, kibbleFunction.typeParameters[0].variance)
-        Assert.assertEquals(KibbleType.from("Bar"), kibbleFunction.typeParameters[0].bounds)
+        kibbleFunction = file.getFunctions("bar")[0]
+        Assert.assertEquals(kibbleFunction.typeParameters[0].type?.fqcn(), "K")
+        Assert.assertEquals(kibbleFunction.typeParameters[0].variance, TypeParameterVariance.OUT)
+        Assert.assertEquals(kibbleFunction.typeParameters[0].bounds, KibbleType.from("Bar"))
 
-        val foo = KibbleFunction("foo")
+        val foo = file.addFunction("foo")
         foo.addParameter("t", "T")
         foo.addTypeParameter("T")
 

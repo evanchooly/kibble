@@ -80,11 +80,9 @@ class SourceWriter {
     }
 
     fun write(mutability: Mutability) {
-        when (mutability) {
-            VAL, VAR -> {
-                write(mutability.toString())
-                write(" ")
-            }
+        if (mutability == VAL || mutability == VAR) {
+            write(mutability.toString())
+            write(" ")
         }
     }
 
@@ -100,15 +98,19 @@ class SourceWriter {
         }
     }
 
-    fun writeType(type: KibbleType?) {
+    fun writeType(type: KibbleType?, useSeparator: Boolean = true) {
         if (type != null) {
-            write(if (type.resolvedName != "Unit") ": $type" else "")
+            if (type.resolvedName != "Unit") {
+                if (useSeparator) write(": ")
+                write(type.toSource().toString())
+            }
         }
     }
 
     fun writeTypeParameters(typeParameters: List<TypeParameter>, buffer: Boolean = false) {
         if (typeParameters.isNotEmpty()) {
-            write(typeParameters.joinToString(prefix = "<", postfix = ">"))
+            write(typeParameters.joinToString(prefix = "<", postfix = ">",
+                    transform = { it.toSource().toString() }))
             if(buffer) {
                 write(" ")
             }
@@ -116,7 +118,7 @@ class SourceWriter {
     }
 
     fun writeBlock(body: String?, level: Int) {
-        if (body != null && body.isNotBlank()) {
+        body?.let {
             writeOpeningBrace()
             writeln(body.prependIndent(indent * (level + 1)))
             writeln("}", level)
@@ -130,8 +132,10 @@ class SourceWriter {
         return result
     }
 
-    fun writeArguments(arguments: List<KibbleArgument>) {
-        write(arguments.joinToString(", ", prefix = "(", postfix = ")", transform = { it.toSource().toString() }))
+    fun writeArguments(arguments: List<KibbleArgument>, allowEmpty: Boolean = true) {
+        if (allowEmpty || arguments.isNotEmpty()) {
+            write(arguments.joinToString(", ", prefix = "(", postfix = ")", transform = { it.toSource().toString() }))
+        }
     }
 
     fun writeSuperCall(extends: KibbleType?, args: List<KibbleArgument>) {
@@ -156,7 +160,7 @@ class SourceWriter {
             if (extends != null) {
                 write(", ")
             }
-            write(implements.joinToString(", "))
+            write(implements.joinToString(", ", transform = { it.toSource().toString() }))
         }
     }
 
@@ -171,7 +175,7 @@ class SourceWriter {
         write(indent * level)
     }
 
-    fun writeCollections(previous: Boolean, level: Int, vararg blocks: List<KibbleElement>) {
+    fun writeCollections(previous: Boolean, level: Int, vararg blocks: Collection<KibbleElement>) {
         var previousWritten = previous
         blocks.forEach {
             previousWritten = writeCollection(previousWritten, it, level)
@@ -196,6 +200,12 @@ class SourceWriter {
     fun writePackage(name: String?) {
         name?.let {
             writeln("package $it")
+        }
+    }
+
+    fun writeReceiver(receiver: KibbleType?) {
+        receiver?.let {
+            write("$receiver.")
         }
     }
 }

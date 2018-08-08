@@ -9,7 +9,7 @@ class KibbleObjectTest {
     fun objects() {
         val file = Kibble.parse("src/test/resources/com/antwerkz/test/SampleKibbleObject.kt")
 
-        val objects = file.classes[0].objects.iterator()
+        val objects = file.classes.first().objects.iterator()
 
         val kibbleObject = objects.next()
         Assert.assertTrue(kibbleObject.companion)
@@ -34,14 +34,14 @@ object temp {
     fun something(): Junk {
         println("something")
     }
-}""".trim()).objects[0]
+}""".trim()).objects.first()
 
         Assert.assertEquals(obj.name, "temp")
-        val function = obj.functions[0]
+        val function = obj.functions.first()
         Assert.assertEquals(function.name, "something")
         Assert.assertEquals(function.type, KibbleType(className = "Junk"))
 
-        val file = KibbleFile("temp.kt")
+        val file = KibbleFile()
 
         val temp = file.addObject("temp")
         temp.addFunction("something", "Junk", """println("something")""")

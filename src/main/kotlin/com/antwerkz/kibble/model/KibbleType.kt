@@ -12,7 +12,8 @@ import com.antwerkz.kibble.SourceWriter
  * @property nullable does this type support null values?
  */
 open class KibbleType internal constructor(pkgName: String? = null, val className: String,
-                                           val nullable: Boolean = false) : GenericCapable, Comparable<KibbleType>, KibbleElement {
+                                           val nullable: Boolean = false)
+    : GenericCapable, Comparable<KibbleType>, KibbleElement {
 
     internal constructor(type: KibbleType, nullable: Boolean = false) : this(type.pkgName, type.className, nullable) {
         this.typeParameters = type.typeParameters
@@ -21,9 +22,9 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
     companion object {
 
         internal val AUTOIMPORTS = listOf("Any", "Unit", "Nothing", "Byte", "Short", "Int", "Long", "Float", "Double",
-                "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString")
+                "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString", "Suppress")
         internal val AUTOIMPORTED = mutableSetOf<String>()
-        fun from(type: Class<Any>) = KibbleType(pkgName = type.`package`.name, className = type.simpleName)
+        fun from(type: Class<*>) = KibbleType(pkgName = type.`package`.name, className = type.simpleName)
 
         fun from(type: String): KibbleType {
             return if (!type.contains("*") && (type.contains(".") || type.contains("<"))) {
@@ -34,6 +35,7 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
         }
 
     }
+
     var pkgName: String? = pkgName
         get() = if (field != "") field else null
     override var typeParameters: List<TypeParameter> = listOf()
@@ -43,18 +45,22 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
      */
     fun fqcn() = (pkgName?.let { "$pkgName." } ?: "") + className
 
-    internal var resolvedName = fqcn()
+    fun externalize(): String {
+        val writer = SourceWriter()
+        return writer {
+            pkgName?.let {
+                write(it)
+                write(".")
+            }
 
-    /**
-     * @return the string/source form of this type
-     */
-    override fun toString(): String {
-        val list = mutableListOf(resolvedName)
-        var base = list.joinToString(".") +
-                (if (typeParameters.isNotEmpty()) typeParameters.joinToString(prefix = "<", postfix = ">") else "")
-        if (nullable) base += "?"
-        return base
+            write(className)
+            if (typeParameters.isNotEmpty()) {
+                write(typeParameters.joinToString(prefix = "<", postfix = ">",
+                        transform = { it.externalize() }))
+            }
+        }.toString()
     }
+    internal var resolvedName = fqcn()
 
     override fun compareTo(other: KibbleType): Int {
         return fqcn().compareTo(other.fqcn())
@@ -94,9 +100,10 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
         return className in AUTOIMPORTS || className in AUTOIMPORTED
     }
 
-    override fun collectImports(file: KibbleFile) {
-        file.resolve(this)
-    }
+    /**
+     * @return the string/source form of this type
+     */
+    override fun toString() = toSource().toString()
 
     override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
         return writer {
@@ -104,6 +111,10 @@ open class KibbleType internal constructor(pkgName: String? = null, val classNam
             writeTypeParameters(typeParameters)
             if (nullable) write("?")
         }
+    }
+
+    override fun collectImports(file: KibbleFile) {
+        file.resolve(this)
     }
 
     override fun addTypeParameter(type: TypeParameter) {

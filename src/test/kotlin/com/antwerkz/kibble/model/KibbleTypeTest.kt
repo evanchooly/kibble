@@ -9,43 +9,48 @@ import org.testng.annotations.Test
 @Test
 class KibbleTypeTest {
     fun simpleType() {
-        val file = Kibble.parseSource("val foo: com.foo.bar.Type")
-        val type = file.properties[0].type
+        val type = KibbleType.from("com.foo.bar.Type")
 
-        Assert.assertEquals(type?.toString(), "Type")
-        Assert.assertTrue(type?.typeParameters?.isEmpty() ?: false)
+        Assert.assertEquals(type.toSource().toString(), "Type")
+        Assert.assertTrue(type.typeParameters.isEmpty())
     }
 
     fun generics() {
         val string = "com.foo.bar.SomeType<String, Double>?"
-        val type = Kibble.parseSource("val foo: $string")
-                .properties[0]
-                .type!!
+        val type = KibbleType.from(string)
 
-        Assert.assertEquals(type.toString(), "SomeType<String, Double>?")
+        Assert.assertEquals(type.toSource().toString(), "SomeType<String, Double>?")
         Assert.assertEquals(type.className, "SomeType")
         Assert.assertEquals(type.pkgName, "com.foo.bar")
         Assert.assertTrue(type.nullable)
         Assert.assertEquals(type.typeParameters.size, 2)
-        Assert.assertEquals(type.typeParameters[0].type.toString(), "String")
-        Assert.assertEquals(type.typeParameters[1].type.toString(), "Double")
+        Assert.assertEquals(type.typeParameters[0].type?.toSource().toString(), "String")
+        Assert.assertEquals(type.typeParameters[1].type?.toSource().toString(), "Double")
 
         val kibbleClass = Kibble.parseSource("class Foo<T: Runnable")
-                .classes[0]
-        Assert.assertEquals(kibbleClass.typeParameters[0].bounds.toString(), "Runnable")
-        Assert.assertEquals(kibbleClass.typeParameters[0].type.toString(), "T")
+                .classes.first()
+        Assert.assertEquals(kibbleClass.typeParameters[0].bounds?.toSource().toString(), "Runnable")
+        Assert.assertEquals(kibbleClass.typeParameters[0].type?.toSource().toString(), "T")
+    }
+
+    @Test
+    fun externalize() {
+        val string = "java.util.List<com.foo.Bar>"
+        val type = KibbleType.from(string)
+        Assert.assertEquals(type.toSource().toString(), "List<Bar>")
+        Assert.assertEquals(type.externalize(), string)
     }
 
     fun fullyQualified() {
         Assert.assertEquals(from("java.math.BigDecimal").fqcn(), "java.math.BigDecimal")
-        Assert.assertEquals(from("java.math.BigDecimal").toString(), "BigDecimal")
+        Assert.assertEquals(from("java.math.BigDecimal").toSource().toString(), "BigDecimal")
         Assert.assertEquals(from("BigDecimal").fqcn(), "BigDecimal")
         Assert.assertEquals(from("BigInteger").fqcn(), "BigInteger")
         Assert.assertEquals(from("java.time.LocalDateTime").fqcn(), "java.time.LocalDateTime")
-        Assert.assertEquals(from("java.time.LocalDateTime").toString(), "LocalDateTime")
+        Assert.assertEquals(from("java.time.LocalDateTime").toSource().toString(), "LocalDateTime")
         Assert.assertEquals(KibbleType("java.util", "List").also {
             it.addTypeParameters(listOf(TypeParameter(from("String"))))
-        }.toString(), "java.util.List<String>")
+        }.toSource().toString(), "java.util.List<String>")
     }
 
     fun components() {
@@ -68,11 +73,11 @@ class KibbleTypeTest {
         })
 
         Assert.assertEquals(type.fqcn(), "this.is.the.package.Class")
-        Assert.assertEquals(type.toString(), "Class<K, V>?")
+        Assert.assertEquals(type.toSource().toString(), "Class<K, V>?")
 
         val list = file.resolve(from("java.util.List<com.foo.Bar, out K>"))
         Assert.assertEquals(list.fqcn(), "java.util.List")
-        Assert.assertEquals(list.toString(), "List<Bar, out K>")
+        Assert.assertEquals(list.toSource().toString(), "List<Bar, out K>")
     }
 
     fun autoImportedTypes() {
@@ -91,7 +96,7 @@ class Main {
 }
 """.trim()
         val file = Kibble.parseSource(source)
-        val props = file.classes[0].properties.iterator()
+        val props = file.classes.first().properties.iterator()
 
         check(props.next(), "Boolean")
         check(props.next(), "Byte")

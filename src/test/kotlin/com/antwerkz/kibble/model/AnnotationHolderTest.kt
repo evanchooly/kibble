@@ -3,6 +3,7 @@ package com.antwerkz.kibble.model
 import com.antwerkz.kibble.Kibble
 import org.testng.Assert
 import org.testng.annotations.Test
+import java.io.File
 import java.lang.annotation.Retention
 
 
@@ -25,7 +26,7 @@ class AnnotationHolderTest {
         class Foo """)
 
         val klass = file
-                .classes[0]
+                .classes.first()
         Assert.assertTrue(klass.hasAnnotation(SuppressWarnings::class.java))
         verify(klass.getAnnotation(SuppressWarnings::class.java)!!)
     }
@@ -36,11 +37,11 @@ class AnnotationHolderTest {
         @SuppressWarnings("deprecation", count=10, foo=@Foo(42))
         fun foo()
         """)
-                .functions[0]
+                .functions.first()
         Assert.assertTrue(function.hasAnnotation(SuppressWarnings::class.java))
         verify(function.getAnnotation(SuppressWarnings::class.java)!!)
 
-        val file = KibbleFile("temp")
+        val file = KibbleFile(File("temp.kt"))
         val foo = file.addFunction("foo")
         foo.addAnnotation("Bob", listOf(KibbleArgument("name", "Feller")))
         foo.addAnnotation(Retention::class.java)

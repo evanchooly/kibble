@@ -13,29 +13,41 @@ class FunctionHolderTest {
 
 fun body() {
     print()
+    for (item in items) {
+        add(item)
+    }
 }
 """
 
         val file = Kibble.parseSource(source)
-        var kibbleFunction = file.functions[0]
+        val functions = file.getFunctions("expression").iterator()
+        var kibbleFunction = functions.next()
         Assert.assertEquals(kibbleFunction.body, """Foo(name ?: "")""")
 
-        kibbleFunction = file.functions[1]
-        Assert.assertEquals(kibbleFunction.body, """print()""")
+        kibbleFunction = file.getFunctions("body").first()
+        Assert.assertEquals(kibbleFunction.body, """print()
+for (item in items) {
+    add(item)
+}""")
     }
 
     @Test
     fun functionParameter() {
-        val bloop = Kibble.parseSource("""fun bloop(message: String, converter: (String, List<Double>) -> String): String { }""")
-                .functions[0]
+        val source = """fun bloop(message: String, converter: (String, List<Double>) -> String): String {
+    println()
+}
+"""
+        val bloop = Kibble.parseSource(source)
+                .functions.first()
         Assert.assertEquals(bloop.parameters[0].name, "message")
-        Assert.assertEquals(bloop.parameters[0].type.toString(), "String")
+        Assert.assertEquals(bloop.parameters[0].type?.toSource().toString(), "String")
 
         val kibbleParameter = bloop.parameters[1]
         Assert.assertEquals(kibbleParameter.name, "converter")
         val type = kibbleParameter.type as KibbleFunctionType
         val list = type.parameters.map { it.type?.toSource().toString() }
         Assert.assertEquals(list, listOf("String", "List<Double>"))
-        Assert.assertEquals(type.type.toString(), "String")
+        Assert.assertEquals(type.type?.toSource().toString(), "String")
+        Assert.assertEquals(bloop.toSource().toString(), source)
     }
 }
