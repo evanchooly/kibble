@@ -1,6 +1,12 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import com.antwerkz.kibble.classes
+import com.antwerkz.kibble.functions
+import com.antwerkz.kibble.interfaces
+import com.antwerkz.kibble.objects
+import com.antwerkz.kibble.properties
+import com.squareup.kotlinpoet.ClassName
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -10,8 +16,8 @@ class KibbleInterfaceTest {
         val file = Kibble.parseSource("""interface temp {
         |}""".trimMargin())
 
-        Assert.assertTrue(file.classes.any { it.isInterface })
-        Assert.assertFalse(file.classes.any { !it.isInterface })
+        Assert.assertTrue(file.classes.isEmpty())
+        Assert.assertFalse(file.interfaces.isEmpty())
         Assert.assertTrue(file.objects.isEmpty())
         Assert.assertTrue(file.functions.isEmpty())
         Assert.assertTrue(file.properties.isEmpty())
@@ -31,12 +37,12 @@ class KibbleInterfaceTest {
         |
         |}""".trimMargin())
 
-        Assert.assertTrue(file.classes.any { it.isInterface })
-        val kibbleInterface = file.classes.first { it.isInterface }
+        Assert.assertFalse(file.interfaces.isEmpty())
+        val kibbleInterface = file.interfaces.first()
         Assert.assertFalse(kibbleInterface.classes.isEmpty())
         Assert.assertFalse(kibbleInterface.objects.isEmpty())
-        Assert.assertFalse(kibbleInterface.functions.isEmpty())
-        Assert.assertFalse(kibbleInterface.properties.isEmpty())
+        Assert.assertFalse(kibbleInterface.funSpecs.isEmpty())
+        Assert.assertFalse(kibbleInterface.propertySpecs.isEmpty())
     }
 
     @Test
@@ -45,7 +51,7 @@ class KibbleInterfaceTest {
 }""".trim()
         val file = Kibble.parseSource(source)
 
-        Assert.assertEquals(file.classes.first().implements[0].fqcn(), "java.lang.Runnable")
+        Assert.assertNotNull(file.interfaces.first().superinterfaces.containsKey(ClassName("java.lang", "Runnable")))
 
     }
 }

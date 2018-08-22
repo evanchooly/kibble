@@ -1,6 +1,13 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import com.antwerkz.kibble.classes
+import com.antwerkz.kibble.companion
+import com.antwerkz.kibble.objects
+import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.KModifier.OVERRIDE
+import com.squareup.kotlinpoet.KModifier.PRIVATE
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -12,16 +19,16 @@ class KibbleObjectTest {
         val objects = file.classes.first().objects.iterator()
 
         val kibbleObject = objects.next()
-        Assert.assertTrue(kibbleObject.companion)
-        Assert.assertTrue(kibbleObject.isPrivate())
-        Assert.assertNull(kibbleObject.extends)
-        Assert.assertTrue(kibbleObject.superCallArgs.isEmpty())
-        Assert.assertEquals(kibbleObject.implements[0].className, "Runnable")
-        val functions = kibbleObject.functions.iterator()
+        Assert.assertTrue(kibbleObject.isCompanion)
+        Assert.assertTrue(kibbleObject.modifiers.contains(PRIVATE))
+        Assert.assertEquals(kibbleObject.superclass, ANY)
+        Assert.assertTrue(kibbleObject.superclassConstructorParameters.isEmpty())
+        Assert.assertNotNull(kibbleObject.superinterfaces.containsKey(ClassName("java.lang", "Runnable")))
+        val functions = kibbleObject.funSpecs.iterator()
 
         var function = functions.next()
         Assert.assertEquals(function.name, "run")
-        Assert.assertTrue(function.overriding)
+        Assert.assertTrue(function.modifiers.contains(OVERRIDE))
 
         function = functions.next()
         Assert.assertEquals(function.name, "dummy")
@@ -37,15 +44,8 @@ object temp {
 }""".trim()).objects.first()
 
         Assert.assertEquals(obj.name, "temp")
-        val function = obj.functions.first()
+        val function = obj.funSpecs.first()
         Assert.assertEquals(function.name, "something")
-        Assert.assertEquals(function.type, KibbleType(className = "Junk"))
-
-        val file = KibbleFile()
-
-        val temp = file.addObject("temp")
-        temp.addFunction("something", "Junk", """println("something")""")
-
-        Assert.assertEquals(temp, obj)
+        Assert.assertEquals(function.returnType, ClassName("", "Junk"))
     }
 }

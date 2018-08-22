@@ -24,20 +24,26 @@
     </scm>
 
     <properties>
-        <kotlin.version>1.2.51</kotlin.version>
+        <kotlin.version>1.2.61</kotlin.version>
         <slf4j.version>1.7.25</slf4j.version>
         <testng.version>6.11</testng.version>
-        <jacoco.version>0.7.7.201606060606</jacoco.version>
-        <dokka.version>0.9.13</dokka.version>
+        <jacoco.version>0.8.1</jacoco.version>
+        <dokka.version>0.9.17</dokka.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <downloadSources>true</downloadSources>
+        <kotlinpoet.version>1.0.0-RC1</kotlinpoet.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-compiler-embeddable</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
         <dependency>
@@ -61,6 +67,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>kotlinpoet</artifactId>
+            <version>${kotlinpoet.version}</version>
         </dependency>
 
         <dependency>
@@ -130,6 +141,7 @@
                     <jvmTarget>1.8</jvmTarget>
                 </configuration>
             </plugin>
+<!--
             <plugin>
                 <groupId>org.jetbrains.dokka</groupId>
                 <artifactId>dokka-maven-plugin</artifactId>
@@ -143,6 +155,7 @@
                     </execution>
                 </executions>
             </plugin>
+-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -165,7 +178,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.9</version>
+                <version>${jacoco.version}</version>
                 <executions>
                     <execution>
                         <id>default-prepare-agent</id>
@@ -182,6 +195,29 @@
                     </execution>
                 </executions>
             </plugin>
+<!--
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.squareup.kotlinpoet</pattern>
+                                    <shadedPattern>kibble.com.squareup.kotlinpoet</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+-->
         </plugins>
     </build>
 
@@ -190,7 +226,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.9</version>
+                <version>${jacoco.version}</version>
                 <reportSets>
                     <reportSet>
                         <reports>

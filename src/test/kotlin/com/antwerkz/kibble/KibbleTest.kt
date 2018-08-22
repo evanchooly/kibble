@@ -1,14 +1,13 @@
 package com.antwerkz.kibble
 
-import com.antwerkz.kibble.model.KibbleArgument
-import com.antwerkz.kibble.model.KibbleFile
-import com.antwerkz.kibble.model.KibbleParameter
-import com.antwerkz.kibble.model.KibbleType
-import com.antwerkz.kibble.model.Visibility
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.KModifier.INTERNAL
+import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.TypeSpec.Kind.Interface
 import org.testng.Assert
 import org.testng.annotations.Test
-import java.io.File
-import javax.annotation.Generated
 
 class KibbleTest {
     companion object {
@@ -21,71 +20,38 @@ class KibbleTest {
 
         Assert.assertEquals(file.functions.size, 1)
         val first = file.functions.first()
-        Assert.assertEquals(first.visibility, Visibility.INTERNAL)
-        Assert.assertEquals(first.type, KibbleType(className = "String"))
-        Assert.assertEquals(first.body, """println("hi")
-return "hi"""")
+        Assert.assertEquals(first.visibility, KModifier.INTERNAL)
+        Assert.assertEquals(first.returnType, ClassName("", "String"))
+        Assert.assertEquals(first.body, CodeBlock.of("""println("hi")
+return "hi""""))
     }
 
     @Test
     fun sampleClass() {
         val file = Kibble.parse(path)
 
-        Assert.assertEquals(file.imports.size, 3)
-        val classes = file.classes.iterator()
-        Assert.assertTrue(classes.next().isInterface)
+        val next = file.interfaces.first()
+        Assert.assertTrue(next.kind is Interface)
 
-        val klass = classes.next()
-        Assert.assertTrue(klass.isInternal())
-        Assert.assertTrue(klass.hasAnnotation(Generated::class.java))
-        Assert.assertEquals(klass.properties.size, 7, klass.properties.toString())
-        Assert.assertEquals(klass.constructor.parameters.size, 1, klass.constructor.parameters.toString())
+        val klass = file.getClass("KotlinSampleClass")!!
+        Assert.assertTrue(klass.visibility == INTERNAL)
+        Assert.assertNotNull(klass.annotations.firstOrNull { it.type == ClassName("javax.annotation", "Generated") })
+        Assert.assertEquals(klass.propertySpecs.size, 7, klass.propertySpecs.toString())
+        Assert.assertEquals(klass.primaryConstructor?.parameters?.size, 2, klass.primaryConstructor?.parameters.toString())
 
         listOf("cost", "name", "age", "list", "map", "time", "random").forEach {
-            Assert.assertNotNull(klass.properties.firstOrNull { p -> p.name == it}, "Should find '$it: "
-                    + klass.properties.map { p -> p.name})
+            Assert.assertNotNull(klass.propertySpecs.firstOrNull { p -> p.name == it}, "Should find '$it: "
+                    + klass.propertySpecs.map { p -> p.name})
         }
         listOf("output", "toString").forEach {
-            Assert.assertNotNull(klass.functions.firstOrNull { f -> f.name == it}, "Should find '$it: "
-                    + klass.functions.map { f -> f.name})
+            Assert.assertNotNull(klass.funSpecs.firstOrNull { f -> f.name == it}, "Should find '$it: "
+                    + klass.funSpecs.map { f -> f.name})
         }
 
-        Assert.assertEquals(klass.functions.first { it.name == "output"}.parameters,
-                listOf(KibbleParameter("count", KibbleType(className = "Long"))))
+        Assert.assertEquals(klass.funSpecs.first { it.name == "output"}.parameters,
+                listOf(ParameterSpec.builder("count", ClassName("", "Long")).build()))
 
-        Assert.assertEquals(klass.functions.first { it.name == "toString" }.parameters, listOf<KibbleParameter>())
-    }
-
-    @Test
-    fun writeSource() {
-        val file = Kibble.parse(path)
-
-        val tempFile = File("kibble-test.kt")
-        file.toSource().toFile(tempFile)
-
-        Assert.assertEquals(tempFile.readText(), File(path).readText())
-        tempFile.delete()
-    }
-
-    @Test
-    fun create() {
-        val file = KibbleFile(File("create.kt"))
-        val klass = file.addClass("KibbleTest")
-                .markOpen()
-
-        klass.addProperty("val property: Double = 0.0")
-        klass.addFunction("test", type = "Double",
-                body = """println("hello")
-return 0.0""")
-                .visibility = Visibility.PROTECTED
-
-        file.addProperty("val topLevel: Int =4")
-
-        file.addFunction("bareMethod", body = """println("hi")""")
-
-        val generated = file.toSource().toString()
-
-        Assert.assertEquals(generated, File("src/test/resources/generated.kt").readText())
+        Assert.assertTrue(klass.funSpecs.first { it.name == "toString" }.parameters.isEmpty())
     }
 
     @Test
@@ -95,12 +61,13 @@ return 0.0""")
         """.trimIndent())
 
         Assert.assertTrue(file.classes.size == 1)
-        Assert.assertTrue(file.classes.first().constructor.parameters.isEmpty())
-        val properties = file.classes.first().properties
+        Assert.assertEquals(file.classes.first().primaryConstructor?.parameters?.size, 1,
+                file.classes.first().primaryConstructor?.parameters.toString())
+        val properties = file.classes.first().propertySpecs
         Assert.assertTrue(properties.size == 1)
         Assert.assertEquals(properties[0].name, "num")
-        Assert.assertEquals(properties[0].type?.toSource().toString(), "Int")
     }
+
     @Test
     fun secondaryConstructors() {
         val file = Kibble.parseSource("""
@@ -114,8 +81,8 @@ return 0.0""")
         val secondaryConstructor = file.classes.first().secondaries[0]
         val parameters = secondaryConstructor.parameters
         Assert.assertEquals(parameters[0].name, "otherNum")
-        Assert.assertEquals(parameters[0].type?.toSource().toString(), "Long")
-        Assert.assertEquals(secondaryConstructor.delegationArguments, mutableListOf(KibbleArgument(value = "otherNum.toInt()")))
-        Assert.assertEquals(secondaryConstructor.body, "this.num = num")
+        Assert.assertEquals(secondaryConstructor.delegateConstructorArguments, mutableListOf(CodeBlock.of("otherNum.toInt()")))
+        Assert.assertEquals(secondaryConstructor.body, CodeBlock.of("this.num = num"))
     }
 }
+

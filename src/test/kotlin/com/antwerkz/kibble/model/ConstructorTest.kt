@@ -1,9 +1,11 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import com.antwerkz.kibble.classes
+import com.antwerkz.kibble.secondaries
 import org.testng.Assert
 import org.testng.annotations.Test
-import java.io.File
+import kotlin.test.fail
 
 class ConstructorTest {
     @Test
@@ -15,8 +17,8 @@ class Factory(val type: String) {
         """).classes.iterator()
 
         val klass = classes.next()
-        Assert.assertTrue(klass.constructor.parameters.isEmpty())
-        Assert.assertEquals("type", klass.properties[0].name)
+        Assert.assertEquals(klass.primaryConstructor?.parameters?.size, 1)
+        Assert.assertEquals("type", klass.propertySpecs[0].name)
 
         val secondaries = klass.secondaries.iterator()
         val secondary = secondaries.next()
@@ -24,25 +26,4 @@ class Factory(val type: String) {
         Assert.assertTrue(secondary.parameters.isEmpty())
     }
 
-    @Test
-    fun imports() {
-        val file = KibbleFile()
-        val temp = file.addClass("temp")
-        temp.addProperty("val temp: com.foo.Bob")
-                .constructorParam = true
-        temp.addSecondaryConstructor()
-                .addParameter("foo", "org.box.Bla")
-
-        val source = file.toSource().toString()
-        //language=kotlin
-        Assert.assertEquals(source, """import com.foo.Bob
-import org.box.Bla
-
-class temp(val temp: Bob) {
-    constructor(foo: Bla): this()
-
-}
-
-            """.trimIndent())
-    }
 }

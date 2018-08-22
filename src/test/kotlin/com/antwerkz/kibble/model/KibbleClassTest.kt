@@ -1,8 +1,15 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.model.TypeParameterVariance.IN
-import com.antwerkz.kibble.model.TypeParameterVariance.OUT
+import com.antwerkz.kibble.classes
+import com.antwerkz.kibble.companion
+import com.antwerkz.kibble.getClass
+import com.antwerkz.kibble.getFunctions
+import com.antwerkz.kibble.getObject
+import com.antwerkz.kibble.getProperty
+import com.antwerkz.kibble.isAbstract
+import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.ClassName
 import org.intellij.lang.annotations.Language
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -35,41 +42,6 @@ class KibbleClassTest {
         """.trimIndent()
 
     @Test
-    fun nested() {
-        var kibbleClass = Kibble.parseSource(source).classes.first()
-
-        Assert.assertEquals(kibbleClass.classes.size, 1)
-        Assert.assertEquals(kibbleClass.classes.first().name, "Nested")
-
-        val file = KibbleFile()
-        kibbleClass = file.addClass("Temp")
-        val nested = kibbleClass.addClass("Nested")
-
-        nested.extends("Foo", "\"bar\"")
-        nested.implements(KibbleType.from("Interface"))
-
-        nested.addSecondaryConstructor("blarg", "\"nargle\"")
-
-        nested.initBlock = InitBlock("println()")
-        nested.addProperty("val foo: Bob")
-                .constructorParam = true
-        nested.addProperty("val property: String")
-        nested.addFunction("something", "Int", "return 4")
-
-        val companion = kibbleClass.addCompanionObject()
-        companion.addProperty("val prop = 42")
-        kibbleClass.addObject("temp")
-
-        Assert.assertEquals(kibbleClass.classes.size, 1)
-        Assert.assertEquals(kibbleClass.classes.first().name, "Nested")
-
-        val objects = kibbleClass.objects.iterator()
-        Assert.assertTrue(objects.next().companion)
-        Assert.assertEquals(objects.next().name, "temp")
-        Assert.assertEquals(file.toSource().toString(), source)
-    }
-
-    @Test
     fun members() {
         val kibbleClass = Kibble.parseSource(source).classes.first()
 
@@ -80,7 +52,7 @@ class KibbleClassTest {
         obj = kibbleClass.getObject("temp")
         Assert.assertNotNull(obj, "Should find an object named 'temp'")
 
-        val kibble = kibbleClass.getClass("Nested")
+        val kibble = kibbleClass.getClass("Nested")!!
         Assert.assertNotNull(kibble.getProperty("property"), "Should find a property named 'property'")
         Assert.assertEquals(kibble.getFunctions("something").size, 1, "Should find one function named 'something'")
     }
@@ -109,71 +81,11 @@ open class Person : AbstractKotlinPerson {
 } """)
         val classes = file.classes.iterator()
         var clazz = classes.next()
-        Assert.assertNull(clazz.extends)
-        Assert.assertTrue(clazz.implements.isEmpty())
+        Assert.assertEquals(clazz.superclass, ANY)
+        Assert.assertTrue(clazz.superinterfaces.isEmpty())
         clazz = classes.next()
-        Assert.assertNull(clazz.extends)
-        Assert.assertEquals(clazz.implements.first(), KibbleType("critter.test.source", "AbstractKotlinPerson"))
-    }
-
-    @Test
-    fun noGenerics() {
-        val source = """class NoGeneric {
-}
-"""
-        val kibbleClass = Kibble.parseSource(source).classes.first()
-        Assert.assertEquals(kibbleClass.toSource().toString(), source)
-    }
-
-    @Test
-    fun generics() {
-        val source = """class Generic<out T> {
-}
-"""
-        val kibbleClass = Kibble.parseSource(source).classes.first()
-        Assert.assertEquals(kibbleClass.toSource().toString(), source)
-
-        val file = KibbleFile()
-        var generic = file.addClass("Generic")
-        generic.addTypeParameter(KibbleType(className = "T"), OUT)
-        Assert.assertEquals(generic.toSource().toString(), source)
-
-        generic = file.addClass("Generic")
-        generic.addTypeParameter(KibbleType.from("T"), IN)
-        Assert.assertEquals(generic.toSource().toString(), """class Generic<in T> {
-}
-""")
-
-        generic = file.addClass("Generic")
-        generic.addTypeParameter(KibbleType.from("K"))
-        generic.addTypeParameter(KibbleType.from("V"))
-        Assert.assertEquals(generic.toSource().toString(), """class Generic<K, V> {
-}
-""")
-
-        generic = file.addClass("Generic")
-        generic.addTypeParameter(KibbleType.from("K"), OUT)
-        generic.addTypeParameter(KibbleType.from("V"), IN)
-        Assert.assertEquals(generic.toSource().toString(), """class Generic<out K, in V> {
-}
-""")
-
-        generic = file.addClass("Generic")
-        generic.addTypeParameter(KibbleType.from("K"), OUT)
-        generic.addTypeParameter(KibbleType.from("V"), IN)
-        Assert.assertEquals(generic.toSource().toString(), """class Generic<out K, in V> {
-}
-""")
-    }
-
-    @Test
-    fun nestedGenerics() {
-        @Language("kotlin")
-        val source = """class Generic<out T: Comparable<T>> {
-}
-"""
-        val kibbleClass = Kibble.parseSource(source).classes.first()
-        Assert.assertEquals(kibbleClass.toSource().toString().trim(), source.trim())
+        Assert.assertEquals(clazz.superclass, ANY)
+        Assert.assertNotNull(clazz.superinterfaces.containsKey(ClassName("", "AbstractKotlinPerson")))
     }
 
     @Test
@@ -188,25 +100,10 @@ open class Person : AbstractKotlinPerson {
     @Test
     fun enumClasses() {
         @Language("kotlin")
-        val source = """enum class Enum"""
+        val source = """enum class Enum {
+    ENUM1
+}""".trimMargin()
         val kibbleClass = Kibble.parseSource(source).classes.first()
-        Assert.assertTrue(kibbleClass.enum)
-    }
-
-    @Test
-    fun implements() {
-        val file = KibbleFile()
-        file.addClass("Temp").also {
-            it.implements("java.lang.Runnable")
-        }
-
-        val temp = """import java.lang.Runnable
-
-class Temp: Runnable {
-}"""
-        Assert.assertEquals(file.toSource().toString().trim(), temp.trim())
-
-        val parsed = Kibble.parseSource(temp)
-        Assert.assertEquals(parsed.toSource().toString().trim(), temp.trim())
+        Assert.assertTrue(kibbleClass.isEnum)
     }
 }

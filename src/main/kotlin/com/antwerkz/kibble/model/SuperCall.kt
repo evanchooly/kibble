@@ -1,14 +1,9 @@
 package com.antwerkz.kibble.model
 
-import com.antwerkz.kibble.SourceWriter
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 
-class SuperCall(val type: KibbleType, val arguments: MutableList<KibbleArgument> = mutableListOf()): KibbleElement {
-    override fun toSource(writer: SourceWriter, level: Int): SourceWriter {
-        TODO("not implemented")
-    }
-
-    override fun collectImports(file: KibbleFile) {
-        TODO("not implemented")
-    }
-
+class SuperCall {
+    lateinit var type: ClassName
+    val arguments: MutableList<CodeBlock> = mutableListOf()
 }

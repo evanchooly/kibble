@@ -1,26 +1,13 @@
 package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
+import com.antwerkz.kibble.getFunctions
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.KModifier
 import org.testng.Assert
 import org.testng.annotations.Test
 
 class KibbleFunctionTest {
-    @Test
-    fun varargs() {
-        val file = KibbleFile()
-        file.addFunction("temp", body = """return 4""")
-                .addParameter("bob", "String", varargs = true)
-
-        val source = file.toSource().toString()
-
-        Assert.assertEquals(source, """
-            fun temp(vararg bob: String) {
-                return 4
-            }
-
-            """.trimIndent())
-    }
-
     @Test
     fun generics() {
         val file = Kibble.parseSource("""fun <T> foo(t: T)
@@ -28,21 +15,13 @@ class KibbleFunctionTest {
         """.trimMargin())
 
         var kibbleFunction = file.getFunctions("foo")[0]
-        Assert.assertEquals(kibbleFunction.typeParameters[0].type?.fqcn(), "T")
-        Assert.assertNull(kibbleFunction.typeParameters[0].variance)
-        Assert.assertNull(kibbleFunction.typeParameters[0].bounds)
+        Assert.assertEquals(kibbleFunction.typeVariables[0].toString(), "T")
+        Assert.assertNull(kibbleFunction.typeVariables[0].variance)
+        Assert.assertEquals(kibbleFunction.typeVariables[0].bounds, listOf(ClassName("kotlin", "Any?")))
 
         kibbleFunction = file.getFunctions("bar")[0]
-        Assert.assertEquals(kibbleFunction.typeParameters[0].type?.fqcn(), "K")
-        Assert.assertEquals(kibbleFunction.typeParameters[0].variance, TypeParameterVariance.OUT)
-        Assert.assertEquals(kibbleFunction.typeParameters[0].bounds, KibbleType.from("Bar"))
-
-        val foo = file.addFunction("foo")
-        foo.addParameter("t", "T")
-        foo.addTypeParameter("T")
-
-        Assert.assertEquals(foo.toString(), """fun <T> foo(t: T)
-            |
-        """.trimMargin())
+        Assert.assertEquals(kibbleFunction.typeVariables[0].toString(), "K")
+        Assert.assertEquals(kibbleFunction.typeVariables[0].variance, KModifier.OUT)
+        Assert.assertEquals(kibbleFunction.typeVariables[0].bounds, listOf(ClassName("", "Bar")))
     }
 }
