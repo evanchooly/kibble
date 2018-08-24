@@ -7,7 +7,6 @@ jdk:
 - openjdk8
 - openjdk9
 - openjdk10
-- openjdk11
 
 install:
   - wget http://apache.cs.utah.edu/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.zip || travis_terminate 1;
