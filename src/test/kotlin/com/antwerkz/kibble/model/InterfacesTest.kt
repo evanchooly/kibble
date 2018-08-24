@@ -10,7 +10,7 @@ import com.squareup.kotlinpoet.ClassName
 import org.testng.Assert
 import org.testng.annotations.Test
 
-class KibbleInterfaceTest {
+class InterfacesTest {
     @Test
     fun basic() {
         val file = Kibble.parseSource("""interface temp {
@@ -52,6 +52,5 @@ class KibbleInterfaceTest {
         val file = Kibble.parseSource(source)
 
         Assert.assertNotNull(file.interfaces.first().superinterfaces.containsKey(ClassName("java.lang", "Runnable")))
-
     }
 }

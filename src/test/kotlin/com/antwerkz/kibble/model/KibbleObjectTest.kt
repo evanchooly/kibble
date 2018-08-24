@@ -2,7 +2,6 @@ package com.antwerkz.kibble.model
 
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.classes
-import com.antwerkz.kibble.companion
 import com.antwerkz.kibble.objects
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ClassName

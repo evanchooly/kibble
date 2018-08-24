@@ -335,9 +335,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         context.push(builder.build())
     }
 
-    private fun unknownType(it: Any): Nothing {
-        TODO("unknown type: ${it.javaClass}\n${it}")
-    }
+    private fun unknownType(it: Any): Nothing = TODO("unknown type: ${it.javaClass}\n$it")
 
     override fun visitNamedFunction(kt: KtNamedFunction) {
         val builder = FunSpec.builder(kt.name ?: missing("function name is missing: ${kt.text}"))
@@ -540,7 +538,6 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
             }
             context.push(builder.build())
         }
-
     }
 
     override fun visitSuperTypeList(list: KtSuperTypeList) {
@@ -621,7 +618,6 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         when (expression) {
             is KtConstructorDelegationReferenceExpression -> visitConstructorDelegationReferenceExpression(expression)
             else -> context.push(CodeBlock.of(expression.text))
-
         }
     }
 
@@ -964,5 +960,4 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
             it.accept(visitor)
         }
     }
-
 }

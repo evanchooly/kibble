@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -98,6 +99,14 @@
             <name>JCenter</name>
             <url>https://jcenter.bintray.com/</url>
         </pluginRepository>
+        <pluginRepository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-gantsign-maven</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/gantsign/maven</url>
+        </pluginRepository>
     </pluginRepositories>
 
     <build>
@@ -140,21 +149,21 @@
                     <jvmTarget>1.8</jvmTarget>
                 </configuration>
             </plugin>
-<!--
-            <plugin>
-                <groupId>org.jetbrains.dokka</groupId>
-                <artifactId>dokka-maven-plugin</artifactId>
-                <version>${dokka.version}</version>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>dokka</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
--->
+            <!--
+                        <plugin>
+                            <groupId>org.jetbrains.dokka</groupId>
+                            <artifactId>dokka-maven-plugin</artifactId>
+                            <version>${dokka.version}</version>
+                            <executions>
+                                <execution>
+                                    <phase>prepare-package</phase>
+                                    <goals>
+                                        <goal>dokka</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -194,29 +203,43 @@
                     </execution>
                 </executions>
             </plugin>
-<!--
+            <!--
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-shade-plugin</artifactId>
+                            <version>3.1.1</version>
+                            <executions>
+                                <execution>
+                                    <phase>package</phase>
+                                    <goals>
+                                        <goal>shade</goal>
+                                    </goals>
+                                    <configuration>
+                                        <relocations>
+                                            <relocation>
+                                                <pattern>com.squareup.kotlinpoet</pattern>
+                                                <shadedPattern>kibble.com.squareup.kotlinpoet</shadedPattern>
+                                            </relocation>
+                                        </relocations>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+            -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.1.1</version>
+                <groupId>com.github.gantsign.maven</groupId>
+                <artifactId>ktlint-maven-plugin</artifactId>
+                <version>0.9.4</version>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <id>format-and-check</id>
                         <goals>
-                            <goal>shade</goal>
+                            <!--<goal>format</goal>-->
+                            <goal>check</goal>
                         </goals>
-                        <configuration>
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.squareup.kotlinpoet</pattern>
-                                    <shadedPattern>kibble.com.squareup.kotlinpoet</shadedPattern>
-                                </relocation>
-                            </relocations>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
--->
         </plugins>
     </build>
 

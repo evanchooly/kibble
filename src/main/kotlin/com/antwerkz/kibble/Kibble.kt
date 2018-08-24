@@ -22,7 +22,6 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import org.jetbrains.kotlin.config.addKotlinSourceRoot
 import java.io.File
-import javax.tools.Diagnostic.Kind
 
 /**
  * This is the primary entry point for parsing existing Kotlin code
@@ -72,7 +71,10 @@ object Kibble {
                 PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false))
         paths.forEach { configuration.addKotlinSourceRoot(it.absolutePath) }
 
-        val environment = KotlinCoreEnvironment.createForProduction(Disposable { }, configuration, JVM_CONFIG_FILES)
+        val environment = KotlinCoreEnvironment.createForProduction(
+                Disposable { },
+                configuration,
+                JVM_CONFIG_FILES)
 
         val visitor = KibbleVisitor(context)
         environment.getSourceFiles()
@@ -80,7 +82,6 @@ object Kibble {
 
         return context.files
     }
-
 }
 
 val FileSpec.classes: List<TypeSpec>
@@ -106,13 +107,11 @@ val FunSpec.visibility: KModifier
     get() = modifiers.visibility
 
 fun FileSpec.getClass(name: String): TypeSpec? = classes.firstOrNull { it.name == name }
-fun FileSpec.getFunctions(name: String): List<FunSpec> = functions.filter { it.name == name }
 
+fun FileSpec.getFunctions(name: String): List<FunSpec> = functions.filter { it.name == name }
 
 val Set<KModifier>.visibility: KModifier
     get() = firstOrNull { it in setOf(PUBLIC, PROTECTED, PRIVATE, INTERNAL) } ?: PUBLIC
-
-
 
 val TypeSpec.classes: List<TypeSpec>
     get() = typeSpecs
@@ -141,7 +140,6 @@ fun TypeSpec.getObject(name: String): TypeSpec? = typeSpecs
 fun TypeSpec.getFunctions(name: String): List<FunSpec> = funSpecs.filter { it.name == name }
 fun TypeSpec.getProperty(name: String): PropertySpec? = propertySpecs.firstOrNull { it.name == name }
 fun TypeSpec.isAbstract() = KModifier.ABSTRACT in modifiers
-//fun TypeSpec.isEnum() = isEnum()
 val TypeSpec.visibility: KModifier
     get() = modifiers.visibility
 

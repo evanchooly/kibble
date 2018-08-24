@@ -5,7 +5,6 @@ import com.antwerkz.kibble.classes
 import com.antwerkz.kibble.secondaries
 import org.testng.Assert
 import org.testng.annotations.Test
-import kotlin.test.fail
 
 class ConstructorTest {
     @Test
@@ -25,5 +24,4 @@ class Factory(val type: String) {
         Assert.assertNotNull(secondary)
         Assert.assertTrue(secondary.parameters.isEmpty())
     }
-
 }

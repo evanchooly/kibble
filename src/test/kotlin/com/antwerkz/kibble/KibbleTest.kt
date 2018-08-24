@@ -40,15 +40,15 @@ return "hi""""))
         Assert.assertEquals(klass.primaryConstructor?.parameters?.size, 2, klass.primaryConstructor?.parameters.toString())
 
         listOf("cost", "name", "age", "list", "map", "time", "random").forEach {
-            Assert.assertNotNull(klass.propertySpecs.firstOrNull { p -> p.name == it}, "Should find '$it: "
-                    + klass.propertySpecs.map { p -> p.name})
+            Assert.assertNotNull(klass.propertySpecs.firstOrNull { p -> p.name == it }, "Should find '$it: " +
+                    klass.propertySpecs.map { p -> p.name })
         }
         listOf("output", "toString").forEach {
-            Assert.assertNotNull(klass.funSpecs.firstOrNull { f -> f.name == it}, "Should find '$it: "
-                    + klass.funSpecs.map { f -> f.name})
+            Assert.assertNotNull(klass.funSpecs.firstOrNull { f -> f.name == it }, "Should find '$it: " +
+                    klass.funSpecs.map { f -> f.name })
         }
 
-        Assert.assertEquals(klass.funSpecs.first { it.name == "output"}.parameters,
+        Assert.assertEquals(klass.funSpecs.first { it.name == "output" }.parameters,
                 listOf(ParameterSpec.builder("count", ClassName("", "Long")).build()))
 
         Assert.assertTrue(klass.funSpecs.first { it.name == "toString" }.parameters.isEmpty())
@@ -85,4 +85,3 @@ return "hi""""))
         Assert.assertEquals(secondaryConstructor.body, CodeBlock.of("this.num = num"))
     }
 }
-

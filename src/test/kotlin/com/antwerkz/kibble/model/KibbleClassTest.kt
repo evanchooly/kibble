@@ -94,7 +94,6 @@ open class Person : AbstractKotlinPerson {
         val source = """abstract class Abstract"""
         val kibbleClass = Kibble.parseSource(source).classes.first()
         Assert.assertTrue(kibbleClass.isAbstract())
-
     }
 
     @Test
