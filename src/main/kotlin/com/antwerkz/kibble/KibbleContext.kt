@@ -40,6 +40,7 @@ class KibbleContext {
     fun register(file: FileSpec) = files.add(file)
 
     fun push(value: Any) {
+/*
         if (value !is Slab &&
                 value !is SuperCall &&
                 value !is CallBlock &&
@@ -48,6 +49,7 @@ class KibbleContext {
                 !value::class.java.`package`.name.startsWith("com.square")) {
             throw Exception("non-kotlinpoet type pushed to the stack: [${value::class.java}] $value")
         }
+*/
         stack.push(value)
     }
 

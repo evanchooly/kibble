@@ -5,9 +5,11 @@ import com.antwerkz.kibble.model.CallBlock.ThisCallBlock
 import com.antwerkz.kibble.model.ClassType
 import com.antwerkz.kibble.model.ClassType.ENUM
 import com.antwerkz.kibble.model.ClassType.INTERFACE
+import com.antwerkz.kibble.model.Delegate
 import com.antwerkz.kibble.model.SuperCall
 import com.antwerkz.kibble.model.TypeProjection
 import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.AnnotationSpec.UseSiteTarget
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -15,6 +17,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.PropertySpec.Builder
@@ -195,7 +198,10 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitKtElement(element: KtElement) {
-        throw Exception("Found an unprocessed type: $element")
+        when (element) {
+            is KtAnnotationUseSiteTarget -> visitAnnotationUseSiteTarget(element)
+            else -> unknownType(element)
+        }
     }
 
     override fun visitDeclaration(dcl: KtDeclaration) {
@@ -239,6 +245,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                     }
                 }
                 is CodeBlock -> addInitializerBlock(it)
+                is SuperType -> if(it.delegate != null) addSuperinterface(it.type, it.delegate!!) else addSuperinterface(it.type)
                 else -> unknownType(it)
             }
         }
@@ -288,6 +295,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                     it.arguments.forEach { arg -> addSuperclassConstructorParameter(arg) }
                 }
                 is TypeSpec -> addType(it)
+                is CodeBlock -> addInitializerBlock(it)
                 else -> unknownType(it)
             }
         }
@@ -328,6 +336,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                     builder.addParameter(it.name, it.type)
                     context.push(it)
                 }
+                is AnnotationSpec -> builder.addAnnotation(it)
                 else -> unknownType(it)
             }
         }
@@ -335,7 +344,10 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         context.push(builder.build())
     }
 
-    private fun unknownType(it: Any): Nothing = TODO("unknown type: ${it.javaClass}\n$it")
+    private fun unknownType(it: Any): Nothing {
+        val text = if(it is KtElement) it.text else it.toString()
+        TODO("unknown type: ${it.javaClass}\n --> $text")
+    }
 
     override fun visitNamedFunction(kt: KtNamedFunction) {
         val builder = FunSpec.builder(kt.name ?: missing("function name is missing: ${kt.text}"))
@@ -396,10 +408,10 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         acceptChildren(bookmark, property, builder) {
             when (it) {
                 is CodeBlock -> initializer(it)
+                is Delegate -> delegate(it.delegation)
                 is AnnotationSpec -> addAnnotation(it)
-                is KModifier -> builder.addModifiers(it)
-                is TypeName -> { /*  already handled */
-                }
+                is KModifier -> addModifiers(it)
+                is TypeName -> { /*  already handled */ }
                 else -> unknownType(it)
             }
         }
@@ -455,7 +467,18 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitAnnotation(annotation: KtAnnotation) {
-        this.visitKtElement(annotation)
+//        val annType = annotation.typeReference?.evaluate<ClassName>(this)!!
+        var useSiteTarget: UseSiteTarget? = null
+        acceptChildren("visitAnnotation", annotation, None) {
+            when (it) {
+                is UseSiteTarget -> useSiteTarget = it
+                is AnnotationSpec -> {
+                    context.push(it.toBuilder().useSiteTarget(useSiteTarget)
+                            .build())
+                }
+                else -> unknownType(it)
+            }
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -476,14 +499,15 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     fun visitAnnotationUseSiteTarget(annotationTarget: KtAnnotationUseSiteTarget) {
-        this.visitKtElement(annotationTarget)
+        context.push(UseSiteTarget.valueOf(annotationTarget.getAnnotationUseSiteTarget().name))
     }
 
     override fun visitConstructorCalleeExpression(kt: KtConstructorCalleeExpression) {
         val superCall = SuperCall()
         acceptChildren("visitConstructorCalleeExpression", kt, superCall) {
             when (it) {
-                is ClassName -> superCall.type = it
+                is ClassName -> type = it
+                is ParameterizedTypeName -> type = it
                 else -> unknownType(it)
             }
         }
@@ -522,7 +546,6 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         val builder: Any
         if (parameter.hasValOrVar()) {
             builder = PropertySpec.builder(name, type)
-            builder.initializer(parameter.name!!)
             buildProperty("visitParameter", parameter, builder)
             context.push(builder.build())
         } else {
@@ -544,8 +567,19 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         list.entries.forEach { it.accept(this) }
     }
 
+    class SuperType {
+        lateinit var type: TypeName
+        var delegate: CodeBlock? = null
+    }
+
     override fun visitSuperTypeListEntry(specifier: KtSuperTypeListEntry) {
-        unknownType(specifier)
+        acceptChildren("visitSuperTypeListEntry", specifier, SuperType()) {
+            when (it) {
+                is CodeBlock -> delegate = it
+                is ParameterizedTypeName -> type = it
+                else -> unknownType(it)
+            }
+        }
     }
 
     override fun visitDelegatedSuperTypeEntry(specifier: KtDelegatedSuperTypeEntry) {
@@ -592,8 +626,15 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitPropertyDelegate(delegate: KtPropertyDelegate) {
-        this.visitKtElement(delegate)
+        acceptChildren("visitPropertyDelegate", delegate, object: Any() {}) {
+            when (it) {
+                is CodeBlock -> context.push(Delegate(it))
+                else -> unknownType(it)
+            }
+        }
     }
+
+    object None : Any()
 
     override fun visitTypeReference(typeReference: KtTypeReference) {
         typeReference.acceptChildren(this)
@@ -766,12 +807,12 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitBlockExpression(expression: KtBlockExpression) {
         val builder = CodeBlock.builder()
-        val body = expression.text
-                .dropWhile { it == '{' /*|| it == '\n'*/ }
-                .dropLastWhile { it == '}' /*|| it == '\n'*/ }
-                .trimIndent()
 
-        builder.add(body)
+        builder.add("%L", expression.text
+                .drop(1)
+                .dropLast(1)
+                .trimIndent()
+        )
 
         context.push(builder.build())
     }
