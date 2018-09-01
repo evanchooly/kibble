@@ -15,6 +15,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.KModifier.VARARG
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
@@ -558,16 +559,21 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 is TypeName -> { } // handled
                 is KModifier -> addModifiers(it)
                 is CodeBlock -> defaultValue(it)
+                is AnnotationSpec -> addAnnotation(it)
                 else -> unknownType(it)
             }
         }
-        context.push(builder.build())
         if (parameter.hasValOrVar()) {
             val propBuilder = PropertySpec.builder(name, type)
             buildProperty("visitParameter", parameter, propBuilder, true)
+            if(VARARG in propBuilder.modifiers) {
+                propBuilder.modifiers.remove(VARARG)
+            }
             propBuilder.initializer(name)
             context.push(propBuilder.build())
         }
+        context.push(builder.build())
+
     }
 
     override fun visitSuperTypeList(list: KtSuperTypeList) {

@@ -2,6 +2,7 @@ package com.antwerkz.kibble
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec.Companion.classBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -32,7 +33,7 @@ class Factory(val type: String) {
     fun constructors() {
         val fileSpec = Kibble.parseSource(
                 """
-class Factory(val type: String = "red")
+class Factory(vararg val type: String = "red")
         """
         )
         val classes = fileSpec.classes.iterator()
@@ -40,26 +41,11 @@ class Factory(val type: String = "red")
         val klass = classes.next()
         val primaryConstructor = klass.primaryConstructor!!
         Assert.assertEquals(primaryConstructor.parameters.size, 1)
-        Assert.assertEquals("type", primaryConstructor.parameters[0].name)
-        Assert.assertEquals(CodeBlock.of("\"red\""), primaryConstructor.parameters[0].defaultValue)
+
+        val parameterSpec = primaryConstructor.parameters[0]
+        Assert.assertEquals("type", parameterSpec.name)
+        Assert.assertEquals(CodeBlock.of("\"red\""), parameterSpec.defaultValue)
+        Assert.assertTrue(KModifier.VARARG in parameterSpec.modifiers)
         Assert.assertEquals("type", klass.propertySpecs[0].name)
-    }
-
-    @Test
-    fun props() {
-        val string = ClassName("", "String")
-     file("", "temp").addType(
-             classBuilder("temp").primaryConstructor(
-                     ctor().addParameter(parameter("arg", string)
-                                                 .defaultValue(""""hello world"""")
-                                                 .build()).build()
-             ).addProperty(
-                     property("arg", string)
-                             .initializer("arg")
-     //                                .initializer(""""hello world"""")
-                             .build()
-             ).build()
-     ).build().writeTo(System.out)
-
     }
 }
