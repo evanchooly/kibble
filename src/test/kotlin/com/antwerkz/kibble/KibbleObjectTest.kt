@@ -1,8 +1,5 @@
-package com.antwerkz.kibble.model
+package com.antwerkz.kibble
 
-import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.classes
-import com.antwerkz.kibble.objects
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier.OVERRIDE

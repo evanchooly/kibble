@@ -1,13 +1,5 @@
-package com.antwerkz.kibble.model
+package com.antwerkz.kibble
 
-import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.classes
-import com.antwerkz.kibble.companion
-import com.antwerkz.kibble.getClass
-import com.antwerkz.kibble.getFunctions
-import com.antwerkz.kibble.getObject
-import com.antwerkz.kibble.getProperty
-import com.antwerkz.kibble.isAbstract
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ClassName
 import org.intellij.lang.annotations.Language

@@ -1,7 +1,5 @@
-package com.antwerkz.kibble.model
+package com.antwerkz.kibble
 
-import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.getFunctions
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import org.testng.Assert

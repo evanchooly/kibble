@@ -332,10 +332,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         processChildren(builder, values) {
             when (it) {
                 is ParameterSpec -> builder.addParameter(it)
-                is PropertySpec -> {
-                    builder.addParameter(it.name, it.type)
-                    context.push(it)
-                }
+                is PropertySpec -> context.push(it)
                 is AnnotationSpec -> builder.addAnnotation(it)
                 else -> unknownType(it)
             }
@@ -346,7 +343,11 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     private fun unknownType(it: Any): Nothing {
         val text = if(it is KtElement) it.text else it.toString()
-        TODO("unknown type: ${it.javaClass}\n --> $text")
+        val stack = context.stack
+                .map { it.toString() }
+                .reversed()
+                .joinToString("\n ===> ") { it.trim() }
+        TODO("unknown type: ${it.javaClass}\n --> $text\nStack:\n$stack")
     }
 
     override fun visitNamedFunction(kt: KtNamedFunction) {
@@ -404,14 +405,15 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         context.push(builder.build())
     }
 
-    private fun buildProperty(bookmark: String, property: PsiElement, builder: Builder) {
+    private fun buildProperty(bookmark: String, property: PsiElement, builder: Builder, skipInitializer: Boolean = false) {
         acceptChildren(bookmark, property, builder) {
             when (it) {
-                is CodeBlock -> initializer(it)
+                is CodeBlock -> if (!skipInitializer) initializer(it)
                 is Delegate -> delegate(it.delegation)
                 is AnnotationSpec -> addAnnotation(it)
                 is KModifier -> addModifiers(it)
                 is TypeName -> { /*  already handled */ }
+                is Accessor -> getter(it.function)
                 else -> unknownType(it)
             }
         }
@@ -453,6 +455,13 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitClassBody(classBody: KtClassBody) {
         classBody.acceptChildren(this)
+/*
+        acceptChildren("visitClassBody", classBody, None) {
+            when (it) {
+                else -> unknownType(it)
+            }
+        }
+*/
     }
 
     override fun visitModifierList(list: KtModifierList) {
@@ -543,23 +552,21 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     override fun visitParameter(parameter: KtParameter) {
         val name = parameter.name ?: ""
         val type = parameter.typeReference!!.evaluate<TypeName>(this)
-        val builder: Any
-        if (parameter.hasValOrVar()) {
-            builder = PropertySpec.builder(name, type)
-            buildProperty("visitParameter", parameter, builder)
-            context.push(builder.build())
-        } else {
-            builder = ParameterSpec.builder(name, type)
-            acceptChildren("visitParameter accept", parameter, builder) {
-                when (it) {
-                    is TypeName -> {
-                    } // handled
-                    is KModifier -> addModifiers(it)
-                    is CodeBlock -> defaultValue(it)
-                    else -> unknownType(it)
-                }
+        val builder= ParameterSpec.builder(name, type)
+        acceptChildren("visitParameter accept", parameter, builder) {
+            when (it) {
+                is TypeName -> { } // handled
+                is KModifier -> addModifiers(it)
+                is CodeBlock -> defaultValue(it)
+                else -> unknownType(it)
             }
-            context.push(builder.build())
+        }
+        context.push(builder.build())
+        if (parameter.hasValOrVar()) {
+            val propBuilder = PropertySpec.builder(name, type)
+            buildProperty("visitParameter", parameter, propBuilder, true)
+            propBuilder.initializer(name)
+            context.push(propBuilder.build())
         }
     }
 
@@ -842,7 +849,12 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitInitializerList(list: KtInitializerList) {
-        this.visitKtElement(list)
+        acceptChildren("visitInitializerList", list, None) {
+            when (it) {
+                is SuperCall -> context.push(it)
+                else -> unknownType(it)
+            }
+        }
     }
 
     override fun visitAnonymousInitializer(initializer: KtAnonymousInitializer) {
@@ -857,8 +869,15 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         context.push(initializer.body?.evaluate(this) ?: CodeBlock.of(""))
     }
 
+    data class Accessor(val function: FunSpec)
     override fun visitPropertyAccessor(accessor: KtPropertyAccessor) {
-        this.visitDeclaration(accessor)
+        acceptChildren("visitPropertyAccessor", accessor, None) {
+            when (it) {
+                is CodeBlock -> context.push(Accessor(FunSpec.builder("get()").addCode(it).build()))
+                else -> unknownType(it)
+            }
+        }
+
     }
 
     override fun visitTypeConstraintList(list: KtTypeConstraintList) {

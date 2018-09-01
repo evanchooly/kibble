@@ -1,11 +1,5 @@
-package com.antwerkz.kibble.model
+package com.antwerkz.kibble
 
-import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.classes
-import com.antwerkz.kibble.functions
-import com.antwerkz.kibble.interfaces
-import com.antwerkz.kibble.objects
-import com.antwerkz.kibble.properties
 import com.squareup.kotlinpoet.ClassName
 import org.testng.Assert
 import org.testng.annotations.Test

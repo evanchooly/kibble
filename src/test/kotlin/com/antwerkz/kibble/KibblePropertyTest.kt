@@ -1,4 +1,4 @@
-package com.antwerkz.kibble.model
+package com.antwerkz.kibble
 
 import com.antwerkz.kibble.Kibble
 import com.antwerkz.kibble.properties

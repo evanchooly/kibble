@@ -1,8 +1,5 @@
 package com.antwerkz.kibble
 
-import com.antwerkz.kibble.model.CallBlock
-import com.antwerkz.kibble.model.SuperCall
-import com.antwerkz.kibble.model.TypeProjection
 import com.squareup.kotlinpoet.FileSpec
 import org.slf4j.LoggerFactory
 import java.util.Stack
@@ -10,30 +7,17 @@ import java.util.Stack
 @Suppress("UNCHECKED_CAST")
 class KibbleContext {
     companion object {
-        val LOG = LoggerFactory.getLogger(KibbleContext::class.java)
-
-        private val list = listOf(
-                "kotlin",
-                "kotlin.collections",
-                "kotlin.io",
-                "kotlin.jvm",
-                "kotlin.comparisons",
-                "kotlin.text",
-                "kotlin.sequences",
-                "kotlin.ranges",
-                "java.lang",
-                "kotlin.annotation"
-        )
+        val LOG = LoggerFactory.getLogger(KibbleContext::class.java)!!
     }
 
-    private data class Slab(val name: String)
+    private data class Bookmark(val name: String)
 
-    val autoImports = mutableSetOf<String>("Any", "Unit", "Nothing", "Byte", "Short", "Int", "Long", "Float", "Double",
-            "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString", "Suppress")
+    val autoImports = mutableSetOf("Any", "Unit", "Nothing", "Byte", "Short", "Int", "Long", "Float", "Double",
+                                   "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString", "Suppress")
 
     val files = mutableListOf<FileSpec>()
 
-    private val stack = Stack<Any>()
+    internal val stack = Stack<Any>()
 
     var defaultPackageName = ""
 
@@ -58,16 +42,16 @@ class KibbleContext {
     fun <T> peek(): T = (if (!stack.isEmpty()) stack.peek() else null) as T
 
     fun bookmark(name: String) {
-        push(Slab(name))
+        push(Bookmark(name))
         LOG.debug("bookmarking $name")
     }
 
     fun popToBookmark(): List<Any> {
         val values = mutableListOf<Any>()
-        while (peek<Any>() !is Slab) {
+        while (peek<Any>() !is Bookmark) {
             values += pop<Any>()
         }
-        val slab = pop<Slab>()
+        val slab = pop<Bookmark>()
         LOG.debug("removing bookmark $slab")
         return values.reversed()
     }
