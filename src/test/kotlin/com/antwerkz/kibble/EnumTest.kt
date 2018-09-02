@@ -25,6 +25,5 @@ class EnumTest {
         val typeSpec = fileSpec.classes[0]
         assertTrue(typeSpec.isEnum)
         assertNotNull(typeSpec.enumConstants["Davis"])
-        println("typeSpec = ${typeSpec}")
     }
 }

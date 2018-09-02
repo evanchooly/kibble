@@ -43,9 +43,11 @@ class Factory(vararg val type: String = "red")
         Assert.assertEquals(primaryConstructor.parameters.size, 1)
 
         val parameterSpec = primaryConstructor.parameters[0]
-        Assert.assertEquals("type", parameterSpec.name)
-        Assert.assertEquals(CodeBlock.of("\"red\""), parameterSpec.defaultValue)
+        Assert.assertEquals(parameterSpec.name, "type")
+        Assert.assertEquals(parameterSpec.defaultValue.toString(), "\"red\"")
         Assert.assertTrue(KModifier.VARARG in parameterSpec.modifiers)
-        Assert.assertEquals("type", klass.propertySpecs[0].name)
+        Assert.assertEquals(klass.propertySpecs[0].name, "type")
+
+        fileSpec.writeTo(System.out)
     }
 }

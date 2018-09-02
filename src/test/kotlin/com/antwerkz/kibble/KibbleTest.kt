@@ -6,12 +6,14 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.KModifier.INTERNAL
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec.Kind.Interface
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
 import org.testng.Assert
 import org.testng.annotations.Test
 
 class KibbleTest {
     companion object {
-        val path = "src/test/resources/com/antwerkz/test/KotlinSampleClass.kt"
+        const val path = "src/test/resources/com/antwerkz/test/KotlinSampleClass.kt"
     }
 
     @Test
@@ -21,7 +23,7 @@ class KibbleTest {
         Assert.assertEquals(file.functions.size, 1)
         val first = file.functions.first()
         Assert.assertEquals(first.visibility, KModifier.INTERNAL)
-        Assert.assertEquals(first.returnType, ClassName("", "String"))
+        Assert.assertEquals(first.returnType.toString(), "String")
         Assert.assertEquals(first.body, CodeBlock.of("""println("hi")
 return "hi""""))
     }
@@ -35,7 +37,7 @@ return "hi""""))
 
         val klass = file.getClass("KotlinSampleClass")!!
         Assert.assertTrue(klass.visibility == INTERNAL)
-        Assert.assertNotNull(klass.annotations.firstOrNull { it.type == ClassName("javax.annotation", "Generated") })
+        Assert.assertNotNull(klass.annotationSpecs.firstOrNull { it.type == ClassName("javax.annotation", "Generated") })
         Assert.assertEquals(klass.propertySpecs.size, 7, klass.propertySpecs.toString())
         Assert.assertEquals(klass.primaryConstructor?.parameters?.size, 2, klass.primaryConstructor?.parameters.toString())
 
