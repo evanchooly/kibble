@@ -12,8 +12,27 @@ class KibbleContext {
 
     private data class Bookmark(val name: String)
 
-    val autoImports = mutableSetOf("Any", "Unit", "Nothing", "Byte", "Short", "Int", "Long", "Float", "Double",
-                                   "Boolean", "String", "Integer", "List", "Map", "String", "MutableList", "MutableMap", "MutableString", "Suppress")
+    val autoImports = mutableSetOf(
+            "Any",
+            "Unit",
+            "Nothing",
+            "Byte",
+            "Short",
+            "Int",
+            "Long",
+            "Float",
+            "Double",
+            "Boolean",
+            "String",
+            "Integer",
+            "List",
+            "Map",
+            "String",
+            "MutableList",
+            "MutableMap",
+            "MutableString",
+            "Suppress"
+    )
 
     val files = mutableListOf<FileSpec>()
 

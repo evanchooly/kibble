@@ -255,7 +255,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                     }
                 }
                 is CodeBlock -> addInitializerBlock(it)
-                is SuperType -> if(it.delegate != null) addSuperinterface(it.type, it.delegate!!) else addSuperinterface(it.type)
+                is SuperType -> if (it.delegate != null) addSuperinterface(it.type, it.delegate!!) else addSuperinterface(it.type)
                 is TypeConstraint -> addTypeVariable(it.type)
                 else -> unknownType(it)
             }
@@ -353,7 +353,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     private fun unknownType(it: Any): Nothing {
-        val text = if(it is KtElement) it.text else it.toString()
+        val text = if (it is KtElement) it.text else it.toString()
         TODO("unknown type: ${it.javaClass}\n --> $text")
     }
 
@@ -567,7 +567,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     override fun visitParameter(parameter: KtParameter) {
         val name = parameter.name ?: ""
         val type = parameter.typeReference!!.evaluate<TypeName>(this)
-        val builder= ParameterSpec.builder(name, type)
+        val builder = ParameterSpec.builder(name, type)
         acceptChildren("visitParameter accept", parameter, builder) {
             when (it) {
                 is TypeName -> { } // handled
@@ -584,7 +584,6 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
             context.push(propBuilder.build())
         }
         context.push(builder.build())
-
     }
 
     override fun visitSuperTypeList(list: KtSuperTypeList) {
@@ -1049,7 +1048,6 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
             it.accept(visitor)
         }
     }
-    
-    internal fun KtElement.toCodeBlock() = CodeBlock.of("%L", text)
 
+    internal fun KtElement.toCodeBlock() = CodeBlock.of("%L", text)
 }

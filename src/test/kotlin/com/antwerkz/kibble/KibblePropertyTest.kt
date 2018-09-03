@@ -1,7 +1,5 @@
 package com.antwerkz.kibble
 
-import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.properties
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier.LATEINIT
 import org.intellij.lang.annotations.Language

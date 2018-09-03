@@ -1,15 +1,8 @@
 package com.antwerkz.kibble
 
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.TypeSpec.Companion.classBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
-import com.squareup.kotlinpoet.FileSpec.Companion.builder as file
-import com.squareup.kotlinpoet.FunSpec.Companion.constructorBuilder as ctor
-import com.squareup.kotlinpoet.ParameterSpec.Companion.builder as parameter
-import com.squareup.kotlinpoet.PropertySpec.Companion.builder as property
 
 class ConstructorTest {
     @Test
@@ -29,6 +22,7 @@ class Factory(val type: String) {
         Assert.assertNotNull(secondary)
         Assert.assertTrue(secondary.parameters.isEmpty())
     }
+
     @Test
     fun constructors() {
         val fileSpec = Kibble.parseSource(

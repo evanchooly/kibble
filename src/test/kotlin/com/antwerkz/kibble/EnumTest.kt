@@ -4,7 +4,6 @@ import org.testng.Assert.assertNotNull
 import org.testng.Assert.assertTrue
 import org.testng.annotations.Test
 
-
 class EnumTest {
     @Test
     fun enums() {

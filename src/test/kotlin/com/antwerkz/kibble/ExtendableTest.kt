@@ -1,7 +1,5 @@
 package com.antwerkz.kibble
 
-import com.antwerkz.kibble.Kibble
-import com.antwerkz.kibble.getClass
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
