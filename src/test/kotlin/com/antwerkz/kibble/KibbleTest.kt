@@ -6,8 +6,6 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.KModifier.INTERNAL
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec.Kind.Interface
-import com.squareup.kotlinpoet.asClassName
-import com.squareup.kotlinpoet.asTypeName
 import org.testng.Assert
 import org.testng.annotations.Test
 

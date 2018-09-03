@@ -4,6 +4,7 @@ import org.eclipse.jgit.api.Git
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.io.File
+import java.io.StringWriter
 
 class ExternalsTest {
     @DataProvider(name = "repos")
@@ -11,7 +12,7 @@ class ExternalsTest {
         return arrayOf(
                 arrayOf("javabot", "git@github.com:evanchooly/javabot.git", listOf("src/main/kotlin/", "src/test/kotlin/")),
 //                                                                    https://github.com/square/kotlinpoet/pull/456
-                arrayOf("kotlinpoet", "git@github.com:square/kotlinpoet.git", listOf(/*"src/main/java/", */"src/test/java/"))
+                arrayOf("kotlinpoet", "git@github.com:square/kotlinpoet.git", listOf("src/main/java/", "src/test/java/"))
         )
     }
 
@@ -23,5 +24,8 @@ class ExternalsTest {
         }
 
         Kibble.parse(sources.map { File(gitDir, it) })
+                .forEach {
+                    it.writeTo(StringWriter())
+                }
     }
 }
