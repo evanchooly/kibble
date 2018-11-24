@@ -35,7 +35,7 @@ return "hi""""))
 
         val klass = file.getClass("KotlinSampleClass")!!
         Assert.assertTrue(klass.visibility == INTERNAL)
-        Assert.assertNotNull(klass.annotationSpecs.firstOrNull { it.type == ClassName("javax.annotation", "Generated") })
+        Assert.assertNotNull(klass.annotationSpecs.firstOrNull { it.className == ClassName("javax.annotation", "Generated") })
         Assert.assertEquals(klass.propertySpecs.size, 7, klass.propertySpecs.toString())
         Assert.assertEquals(klass.primaryConstructor?.parameters?.size, 2, klass.primaryConstructor?.parameters.toString())
 

@@ -13,6 +13,7 @@ import com.squareup.kotlinpoet.TypeSpec.Kind.Class
 import com.squareup.kotlinpoet.TypeSpec.Kind.Interface
 import com.squareup.kotlinpoet.TypeSpec.Kind.Object
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer.PLAIN_FULL_PATHS
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles.JVM_CONFIG_FILES
@@ -20,7 +21,6 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.com.intellij.openapi.Disposable
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
-import org.jetbrains.kotlin.config.addKotlinSourceRoot
 import org.slf4j.LoggerFactory
 import java.io.File
 
