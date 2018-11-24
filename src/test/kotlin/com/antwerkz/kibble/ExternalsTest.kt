@@ -10,9 +10,9 @@ class ExternalsTest {
     @DataProvider(name = "repos")
     fun repos(): Array<Array<Any>> {
         return arrayOf(
-                arrayOf("javabot", "git@github.com:evanchooly/javabot.git", listOf("src/main/kotlin/", "src/test/kotlin/")),
+                arrayOf("javabot", "https://github.com/evanchooly/javabot.git", listOf("src/main/kotlin/", "src/test/kotlin/")),
 //                                                                    https://github.com/square/kotlinpoet/pull/456
-                arrayOf("kotlinpoet", "git@github.com:square/kotlinpoet.git", listOf("src/main/java/", "src/test/java/"))
+                arrayOf("kotlinpoet", "https://github.com/square/kotlinpoet.git", listOf("src/main/java/", "src/test/java/"))
         )
     }
 
