@@ -129,7 +129,7 @@ fun TypeSpec.companion(): TypeSpec? {
     }
 }
 
-fun TypeSpec.getClass(name: String): TypeSpec? = typeSpecs.filter { it.kind == CLASS}.firstOrNull { it.name == name }
+fun TypeSpec.getClass(name: String): TypeSpec? = typeSpecs.filter { it.kind == CLASS }.firstOrNull { it.name == name }
 fun TypeSpec.getObject(name: String): TypeSpec? = typeSpecs.filter { it.kind == OBJECT }.firstOrNull { it.name == name }
 fun TypeSpec.getFunctions(name: String): List<FunSpec> = funSpecs.filter { it.name == name }
 fun TypeSpec.getProperty(name: String): PropertySpec? = propertySpecs.firstOrNull { it.name == name }
