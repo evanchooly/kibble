@@ -15,7 +15,7 @@ class KibbleFunctionTest {
         var kibbleFunction = file.getFunctions("foo")[0]
         Assert.assertEquals(kibbleFunction.typeVariables[0].toString(), "T")
         Assert.assertNull(kibbleFunction.typeVariables[0].variance)
-        Assert.assertEquals(kibbleFunction.typeVariables[0].bounds, listOf(ClassName("kotlin", "Any?")))
+        Assert.assertTrue(kibbleFunction.typeVariables[0].bounds.isEmpty(), kibbleFunction.typeVariables[0].toString())
 
         kibbleFunction = file.getFunctions("bar")[0]
         Assert.assertEquals(kibbleFunction.typeVariables[0].toString(), "K")

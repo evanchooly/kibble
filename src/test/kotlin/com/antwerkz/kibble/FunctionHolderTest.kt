@@ -13,7 +13,7 @@ class FunctionHolderTest {
     fun parameterizedType() {
         @Language("kotlin")
         val source = """fun nickNames(): Foo<Bar, List<String>>""".trimMargin()
-        val file = Kibble.parseSource(source)
+        Kibble.parseSource(source)
     }
 
     @Test

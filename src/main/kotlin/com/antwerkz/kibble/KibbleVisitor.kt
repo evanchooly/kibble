@@ -552,8 +552,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
             Variance.OUT_VARIANCE -> KModifier.OUT
         }
 
-        context.push(TypeVariableName(value, variance)
-                .withBounds(bounds))
+        context.push(TypeVariableName(value, variance).copy(bounds = bounds))
     }
 
     override fun visitEnumEntry(enumEntry: KtEnumEntry) {
@@ -910,7 +909,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
             }
         }
         context.push(TypeVariableName(typeName.toString(), modifier)
-                .withBounds(bounds))
+                .copy(bounds = bounds))
     }
 
     private fun visitTypeElement(type: KtTypeElement) {
@@ -975,7 +974,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         if (nullableType.modifierList?.allChildren?.isEmpty == true) {
             TODO("handle the modifiers: ${nullableType.modifierList}")
         }
-        context.push(type.asNullable())
+        context.push(type)
     }
 
     override fun visitTypeProjection(typeProjection: KtTypeProjection) {

@@ -9,9 +9,9 @@ import com.squareup.kotlinpoet.KModifier.PROTECTED
 import com.squareup.kotlinpoet.KModifier.PUBLIC
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.TypeSpec.Kind.Class
-import com.squareup.kotlinpoet.TypeSpec.Kind.Interface
-import com.squareup.kotlinpoet.TypeSpec.Kind.Object
+import com.squareup.kotlinpoet.TypeSpec.Kind.CLASS
+import com.squareup.kotlinpoet.TypeSpec.Kind.INTERFACE
+import com.squareup.kotlinpoet.TypeSpec.Kind.OBJECT
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer.PLAIN_FULL_PATHS
@@ -90,11 +90,11 @@ object Kibble {
 }
 
 val FileSpec.classes: List<TypeSpec>
-    get() = members.filterIsInstance(TypeSpec::class.java).filter { it.kind is Class }
+    get() = members.filterIsInstance(TypeSpec::class.java).filter { it.kind == CLASS }
 val FileSpec.interfaces: List<TypeSpec>
-    get() = members.filterIsInstance(TypeSpec::class.java).filter { it.kind is Interface }
+    get() = members.filterIsInstance(TypeSpec::class.java).filter { it.kind == INTERFACE }
 val FileSpec.objects: List<TypeSpec>
-    get() = members.filterIsInstance(TypeSpec::class.java).filter { it.kind is Object }
+    get() = members.filterIsInstance(TypeSpec::class.java).filter { it.kind == OBJECT }
 
 val FileSpec.functions: List<FunSpec>
     get() = members.filterIsInstance(FunSpec::class.java)
@@ -113,15 +113,15 @@ val Set<KModifier>.visibility: KModifier
     get() = firstOrNull { it in setOf(PUBLIC, PROTECTED, PRIVATE, INTERNAL) } ?: PUBLIC
 
 val TypeSpec.classes: List<TypeSpec>
-    get() = typeSpecs.filter { it.kind is Class }
+    get() = typeSpecs.filter { it.kind == CLASS }
 val TypeSpec.functions: List<FunSpec>
     get() = funSpecs
 val TypeSpec.properties: List<PropertySpec>
     get() = properties
 val TypeSpec.interfaces: List<TypeSpec>
-    get() = typeSpecs.filter { it.kind is Interface }
+    get() = typeSpecs.filter { it.kind == INTERFACE }
 val TypeSpec.objects: List<TypeSpec>
-    get() = typeSpecs.filter { it.kind is Object }
+    get() = typeSpecs.filter { it.kind == OBJECT }
 
 fun TypeSpec.companion(): TypeSpec? {
     return typeSpecs.firstOrNull {
@@ -129,8 +129,8 @@ fun TypeSpec.companion(): TypeSpec? {
     }
 }
 
-fun TypeSpec.getClass(name: String): TypeSpec? = typeSpecs.filter { it.kind is Class }.firstOrNull { it.name == name }
-fun TypeSpec.getObject(name: String): TypeSpec? = typeSpecs.filter { it.kind is Object }.firstOrNull { it.name == name }
+fun TypeSpec.getClass(name: String): TypeSpec? = typeSpecs.filter { it.kind == CLASS}.firstOrNull { it.name == name }
+fun TypeSpec.getObject(name: String): TypeSpec? = typeSpecs.filter { it.kind == OBJECT }.firstOrNull { it.name == name }
 fun TypeSpec.getFunctions(name: String): List<FunSpec> = funSpecs.filter { it.name == name }
 fun TypeSpec.getProperty(name: String): PropertySpec? = propertySpecs.firstOrNull { it.name == name }
 fun TypeSpec.isAbstract() = KModifier.ABSTRACT in modifiers

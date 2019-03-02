@@ -5,7 +5,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.KModifier.INTERNAL
 import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.TypeSpec.Kind.Interface
+import com.squareup.kotlinpoet.TypeSpec.Kind.INTERFACE
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -31,7 +31,7 @@ return "hi""""))
         val file = Kibble.parse(path)
 
         val next = file.interfaces.first()
-        Assert.assertTrue(next.kind is Interface)
+        Assert.assertTrue(next.kind == INTERFACE)
 
         val klass = file.getClass("KotlinSampleClass")!!
         Assert.assertTrue(klass.visibility == INTERNAL)
