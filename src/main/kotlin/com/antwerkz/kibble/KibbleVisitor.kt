@@ -410,8 +410,8 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitProperty(property: KtProperty) {
-        val type = property.typeReference?.evaluate<TypeName>(this) ?: ClassName("", "")
-        // ?: missing("properties must have types: ${property.text  }")
+        val type = property.typeReference?.evaluate<TypeName>(this)
+            ?: missing("properties must have types: ${property.text  }")
         val name = property.name ?: missing("properties must be named")
 
         val builder = PropertySpec.builder(name, type)

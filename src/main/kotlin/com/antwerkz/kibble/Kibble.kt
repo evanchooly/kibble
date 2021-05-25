@@ -1,5 +1,8 @@
 package com.antwerkz.kibble
 
+import com.antwerkz.kibble.parser.KibbleParser
+import com.antwerkz.kibble.parser.KotlinLexer
+import com.antwerkz.kibble.parser.KotlinParser
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -12,6 +15,9 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpec.Kind.CLASS
 import com.squareup.kotlinpoet.TypeSpec.Kind.INTERFACE
 import com.squareup.kotlinpoet.TypeSpec.Kind.OBJECT
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer.PLAIN_FULL_PATHS
@@ -68,15 +74,29 @@ object Kibble {
     @JvmStatic
     @JvmOverloads
     fun parse(paths: List<File>, context: KibbleContext = KibbleContext()): List<FileSpec> {
+        parser(paths, context)
+//        visitor(paths, context)
+
+        return context.files
+    }
+
+    private fun parser(paths: List<File>, context: KibbleContext) {
+        paths.forEach {
+            val lexer = KotlinLexer(CharStreams.fromStream(it.inputStream()))
+            val parser = KotlinParser(CommonTokenStream(lexer))
+            ParseTreeWalker().walk(KibbleParser(context), parser.kotlinFile())
+        }
+
+    }
+
+    private fun visitor(paths: List<File>, context: KibbleContext) {
         val configuration = CompilerConfiguration()
         configuration.put(CompilerConfigurationKey.create<File>("output directory"), File(""))
         configuration.put(
-                CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false)
+            CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false)
         )
         paths.forEach { configuration.addKotlinSourceRoot(it.absolutePath) }
-
         val environment = KotlinCoreEnvironment.createForProduction(Disposable { }, configuration, JVM_CONFIG_FILES)
-
         val visitor = KibbleVisitor(context)
         try {
             environment.getSourceFiles().forEach { it.accept(visitor) }
@@ -84,8 +104,6 @@ object Kibble {
             LOG.error(e.message, e)
             throw KibbleException("Failed to parse file:  ${e.message}")
         }
-
-        return context.files
     }
 }
 

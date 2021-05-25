@@ -60,6 +60,10 @@ class KibbleContext {
 
     fun <T> peek(): T = (if (!stack.isEmpty()) stack.peek() else null) as T
 
+    fun <T> apply(body: T.() -> Unit) {
+        peek<T>()?.body()
+    }
+
     fun bookmark(name: String) {
         push(Bookmark(name))
         LOG.debug("bookmarking $name")
@@ -76,6 +80,5 @@ class KibbleContext {
     }
 
     fun isAutoImport(name: String) = name in autoImports
-
     override fun toString() = if (!stack.isEmpty()) peek<Any>().toString() else "{}"
 }
