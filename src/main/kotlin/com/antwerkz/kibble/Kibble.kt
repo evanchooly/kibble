@@ -91,7 +91,7 @@ object Kibble {
 
     private fun visitor(paths: List<File>, context: KibbleContext) {
         val configuration = CompilerConfiguration()
-        configuration.put(CompilerConfigurationKey.create<File>("output directory"), File(""))
+        configuration.put(CompilerConfigurationKey.create("output directory"), File(""))
         configuration.put(
             CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false)
         )
