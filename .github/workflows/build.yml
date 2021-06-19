@@ -12,7 +12,7 @@ jobs:
       matrix:
         java: [ 11 ]
         kotlin: [ 1.5.10, 1.4.32 ]
-    name: "Tests on JDK ${{ matrix.java }}, Kotlin: ${{ matrix.kotlin }})"
+    name: "Tests on JDK ${{ matrix.java }}, Kotlin: ${{ matrix.kotlin }}"
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK ${{ matrix.java }}
