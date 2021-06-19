@@ -13,35 +13,30 @@ class KibbleContext {
     private data class Bookmark(val name: String)
 
     val autoImports = mutableSetOf(
-            "Any",
-            "Unit",
-            "Nothing",
-            "Byte",
-            "Short",
-            "Int",
-            "Long",
-            "Float",
-            "Double",
-            "Boolean",
-            "String",
-            "Integer",
-            "List",
-            "Map",
-            "String",
-            "MutableList",
-            "MutableMap",
-            "MutableString",
-            "Suppress"
+        "Any",
+        "Unit",
+        "Nothing",
+        "Byte",
+        "Short",
+        "Int",
+        "Long",
+        "Float",
+        "Double",
+        "Boolean",
+        "String",
+        "Integer",
+        "List",
+        "Map",
+        "String",
+        "MutableList",
+        "MutableMap",
+        "MutableString",
+        "Suppress"
     )
-
     val files = mutableListOf<FileSpec>()
-
     internal val stack = Stack<Any>()
-
     var defaultPackageName = ""
-
     fun register(file: FileSpec) = files.add(file)
-
     fun push(value: Any) {
 /*
         if (value !is Slab &&
@@ -57,9 +52,7 @@ class KibbleContext {
     }
 
     fun <T> pop(): T = stack.pop() as T
-
     fun <T> peek(): T = (if (!stack.isEmpty()) stack.peek() else null) as T
-
     fun bookmark(name: String) {
         push(Bookmark(name))
         LOG.debug("bookmarking $name")
@@ -76,6 +69,5 @@ class KibbleContext {
     }
 
     fun isAutoImport(name: String) = name in autoImports
-
     override fun toString() = if (!stack.isEmpty()) peek<Any>().toString() else "{}"
 }

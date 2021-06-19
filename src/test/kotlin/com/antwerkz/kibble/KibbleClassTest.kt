@@ -31,19 +31,17 @@ class KibbleClassTest {
             }
         }
 
-        """.trimIndent()
+    """.trimIndent()
 
     @Test
     fun members() {
         val kibbleClass = Kibble.parseSource(source).classes.first()
-
         var obj = kibbleClass.companion()
         Assert.assertNotNull(obj, "Should find a companion object")
         Assert.assertNotNull(obj?.getProperty("prop"), "Should find a property named 'prop'")
 
         obj = kibbleClass.getObject("temp")
         Assert.assertNotNull(obj, "Should find an object named 'temp'")
-
         val kibble = kibbleClass.getClass("Nested")!!
         Assert.assertNotNull(kibble.getProperty("property"), "Should find a property named 'property'")
         Assert.assertEquals(kibble.getFunctions("something").size, 1, "Should find one function named 'something'")
@@ -51,7 +49,8 @@ class KibbleClassTest {
 
     @Test
     fun parent() {
-        val file = Kibble.parseSource("""
+        val file = Kibble.parseSource(
+            """
 package critter.test.source
 
 import org.bson.types.ObjectId
@@ -70,7 +69,8 @@ open class Person : AbstractKotlinPerson {
     var first: String? = null
 
     var last: String? = null
-} """)
+} """
+        )
         val classes = file.classes.iterator()
         var clazz = classes.next()
         Assert.assertEquals(clazz.superclass, ANY)

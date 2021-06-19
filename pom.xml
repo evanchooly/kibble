@@ -97,45 +97,6 @@
         </dependency>
     </dependencies>
 
-<!--
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-evanchooly-maven</id>
-            <name>bintray</name>
-            <url>http://dl.bintray.com/evanchooly/maven</url>
-        </repository>
-        <repository>
-            <id>kotlin-eap</id>
-            <name>bintray</name>
-            <url>http://dl.bintray.com/kotlin/kotlin-eap</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
--->
-
-<!--
-    <pluginRepositories>
-        <pluginRepository>
-            <id>jcenter</id>
-            <name>JCenter</name>
-            <url>https://jcenter.bintray.com/</url>
-        </pluginRepository>
-        <pluginRepository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-gantsign-maven</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/gantsign/maven</url>
-        </pluginRepository>
-    </pluginRepositories>
--->
-
     <build>
         <defaultGoal>install</defaultGoal>
         <sourceDirectory>src/main/kotlin</sourceDirectory>

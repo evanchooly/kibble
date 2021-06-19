@@ -10,9 +10,9 @@ class ExternalsTest {
     @DataProvider(name = "repos")
     fun repos(): Array<Array<Any>> {
         return arrayOf(
-                arrayOf("javabot", "https://github.com/evanchooly/javabot.git", listOf("src/main/kotlin/", "src/test/kotlin/")),
+            arrayOf("javabot", "https://github.com/evanchooly/javabot.git", listOf("src/main/kotlin/", "src/test/kotlin/")),
 //                                                                    https://github.com/square/kotlinpoet/pull/456
-                arrayOf("kotlinpoet", "https://github.com/square/kotlinpoet.git", listOf("src/main/java/", "src/test/java/"))
+            arrayOf("kotlinpoet", "https://github.com/square/kotlinpoet.git", listOf("src/main/java/", "src/test/java/"))
         )
     }
 
@@ -24,8 +24,8 @@ class ExternalsTest {
         }
 
         Kibble.parse(sources.map { File(gitDir, it) })
-                .forEach {
-                    it.writeTo(StringWriter())
-                }
+            .forEach {
+                it.writeTo(StringWriter())
+            }
     }
 }

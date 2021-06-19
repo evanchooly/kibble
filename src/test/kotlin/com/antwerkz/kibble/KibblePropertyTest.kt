@@ -7,13 +7,14 @@ import org.testng.Assert
 import org.testng.annotations.Test
 
 class KibblePropertyTest {
-
     @Test
     fun lateinit() {
-        val file = Kibble.parseSource("""
+        val file = Kibble.parseSource(
+            """
     lateinit var foo: Int = 42
     var bar: Int = 42
-""")
+"""
+        )
         val iterator = file.properties.iterator()
         var prop = iterator.next()
         Assert.assertEquals(prop.name, "foo")
@@ -36,7 +37,6 @@ class KibblePropertyTest {
 
     @Test
     fun generics() {
-
         @Language("kotlin")
         val fqcn = """import com.foo.Bar
 val list: List<Bar>"""

@@ -11,9 +11,7 @@ class KibbleObjectTest {
     @Test
     fun objects() {
         val file = Kibble.parse("src/test/resources/com/antwerkz/test/SampleKibbleObject.kt")
-
         val objects = file.classes.first().objects.iterator()
-
         val kibbleObject = objects.next()
         Assert.assertTrue(kibbleObject.isCompanion)
         Assert.assertTrue(kibbleObject.modifiers.contains(PRIVATE))
@@ -21,7 +19,6 @@ class KibbleObjectTest {
         Assert.assertTrue(kibbleObject.superclassConstructorParameters.isEmpty())
         Assert.assertNotNull(kibbleObject.superinterfaces.containsKey(ClassName("java.lang", "Runnable")))
         val functions = kibbleObject.funSpecs.iterator()
-
         var function = functions.next()
         Assert.assertEquals(function.name, "run")
         Assert.assertTrue(function.modifiers.contains(OVERRIDE))
@@ -32,12 +29,14 @@ class KibbleObjectTest {
 
     @Test
     fun functions() {
-        val obj = Kibble.parseSource("""
+        val obj = Kibble.parseSource(
+            """
 object temp {
     fun something(): Junk {
         println("something")
     }
-}""".trim()).objects.first()
+}""".trim()
+        ).objects.first()
 
         Assert.assertEquals(obj.name, "temp")
         val function = obj.funSpecs.first()

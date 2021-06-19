@@ -8,7 +8,6 @@ import org.testng.Assert
 import org.testng.annotations.Test
 
 class FunctionHolderTest {
-
     @Test
     fun parameterizedType() {
         @Language("kotlin")
@@ -28,17 +27,21 @@ fun body() {
     }
 }
 """
-
         val file = Kibble.parseSource(source)
         val functions = file.getFunctions("expression").iterator()
         var kibbleFunction = functions.next()
         Assert.assertEquals(kibbleFunction.body, CodeBlock.of("""Foo(name ?: "")"""))
 
         kibbleFunction = file.getFunctions("body").first()
-        Assert.assertEquals(kibbleFunction.body, CodeBlock.of("""print()
+        Assert.assertEquals(
+            kibbleFunction.body,
+            CodeBlock.of(
+                """print()
 for (item in items) {
     add(item)
-}"""))
+}"""
+            )
+        )
     }
 
     @Test
@@ -48,9 +51,8 @@ for (item in items) {
 }
 """
         val bloop = Kibble.parseSource(source)
-                .functions.first()
+            .functions.first()
         Assert.assertEquals(bloop.parameters[0].name, "message")
-
         val parameter = bloop.parameters[1]
         Assert.assertEquals(parameter.name, "converter")
         val type = parameter.type as LambdaTypeName

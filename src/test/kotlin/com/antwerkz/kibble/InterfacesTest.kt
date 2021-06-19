@@ -7,8 +7,10 @@ import org.testng.annotations.Test
 class InterfacesTest {
     @Test
     fun basic() {
-        val file = Kibble.parseSource("""interface temp {
-        |}""".trimMargin())
+        val file = Kibble.parseSource(
+            """interface temp {
+        |}""".trimMargin()
+        )
 
         Assert.assertTrue(file.classes.isEmpty())
         Assert.assertFalse(file.interfaces.isEmpty())
@@ -19,7 +21,8 @@ class InterfacesTest {
 
     @Test
     fun everything() {
-        val file = Kibble.parseSource("""interface temp {
+        val file = Kibble.parseSource(
+            """interface temp {
         |
         |class Klass
         |
@@ -29,7 +32,8 @@ class InterfacesTest {
         |
         |val property: String
         |
-        |}""".trimMargin())
+        |}""".trimMargin()
+        )
 
         Assert.assertFalse(file.interfaces.isEmpty())
         val kibbleInterface = file.interfaces.first()

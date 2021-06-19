@@ -71,12 +71,10 @@ object Kibble {
         val configuration = CompilerConfiguration()
         configuration.put(CompilerConfigurationKey.create<File>("output directory"), File(""))
         configuration.put(
-                CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false)
+            CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false)
         )
         paths.forEach { configuration.addKotlinSourceRoot(it.absolutePath) }
-
         val environment = KotlinCoreEnvironment.createForProduction(Disposable { }, configuration, JVM_CONFIG_FILES)
-
         val visitor = KibbleVisitor(context)
         try {
             environment.getSourceFiles().forEach { it.accept(visitor) }
@@ -95,23 +93,17 @@ val FileSpec.interfaces: List<TypeSpec>
     get() = members.filterIsInstance(TypeSpec::class.java).filter { it.kind == INTERFACE }
 val FileSpec.objects: List<TypeSpec>
     get() = members.filterIsInstance(TypeSpec::class.java).filter { it.kind == OBJECT }
-
 val FileSpec.functions: List<FunSpec>
     get() = members.filterIsInstance(FunSpec::class.java)
-
 val FileSpec.properties: List<PropertySpec>
     get() = members.filterIsInstance(PropertySpec::class.java)
-
 val FunSpec.visibility: KModifier
     get() = modifiers.visibility
 
 fun FileSpec.getClass(name: String): TypeSpec? = classes.firstOrNull { it.name == name }
-
 fun FileSpec.getFunctions(name: String): List<FunSpec> = functions.filter { it.name == name }
-
 val Set<KModifier>.visibility: KModifier
     get() = firstOrNull { it in setOf(PUBLIC, PROTECTED, PRIVATE, INTERNAL) } ?: PUBLIC
-
 val TypeSpec.classes: List<TypeSpec>
     get() = typeSpecs.filter { it.kind == CLASS }
 val TypeSpec.functions: List<FunSpec>
@@ -136,7 +128,6 @@ fun TypeSpec.getProperty(name: String): PropertySpec? = propertySpecs.firstOrNul
 fun TypeSpec.isAbstract() = KModifier.ABSTRACT in modifiers
 val TypeSpec.visibility: KModifier
     get() = modifiers.visibility
-
 val TypeSpec.secondaries: List<FunSpec>
     get() = funSpecs.filter {
         it.isConstructor
