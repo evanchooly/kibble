@@ -1,5 +1,7 @@
 package com.antwerkz.kibble
 
+import com.antwerkz.kibble.Kibble.addAutoImport
+import com.antwerkz.kibble.Kibble.autoimport
 import com.antwerkz.kibble.model.Accessor
 import com.antwerkz.kibble.model.CallBlock.SuperCallBlock
 import com.antwerkz.kibble.model.CallBlock.ThisCallBlock
@@ -8,6 +10,7 @@ import com.antwerkz.kibble.model.ClassType.ENUM
 import com.antwerkz.kibble.model.ClassType.INTERFACE
 import com.antwerkz.kibble.model.Delegate
 import com.antwerkz.kibble.model.Import
+import com.antwerkz.kibble.model.Mutator
 import com.antwerkz.kibble.model.SuperCall
 import com.antwerkz.kibble.model.SuperType
 import com.antwerkz.kibble.model.TypeProjection
@@ -156,8 +159,34 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         private val LOG = LoggerFactory.getLogger(KibbleVisitor::class.java)
 
         object None : Any()
+
+        init {
+            addAutoImport("Any", "kotlin.Any")
+            addAutoImport("Array", "kotlin.Array")
+            addAutoImport("Boolean", "kotlin.Boolean")
+            addAutoImport("Byte", "kotlin.Byte")
+            addAutoImport("Char", "kotlin.Char")
+            addAutoImport("Double", "kotlin.Double")
+            addAutoImport("Float", "kotlin.Float")
+            addAutoImport("Int", "kotlin.Int")
+            addAutoImport("Long", "kotlin.Long")
+            addAutoImport("Short", "kotlin.Short")
+            addAutoImport("String", "kotlin.String")
+            addAutoImport("Unit", "kotlin.Unit")
+            addAutoImport("Nothing", "kotlin.Nothing")
+            addAutoImport("List", "kotlin.collections.List")
+            addAutoImport("Map", "kotlin.collections.Map")
+            addAutoImport("Set", "kotlin.collections.Set")
+            addAutoImport("MutableList", "kotlin.collections.MutableList")
+            addAutoImport("MutableMap", "kotlin.collections.MutableMap")
+            addAutoImport("MutableSet", "kotlin.collections.MutableSet")
+            addAutoImport("Iterable", "kotlin.collections.Iterable")
+            addAutoImport("Iterator", "kotlin.collections.Iterator")
+            addAutoImport("Sequence", "kotlin.sequences.Sequence")
+        }
     }
 
+    private var pkgName = ""
     private val imports = mutableMapOf<String, ClassName>()
     override fun visitKtFile(kt: KtFile) {
         context.defaultPackageName = kt.packageDirective?.fqName?.asString() ?: ""
@@ -197,14 +226,6 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     private fun registerImport(packageName: String, className: String, alias: String?) {
         imports[alias ?: className] = ClassName(packageName, className)
-    }
-
-    private fun className(packageName: String, className: String): ClassName {
-        return imports[className] ?: if (!context.isAutoImport(className)) {
-            ClassName(if (packageName != "") packageName else context.defaultPackageName, className)
-        } else {
-            ClassName(packageName, className)
-        }
     }
 
     override fun visitKtElement(element: KtElement) {
@@ -272,7 +293,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 TypeSpec.interfaceBuilder(name!!)
             }
             kt.isEnum() -> {
-                kind = ClassType.ENUM
+                kind = ENUM
                 TypeSpec.enumBuilder(name!!)
             }
             kt.isAnnotation() -> {
@@ -416,6 +437,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         // ?: missing("properties must have types: ${property.text  }")
         val name = property.name ?: missing("properties must be named")
         val builder = PropertySpec.builder(name, type)
+        builder.mutable(property.isVar)
         buildProperty("visitProperty", property, builder)
         context.push(builder.build())
     }
@@ -427,9 +449,10 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
                 is Delegate -> delegate(it.delegation)
                 is AnnotationSpec -> addAnnotation(it)
                 is KModifier -> addModifiers(it)
-                is TypeName -> { /*  already handled */
-                }
+                is TypeName -> {
+                } /*  already handled */
                 is Accessor -> getter(it.function)
+                is Mutator -> setter(it.function)
                 else -> unknownType(it)
             }
         }
@@ -569,12 +592,12 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitParameter(parameter: KtParameter) {
         val name = parameter.name ?: ""
-        val type = parameter.typeReference!!.evaluate<TypeName>(this)
+        visitTypeReference(parameter.typeReference!!)
+        val type = context.pop<TypeName>()
         val builder = ParameterSpec.builder(name, type)
         acceptChildren("visitParameter accept", parameter, builder) {
             when (it) {
-                is TypeName -> {
-                } // handled
+                is TypeName -> { } // handled
                 is KModifier -> addModifiers(it)
                 is CodeBlock -> defaultValue(it)
                 is AnnotationSpec -> addAnnotation(it)
@@ -584,6 +607,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         if (parameter.hasValOrVar()) {
             val propBuilder = PropertySpec.builder(name, type)
             buildProperty("visitParameter", parameter, propBuilder, true)
+            propBuilder.mutable(parameter.isMutable)
             propBuilder.initializer(name)
             context.push(propBuilder.build())
         }
@@ -878,12 +902,16 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitPropertyAccessor(accessor: KtPropertyAccessor) {
+        val builder = FunSpec.builder(if (accessor.isGetter) "get()" else "set()")
         acceptChildren("visitPropertyAccessor", accessor, None) {
             when (it) {
-                is CodeBlock -> context.push(Accessor(FunSpec.builder("get()").addCode(it).build()))
+                is CodeBlock -> builder.addCode(it)
+                is ParameterSpec -> builder.addParameter(it)
+                is KModifier -> builder.addModifiers(it)
                 else -> unknownType(it)
             }
         }
+        context.push(if (accessor.isGetter) Accessor(builder.build()) else Mutator(builder.build()))
     }
 
     data class TypeConstraint(val type: TypeVariableName)
@@ -920,12 +948,15 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitUserType(type: KtUserType) {
         val qualifier = type.qualifier?.text?.split(".") ?: listOf()
-        val pkgName = qualifier.takeWhile { it[0].isLowerCase() }
+        var pkgName = qualifier.takeWhile { it[0].isLowerCase() }
             .joinToString(".")
         val className: String = (qualifier.takeLastWhile { it[0].isUpperCase() } + type.referencedName!!)
             .joinToString(".")
         val list = acceptChildren<TypeProjection>("user type type arguments", type.typeArgumentList)
-        val value = className(pkgName, className)
+        if (pkgName.isBlank()) {
+            pkgName = autoimport(className)?.packageName ?: (imports[className]?.packageName ?: this.pkgName)
+        }
+        val value = ClassName(pkgName, className)
         if (list.isNotEmpty()) {
             context.push(value.parameterizedBy(*list.map { it.type }.toTypedArray()))
         } else {
@@ -1037,6 +1068,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitPackageDirective(directive: KtPackageDirective) {
+        pkgName = directive.qualifiedName
     }
 
     private fun PsiElement.toKModifier(): KModifier {

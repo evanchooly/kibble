@@ -46,7 +46,7 @@ for (item in items) {
 
     @Test
     fun functionParameter() {
-        val source = """fun bloop(message: String, converter: Integer.(String, List<Double>) -> String): String {
+        val source = """fun bloop(message: String, converter: Int.(String, List<Double>) -> String): String {
     println()
 }
 """
@@ -57,8 +57,8 @@ for (item in items) {
         Assert.assertEquals(parameter.name, "converter")
         val type = parameter.type as LambdaTypeName
         val parameters = type.parameters.map { it.toString() }
-        Assert.assertEquals(parameters, listOf("String", "List<Double>"))
-        Assert.assertEquals(type.receiver, ClassName("", "Integer"))
-        Assert.assertEquals(type.returnType, ClassName("", "String"))
+        Assert.assertEquals(parameters, listOf("kotlin.String", "kotlin.collections.List<kotlin.Double>"))
+        Assert.assertEquals(type.receiver, ClassName("kotlin", "Int"))
+        Assert.assertEquals(type.returnType, ClassName("kotlin", "String"))
     }
 }

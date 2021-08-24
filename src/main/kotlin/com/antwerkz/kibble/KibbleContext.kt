@@ -12,27 +12,6 @@ class KibbleContext {
 
     private data class Bookmark(val name: String)
 
-    val autoImports = mutableSetOf(
-        "Any",
-        "Unit",
-        "Nothing",
-        "Byte",
-        "Short",
-        "Int",
-        "Long",
-        "Float",
-        "Double",
-        "Boolean",
-        "String",
-        "Integer",
-        "List",
-        "Map",
-        "String",
-        "MutableList",
-        "MutableMap",
-        "MutableString",
-        "Suppress"
-    )
     val files = mutableListOf<FileSpec>()
     internal val stack = Stack<Any>()
     var defaultPackageName = ""
@@ -68,6 +47,5 @@ class KibbleContext {
         return values.reversed()
     }
 
-    fun isAutoImport(name: String) = name in autoImports
     override fun toString() = if (!stack.isEmpty()) peek<Any>().toString() else "{}"
 }

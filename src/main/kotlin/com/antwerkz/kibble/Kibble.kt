@@ -1,5 +1,6 @@
 package com.antwerkz.kibble
 
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -29,6 +30,15 @@ import java.io.File
  */
 object Kibble {
     private val LOG = LoggerFactory.getLogger(Kibble::class.java)
+
+    fun addAutoImport(name: String, type: String) {
+        autoimports[name] = ClassName.bestGuess(type)
+    }
+
+    internal val autoimports = mutableMapOf<String, ClassName>()
+    internal fun autoimport(name: String): ClassName? {
+        return autoimports[name]
+    }
 
     /**
      * Parses a code snippet in to a Kibble model
@@ -75,9 +85,8 @@ object Kibble {
         )
         paths.forEach { configuration.addKotlinSourceRoot(it.absolutePath) }
         val environment = KotlinCoreEnvironment.createForProduction(Disposable { }, configuration, JVM_CONFIG_FILES)
-        val visitor = KibbleVisitor(context)
         try {
-            environment.getSourceFiles().forEach { it.accept(visitor) }
+            environment.getSourceFiles().forEach { it.accept(KibbleVisitor(context)) }
         } catch (e: NotImplementedError) {
             LOG.error(e.message, e)
             throw KibbleException("Failed to parse file:  ${e.message}")
@@ -109,7 +118,7 @@ val TypeSpec.classes: List<TypeSpec>
 val TypeSpec.functions: List<FunSpec>
     get() = funSpecs
 val TypeSpec.properties: List<PropertySpec>
-    get() = properties
+    get() = propertySpecs
 val TypeSpec.interfaces: List<TypeSpec>
     get() = typeSpecs.filter { it.kind == INTERFACE }
 val TypeSpec.objects: List<TypeSpec>

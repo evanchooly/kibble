@@ -21,7 +21,7 @@ class KibbleTest {
         Assert.assertEquals(file.functions.size, 1)
         val first = file.functions.first()
         Assert.assertEquals(first.visibility, KModifier.INTERNAL)
-        Assert.assertEquals(first.returnType.toString(), "String")
+        Assert.assertEquals(first.returnType.toString(), "kotlin.String")
         Assert.assertEquals(
             first.body,
             CodeBlock.of(
@@ -57,7 +57,7 @@ return "hi""""
 
         Assert.assertEquals(
             klass.funSpecs.first { it.name == "output" }.parameters,
-            listOf(ParameterSpec.builder("count", ClassName("", "Long")).build())
+            listOf(ParameterSpec.builder("count", ClassName("kotlin", "Long")).build())
         )
 
         Assert.assertTrue(klass.funSpecs.first { it.name == "toString" }.parameters.isEmpty())
