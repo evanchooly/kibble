@@ -442,10 +442,10 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         context.push(builder.build())
     }
 
-    private fun buildProperty(bookmark: String, property: PsiElement, builder: Builder, skipInitializer: Boolean = false) {
+    private fun buildProperty(bookmark: String, property: PsiElement, builder: Builder) {
         acceptChildren(bookmark, property, builder) {
             when (it) {
-                is CodeBlock -> if (!skipInitializer) initializer(it)
+                is CodeBlock -> initializer(it)
                 is Delegate -> delegate(it.delegation)
                 is AnnotationSpec -> addAnnotation(it)
                 is KModifier -> addModifiers(it)
@@ -606,9 +606,8 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         }
         if (parameter.hasValOrVar()) {
             val propBuilder = PropertySpec.builder(name, type)
-            buildProperty("visitParameter", parameter, propBuilder, true)
+            buildProperty("visitParameter", parameter, propBuilder)
             propBuilder.mutable(parameter.isMutable)
-            propBuilder.initializer(name)
             context.push(propBuilder.build())
         }
         context.push(builder.build())
@@ -1002,7 +1001,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitNullableType(nullableType: KtNullableType) {
         nullableType.innerType?.accept(this)
-        val type = context.pop<TypeName>()
+        val type = context.pop<TypeName>().copy(nullable = true)
         if (nullableType.modifierList?.allChildren?.isEmpty == true) {
             TODO("handle the modifiers: ${nullableType.modifierList}")
         }
