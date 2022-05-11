@@ -9,9 +9,10 @@ class KibbleFunctionTest {
     @Test
     fun generics() {
         val file = Kibble.parseSource(
-            """fun <T> foo(t: T)
-            |fun <out K: Bar> bar(k: K)
-        """.trimMargin()
+            """
+            fun <T> foo(t: T)
+            fun <out K: Bar> bar(k: K)
+            """.trimIndent()
         )
         var kibbleFunction = file.getFunctions("foo")[0]
         Assert.assertEquals(kibbleFunction.typeVariables[0].toString(), "T")

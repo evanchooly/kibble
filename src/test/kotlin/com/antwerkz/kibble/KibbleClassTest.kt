@@ -91,9 +91,12 @@ open class Person : AbstractKotlinPerson {
     @Test
     fun enumClasses() {
         @Language("kotlin")
-        val source = """enum class Enum {
-    ENUM1
-}""".trimMargin()
+        val source =
+            """
+            enum class Enum {
+                ENUM1
+            }
+            """.trimIndent()
         val kibbleClass = Kibble.parseSource(source).classes.first()
         Assert.assertTrue(kibbleClass.isEnum)
     }

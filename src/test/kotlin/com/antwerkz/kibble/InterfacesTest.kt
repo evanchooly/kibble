@@ -8,8 +8,10 @@ class InterfacesTest {
     @Test
     fun basic() {
         val file = Kibble.parseSource(
-            """interface temp {
-        |}""".trimMargin()
+            """
+            interface temp {
+            }
+            """.trimIndent()
         )
 
         Assert.assertTrue(file.classes.isEmpty())
@@ -22,17 +24,14 @@ class InterfacesTest {
     @Test
     fun everything() {
         val file = Kibble.parseSource(
-            """interface temp {
-        |
-        |class Klass
-        |
-        |object Object
-        |
-        |fun function() 
-        |
-        |val property: String
-        |
-        |}""".trimMargin()
+            """
+            interface temp {
+                class Klass
+                object Object
+                fun function() 
+                val property: String
+            }
+            """.trimIndent()
         )
 
         Assert.assertFalse(file.interfaces.isEmpty())
