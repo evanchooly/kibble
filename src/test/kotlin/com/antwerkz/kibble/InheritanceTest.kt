@@ -13,7 +13,7 @@ class InheritanceTest {
             
             class Child: Parent() {
             }
-        """.trimIndent()
+            """.trimIndent()
         ).classes
         val child = types.first { it.name == "Child" }
 

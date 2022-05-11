@@ -10,9 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ 11 ]
-        kotlin: [ 1.5.10, 1.4.32 ]
-    name: "Tests on JDK ${{ matrix.java }}, Kotlin: ${{ matrix.kotlin }}"
+        java: [ 11, 18 ]
+    name: "Tests on JDK ${{ matrix.java }}"
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK ${{ matrix.java }}
@@ -28,7 +27,7 @@ jobs:
       - name: Compile Code
         run: mvn install -DskipTests
       - name: Run Tests
-        run: mvn surefire:test -Dkotlin.version=${{ matrix.kotlin }}
+        run: mvn surefire:test
   Quality:
     name: Style Checks
     runs-on: ubuntu-latest
