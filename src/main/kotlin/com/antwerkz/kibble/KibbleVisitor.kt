@@ -376,7 +376,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
         context.bookmark("visitPrimaryConstructor")
         primary.valueParameters.forEach {
-            it.typeReference?.accept(this);
+            it.typeReference?.accept(this)
             val type = context.pop<TypeName>()
             if (it.hasValOrVar()) {
                 context.push(toProperty(it, type))
@@ -1033,7 +1033,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitTypeProjection(typeProjection: KtTypeProjection) {
         val value = if (typeProjection.projectionKind == KtProjectionKind.STAR) STAR
-            else typeProjection.typeReference!!.evaluate<TypeName>(this)
+        else typeProjection.typeReference!!.evaluate<TypeName>(this)
         var variance: KModifier? = null
         when (typeProjection.projectionKind) {
             IN -> variance = KModifier.IN
