@@ -10,7 +10,7 @@
 
     <groupId>com.antwerkz.kibble</groupId>
     <artifactId>kibble</artifactId>
-    <version>0.20.0-SNAPSHOT</version>
+    <version>0.20.0</version>
     <packaging>jar</packaging>
 
     <name>kibble</name>
