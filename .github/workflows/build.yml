@@ -44,9 +44,9 @@ jobs:
         run: mvn verify
   Snapshots:
     name: Publish Snapshot Artifacts
-    if: "github.repository == 'MorphiaOrg/morphia' && github.ref == 'refs/heads/2.2.x' && github.event_name == 'push'"
+    if: "github.repository == 'evanchooly/kibble' && github.ref == 'refs/heads/master' && github.event_name == 'push'"
     needs:
-      - Morphia
+      - kibble
       - Quality
     runs-on: ubuntu-latest
 
