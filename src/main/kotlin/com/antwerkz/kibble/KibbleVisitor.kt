@@ -18,9 +18,14 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.AnnotationSpec.UseSiteTarget
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.Dynamic
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.KModifier.INTERNAL
+import com.squareup.kotlinpoet.KModifier.PRIVATE
+import com.squareup.kotlinpoet.KModifier.PROTECTED
+import com.squareup.kotlinpoet.KModifier.PUBLIC
 import com.squareup.kotlinpoet.KModifier.VARARG
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterSpec
@@ -151,6 +156,7 @@ import org.jetbrains.kotlin.psi.KtWhenExpression
 import org.jetbrains.kotlin.psi.KtWhileExpression
 import org.jetbrains.kotlin.psi.psiUtil.PsiChildRange
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
+import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.jetbrains.kotlin.types.Variance
 import org.slf4j.LoggerFactory
 import java.util.Locale
@@ -359,29 +365,40 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         context.push(builder.build())
     }
 
-    override fun visitPrimaryConstructor(primary: KtPrimaryConstructor) {
-        fun toProperty(it: KtParameter, type: TypeName) = PropertySpec.builder(it.name!!, type)
-            .mutable(it.isMutable)
-            .initializer(it.name!!)
-            .build()
+    override fun visitElement(element: PsiElement) {
+        super.visitElement(element)
+    }
 
-        fun toParameter(it: KtParameter, type: TypeName): ParameterSpec {
-            val paramBuilder = ParameterSpec.builder(it.name!!, type)
-            if (it.hasDefaultValue()) {
-                it.defaultValue!!.accept(this)
-                paramBuilder.defaultValue(context.pop<CodeBlock>())
+    override fun visitPrimaryConstructor(primary: KtPrimaryConstructor) {
+        fun toProperty(parameter: KtParameter, type: TypeName): PropertySpec {
+            val visibility = parameter.visibilityModifier()?.let { mod ->
+                KModifier.valueOf(mod.text.uppercase())
             }
+
+            return PropertySpec.builder(parameter.name!!, type)
+                .mutable(parameter.isMutable)
+                .addModifiers(listOfNotNull(visibility))
+                .initializer(parameter.name!!)
+                .build()
+        }
+
+        fun toParameter(parameter: KtParameter, type: TypeName, context: KibbleContext): ParameterSpec {
+            val paramBuilder = ParameterSpec.builder(parameter.name!!, type)
+            context.bookmark("parameter mods")
+            parameter.modifierList?.accept(this)
+            val list: List<KModifier> = context.popToBookmark() as List<KModifier>
+            paramBuilder.addModifiers(list.filterNot { it in listOf(PUBLIC, INTERNAL, PROTECTED, PRIVATE)})
+            parameter.defaultValue?.let { paramBuilder.defaultValue(it.evaluate<CodeBlock>(this)) }
             return paramBuilder.build()
         }
 
         context.bookmark("visitPrimaryConstructor")
         primary.valueParameters.forEach {
-            it.typeReference?.accept(this)
-            val type = context.pop<TypeName>()
+            val type = it.typeReference?.evaluate<TypeName>(this)!!
             if (it.hasValOrVar()) {
                 context.push(toProperty(it, type))
             }
-            context.push(toParameter(it, type))
+            context.push(toParameter(it, type, context))
         }
         primary.modifierList?.acceptChildren(this)
         val values = context.popToBookmark()
@@ -456,13 +473,18 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitProperty(property: KtProperty) {
-        val type = property.typeReference?.evaluate<TypeName>(this) ?: ClassName("", "")
-        // ?: missing("properties must have types: ${property.text  }")
-        val name = property.name ?: missing("properties must be named")
-        val builder = PropertySpec.builder(name, type)
-        builder.mutable(property.isVar)
-        buildProperty("visitProperty", property, builder)
-        context.push(builder.build())
+        try {
+            val type = property.typeReference?.evaluate<TypeName>(this)
+                ?: missing("properties must have types: ${property.text}")
+            val name = property.name ?: missing("properties must be named")
+            val builder = PropertySpec.builder(name, type)
+            builder.mutable(property.isVar)
+            buildProperty("visitProperty", property, builder)
+            context.push(builder.build())
+        } catch (e: IllegalArgumentException) {
+            println("property = ${property.text}")
+            throw e
+        }
     }
 
     private fun buildProperty(bookmark: String, property: PsiElement, builder: Builder) {

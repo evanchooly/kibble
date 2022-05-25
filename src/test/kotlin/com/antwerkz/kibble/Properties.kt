@@ -3,6 +3,7 @@ package com.antwerkz.kibble
 import com.antwerkz.kibble.Kibble.parseSource
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.Dynamic
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier.LATEINIT
 import org.intellij.lang.annotations.Language
@@ -52,12 +53,15 @@ class Properties {
             }
             """.trimIndent()
         )
-        val first = file.classes.first().properties[0]
+        val parameters = file.classes.first().primaryConstructor!!.parameters
+
+        val first = parameters[0]
         Assert.assertEquals(first.name, "name")
-        Assert.assertNull(first.initializer)
-        val second = file.classes.first().properties[1]
+        Assert.assertNull(first.defaultValue)
+
+        val second = parameters[1]
         Assert.assertEquals(second.name, "price")
-        Assert.assertEquals(second.initializer, CodeBlock.of("0.0"))
+        Assert.assertEquals(second.defaultValue, CodeBlock.of("0.0"))
     }
 
     @Test
@@ -109,7 +113,7 @@ class Properties {
         val iterator = file.properties.iterator()
         val prop = iterator.next()
         Assert.assertEquals(prop.name, "foo")
-        Assert.assertEquals(prop.type, ClassName("", ""))
+        Assert.assertEquals(prop.type, Dynamic)
         Assert.assertFalse(prop.modifiers.contains(LATEINIT))
     }
 
