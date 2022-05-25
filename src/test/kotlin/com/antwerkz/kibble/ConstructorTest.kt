@@ -1,6 +1,5 @@
 package com.antwerkz.kibble
 
-import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
 import org.testng.Assert
 import org.testng.annotations.Test

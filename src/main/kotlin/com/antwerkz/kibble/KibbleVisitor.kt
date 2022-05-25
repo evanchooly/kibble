@@ -18,7 +18,6 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.AnnotationSpec.UseSiteTarget
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.Dynamic
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -387,7 +386,7 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
             context.bookmark("parameter mods")
             parameter.modifierList?.accept(this)
             val list: List<KModifier> = context.popToBookmark() as List<KModifier>
-            paramBuilder.addModifiers(list.filterNot { it in listOf(PUBLIC, INTERNAL, PROTECTED, PRIVATE)})
+            paramBuilder.addModifiers(list.filterNot { it in listOf(PUBLIC, INTERNAL, PROTECTED, PRIVATE) })
             parameter.defaultValue?.let { paramBuilder.defaultValue(it.evaluate<CodeBlock>(this)) }
             return paramBuilder.build()
         }
