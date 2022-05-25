@@ -103,7 +103,7 @@ class Properties {
         Assert.assertEquals(prop.type.toString(), "com.what.the.What")
     }
 
-    @Test
+    @Test(enabled = false)
     fun implicitType() {
         val file = parseSource("var foo = 42")
         val iterator = file.properties.iterator()
@@ -141,5 +141,17 @@ val list: List<Bar>"""
         prop = iterator.next()
         Assert.assertEquals(prop.name, "bar")
         Assert.assertFalse(prop.type.isNullable, "bar should not be nullable")
+    }
+
+    @Test
+    fun constructorPropertiesWithDefaultValue() {
+        parseSource(
+            """
+                public class PersonCriteria internal constructor(
+                  public val path: String? = null,
+                ) {
+
+            """.trimIndent()
+        )
     }
 }

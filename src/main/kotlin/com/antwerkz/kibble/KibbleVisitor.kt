@@ -28,6 +28,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.PropertySpec.Builder
+import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
@@ -101,6 +102,7 @@ import org.jetbrains.kotlin.psi.KtParenthesizedExpression
 import org.jetbrains.kotlin.psi.KtPostfixExpression
 import org.jetbrains.kotlin.psi.KtPrefixExpression
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
+import org.jetbrains.kotlin.psi.KtProjectionKind
 import org.jetbrains.kotlin.psi.KtProjectionKind.IN
 import org.jetbrains.kotlin.psi.KtProjectionKind.OUT
 import org.jetbrains.kotlin.psi.KtProperty
@@ -358,8 +360,29 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitPrimaryConstructor(primary: KtPrimaryConstructor) {
+        fun toProperty(it: KtParameter, type: TypeName) = PropertySpec.builder(it.name!!, type)
+            .mutable(it.isMutable)
+            .initializer(it.name!!)
+            .build()
+
+        fun toParameter(it: KtParameter, type: TypeName): ParameterSpec {
+            val paramBuilder = ParameterSpec.builder(it.name!!, type)
+            if (it.hasDefaultValue()) {
+                it.defaultValue!!.accept(this)
+                paramBuilder.defaultValue(context.pop<CodeBlock>())
+            }
+            return paramBuilder.build()
+        }
+
         context.bookmark("visitPrimaryConstructor")
-        primary.valueParameters.forEach { it.accept(this) }
+        primary.valueParameters.forEach {
+            it.typeReference?.accept(this);
+            val type = context.pop<TypeName>()
+            if (it.hasValOrVar()) {
+                context.push(toProperty(it, type))
+            }
+            context.push(toParameter(it, type))
+        }
         primary.modifierList?.acceptChildren(this)
         val values = context.popToBookmark()
         val builder = FunSpec.constructorBuilder()
@@ -1009,7 +1032,8 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
     }
 
     override fun visitTypeProjection(typeProjection: KtTypeProjection) {
-        val value = typeProjection.typeReference?.evaluate<TypeName>(this) ?: ClassName("", "")
+        val value = if (typeProjection.projectionKind == KtProjectionKind.STAR) STAR
+            else typeProjection.typeReference!!.evaluate<TypeName>(this)
         var variance: KModifier? = null
         when (typeProjection.projectionKind) {
             IN -> variance = KModifier.IN

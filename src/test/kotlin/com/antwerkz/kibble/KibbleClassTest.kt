@@ -11,7 +11,7 @@ class KibbleClassTest {
     private val source = """
         class Temp {
             companion object {
-                val prop = 42
+                val prop: Int = 42
             }
 
             object temp
