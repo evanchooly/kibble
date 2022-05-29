@@ -24,7 +24,7 @@
 
     <properties>
         <kotlin.version>1.6.21</kotlin.version>
-        <slf4j.version>1.7.25</slf4j.version>
+        <slf4j.version>1.7.36</slf4j.version>
         <testng.version>6.11</testng.version>
         <jacoco.version>0.8.1</jacoco.version>
         <dokka.version>1.6.10</dokka.version>
@@ -110,8 +110,18 @@
                 <version>3.8.0</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.12</version>
+                <configuration>
+                    <serverId>central</serverId>
+                    <nexusUrl>${nexus.url}</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
             <plugin>
@@ -135,7 +145,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <jvmTarget>1.8</jvmTarget>
+                    <jvmTarget>11</jvmTarget>
                 </configuration>
             </plugin>
             <plugin>
@@ -167,21 +177,6 @@
                                 <include>target/dokka</include>
                             </includes>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.github.gantsign.maven</groupId>
-                <artifactId>ktlint-maven-plugin</artifactId>
-                <version>1.13.1</version>
-                <executions>
-                    <execution>
-                        <id>format-and-check</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <!--<goal>format</goal>-->
-                            <goal>check</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>
