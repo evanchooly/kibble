@@ -155,7 +155,6 @@ import org.jetbrains.kotlin.psi.KtWhenExpression
 import org.jetbrains.kotlin.psi.KtWhileExpression
 import org.jetbrains.kotlin.psi.psiUtil.PsiChildRange
 import org.jetbrains.kotlin.psi.psiUtil.allChildren
-import org.jetbrains.kotlin.psi.psiUtil.visibilityModifier
 import org.jetbrains.kotlin.types.Variance
 import org.slf4j.LoggerFactory
 import java.util.Locale
@@ -364,41 +363,9 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         context.push(builder.build())
     }
 
-    override fun visitElement(element: PsiElement) {
-        super.visitElement(element)
-    }
-
     override fun visitPrimaryConstructor(primary: KtPrimaryConstructor) {
-        fun toProperty(parameter: KtParameter, type: TypeName): PropertySpec {
-            val visibility = parameter.visibilityModifier()?.let { mod ->
-                KModifier.valueOf(mod.text.uppercase())
-            }
-
-            return PropertySpec.builder(parameter.name!!, type)
-                .mutable(parameter.isMutable)
-                .addModifiers(listOfNotNull(visibility))
-                .initializer(parameter.name!!)
-                .build()
-        }
-
-        fun toParameter(parameter: KtParameter, type: TypeName, context: KibbleContext): ParameterSpec {
-            val paramBuilder = ParameterSpec.builder(parameter.name!!, type)
-            context.bookmark("parameter mods")
-            parameter.modifierList?.accept(this)
-            val list: List<KModifier> = context.popToBookmark() as List<KModifier>
-            paramBuilder.addModifiers(list.filterNot { it in listOf(PUBLIC, INTERNAL, PROTECTED, PRIVATE) })
-            parameter.defaultValue?.let { paramBuilder.defaultValue(it.evaluate<CodeBlock>(this)) }
-            return paramBuilder.build()
-        }
-
         context.bookmark("visitPrimaryConstructor")
-        primary.valueParameters.forEach {
-            val type = it.typeReference?.evaluate<TypeName>(this)!!
-            if (it.hasValOrVar()) {
-                context.push(toProperty(it, type))
-            }
-            context.push(toParameter(it, type, context))
-        }
+        primary.valueParameters.forEach { it.accept(this) }
         primary.modifierList?.acceptChildren(this)
         val values = context.popToBookmark()
         val builder = FunSpec.constructorBuilder()
@@ -642,7 +609,11 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         acceptChildren("visitParameter accept", parameter, builder) {
             when (it) {
                 is TypeName -> { } // handled
-                is KModifier -> addModifiers(it)
+                is KModifier -> {
+                    if (it !in listOf(PUBLIC, PRIVATE, PROTECTED, INTERNAL)) {
+                        addModifiers(it)
+                    }
+                }
                 is CodeBlock -> defaultValue(it)
                 is AnnotationSpec -> addAnnotation(it)
                 else -> unknownType(it)
@@ -793,8 +764,8 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
 
     override fun visitReturnExpression(expression: KtReturnExpression) {
         val returned = expression.returnedExpression?.evaluate<String>(this)
-        val retVal = returned ?: expression.labeledExpression?.evaluate<String>(this)?.let { it }
-        if (retVal == null) throw RuntimeException("Could not find value for return expression: $expression")
+        val retVal = returned ?: expression.labeledExpression?.evaluate<String>(this)
+            ?: throw RuntimeException("Could not find value for return expression: $expression")
         context.push(CodeBlock.of("return $retVal"))
     }
 

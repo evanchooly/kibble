@@ -9,7 +9,7 @@ class ConstructorTest {
     fun secondaries() {
         val classes = Kibble.parseSource(
             """
-class Factory(val type: String) {
+class Factory(private val type: String) {
     constructor(): this("car")
 }
         """
@@ -40,5 +40,13 @@ class Factory(private vararg val type: String = "red")
         Assert.assertEquals(parameterSpec.defaultValue.toString(), "\"red\"")
         Assert.assertTrue(KModifier.VARARG in parameterSpec.modifiers)
         Assert.assertEquals(klass.propertySpecs[0].name, "type")
+    }
+
+    @Test
+    fun annotatedCtorParameters() {
+        val fileSpec = Kibble.parseSource(
+            "data class Address(@Property(\"c\") val city: String, val state: String, val zip: String)"
+        )
+        val klass = fileSpec.classes.iterator().next()
     }
 }
