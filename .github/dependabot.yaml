@@ -2,6 +2,6 @@ version: 2
 updates:
   - package-ecosystem: maven
     directory: "/"
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 20
     schedule:
       interval: daily
