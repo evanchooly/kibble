@@ -26,7 +26,7 @@
         <kotlin.version>1.6.21</kotlin.version>
         <slf4j.version>1.7.25</slf4j.version>
         <testng.version>6.11</testng.version>
-        <jacoco.version>0.8.1</jacoco.version>
+        <jacoco.version>0.8.8</jacoco.version>
         <dokka.version>1.6.10</dokka.version>
         <kotlinpoet.version>1.11.0</kotlinpoet.version>
 
