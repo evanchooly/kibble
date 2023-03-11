@@ -13,12 +13,12 @@ Kibble can be installed via maven using:
 <dependency>
     <groupId>com.antwerkz.kibble</groupId>
     <artifactId>kibble</artifactId>
-    <version>0.13</version>
+    <version>0.21</version>
 </dependency>
 ```
 
 or via Gradle using:
 
 ```groovy
-compile 'com.antwerkz.kibble:kibble:0.13'
+compile 'com.antwerkz.kibble:kibble:0.21'
 ```
