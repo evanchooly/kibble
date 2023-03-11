@@ -6,6 +6,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.KModifier.INTERNAL
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec.Kind.INTERFACE
+import kotlin.test.assertEquals
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -38,7 +39,15 @@ return "hi""""
         Assert.assertTrue(next.kind == INTERFACE)
         val klass = file.getClass("KotlinSampleClass")!!
         Assert.assertTrue(klass.visibility == INTERNAL)
-        Assert.assertNotNull(klass.annotationSpecs.firstOrNull { it.className == ClassName("javax.annotation", "Generated") })
+        val generated = klass.annotationSpecs.firstOrNull { it.typeName == ClassName("javax.annotation", "Generated") }
+        Assert.assertTrue(generated != null)
+        generated?.let {
+            val arguments = generated.arguments()
+            assertEquals(arguments[""], "\"I'm the value\"")
+            assertEquals(arguments["date"], "\"123455\"")
+            assertEquals(arguments["comments"], "\"Fingers crossed\"")
+            assertEquals(arguments["number"], "49152")
+        }
         Assert.assertEquals(klass.propertySpecs.size, 7, klass.propertySpecs.toString())
         Assert.assertEquals(klass.primaryConstructor?.parameters?.size, 2, klass.primaryConstructor?.parameters.toString())
 

@@ -1,5 +1,6 @@
 package com.antwerkz.kibble
 
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -141,3 +142,11 @@ val TypeSpec.secondaries: List<FunSpec>
     get() = funSpecs.filter {
         it.isConstructor
     }
+
+fun AnnotationSpec.arguments(): Map<String, Any> {
+    return members.associate { argument ->
+        val parts = argument.toString().split("=").map { it.trim() }
+        if (parts.size == 1) "" to parts[0]
+            else parts[0] to parts[1]
+    }
+}

@@ -10,7 +10,7 @@ interface Dummy {
     fun what()
 }
 
-@Generated("I'm the value", date = "123455", comments = "Fingers crossed")
+@Generated("I'm the value", date = "123455", comments = "Fingers crossed", number = 49152)
 internal abstract class KotlinSampleClass(val cost: Double, ignored: Int): ParentClass(21), Cloneable {
     var name: String? = null
 

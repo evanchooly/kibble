@@ -549,10 +549,10 @@ internal class KibbleVisitor(private val context: KibbleContext) : KtVisitorVoid
         val builder = AnnotationSpec.builder(annType)
         context.bookmark("visitAnnotationEntry: $annType")
         annotationEntry.valueArgumentList?.accept(this)
-        val arguments = context.popToBookmark()
+        val arguments = context.popToBookmark() as List<Pair<String, String>>
         arguments.forEach {
-            it as Pair<String, String>
-            builder.addMember(it.first, it.second)
+            val name = if(it.first != "") "${it.first} = " else ""
+            builder.addMember("$name${it.second}")
         }
         context.push(builder.build())
     }
