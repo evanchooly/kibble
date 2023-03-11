@@ -2,8 +2,7 @@
 
 # Kibble
 
-Kibble is a code generation library for generating Kotlin code.  It supports both parsing and generation from scratch.  Examples will be 
-available once the API stabilizes.
+Kibble is a Kotlin source parser and code generation library for generating Kotlin code.  It supports both parsing and generation from scratch.  Examples will be available once the API stabilizes.
 
 # Installation
 
