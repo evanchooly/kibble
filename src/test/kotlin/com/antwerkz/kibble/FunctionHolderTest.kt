@@ -10,15 +10,15 @@ import org.testng.annotations.Test
 class FunctionHolderTest {
     @Test
     fun parameterizedType() {
-        @Language("kotlin")
-        val source = """fun nickNames(): Foo<Bar, List<String>>""".trimMargin()
+        @Language("kotlin") val source = """fun nickNames(): Foo<Bar, List<String>>""".trimMargin()
         Kibble.parseSource(source)
     }
 
     @Test
     fun expression() {
         @Language("kotlin")
-        val source = """fun expression(name: String?, value: String?, userName: String?) = Foo(name ?: "")
+        val source =
+            """fun expression(name: String?, value: String?, userName: String?) = Foo(name ?: "")
 
 fun body() {
     print()
@@ -35,29 +35,30 @@ fun body() {
         kibbleFunction = file.getFunctions("body").first()
         Assert.assertEquals(
             kibbleFunction.body,
-            CodeBlock.of(
-                """print()
+            CodeBlock.of("""print()
 for (item in items) {
     add(item)
-}"""
-            )
+}""")
         )
     }
 
     @Test
     fun functionParameter() {
-        val source = """fun bloop(message: String, converter: Int.(String, List<Double>) -> String): String {
+        val source =
+            """fun bloop(message: String, converter: Int.(String, List<Double>) -> String): String {
     println()
 }
 """
-        val bloop = Kibble.parseSource(source)
-            .functions.first()
+        val bloop = Kibble.parseSource(source).functions.first()
         Assert.assertEquals(bloop.parameters[0].name, "message")
         val parameter = bloop.parameters[1]
         Assert.assertEquals(parameter.name, "converter")
         val type = parameter.type as LambdaTypeName
         val parameters = type.parameters.map { it.toString() }
-        Assert.assertEquals(parameters, listOf("kotlin.String", "kotlin.collections.List<kotlin.Double>"))
+        Assert.assertEquals(
+            parameters,
+            listOf("kotlin.String", "kotlin.collections.List<kotlin.Double>")
+        )
         Assert.assertEquals(type.receiver, ClassName("kotlin", "Int"))
         Assert.assertEquals(type.returnType, ClassName("kotlin", "String"))
     }

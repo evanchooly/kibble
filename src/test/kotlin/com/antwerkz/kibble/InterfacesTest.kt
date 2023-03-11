@@ -7,12 +7,14 @@ import org.testng.annotations.Test
 class InterfacesTest {
     @Test
     fun basic() {
-        val file = Kibble.parseSource(
-            """
+        val file =
+            Kibble.parseSource(
+                """
             interface temp {
             }
-            """.trimIndent()
-        )
+            """
+                    .trimIndent()
+            )
 
         Assert.assertTrue(file.classes.isEmpty())
         Assert.assertFalse(file.interfaces.isEmpty())
@@ -23,16 +25,18 @@ class InterfacesTest {
 
     @Test
     fun everything() {
-        val file = Kibble.parseSource(
-            """
+        val file =
+            Kibble.parseSource(
+                """
             interface temp {
                 class Klass
                 object Object
                 fun function() 
                 val property: String
             }
-            """.trimIndent()
-        )
+            """
+                    .trimIndent()
+            )
 
         Assert.assertFalse(file.interfaces.isEmpty())
         val kibbleInterface = file.interfaces.first()
@@ -44,10 +48,14 @@ class InterfacesTest {
 
     @Test
     fun extends() {
-        val source = """interface Temp: java.lang.Runnable {
-}""".trim()
+        val source =
+            """interface Temp: java.lang.Runnable {
+}"""
+                .trim()
         val file = Kibble.parseSource(source)
 
-        Assert.assertNotNull(file.interfaces.first().superinterfaces.containsKey(ClassName("java.lang", "Runnable")))
+        Assert.assertNotNull(
+            file.interfaces.first().superinterfaces.containsKey(ClassName("java.lang", "Runnable"))
+        )
     }
 }

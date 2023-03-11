@@ -23,13 +23,8 @@ class KibbleTest {
         val first = file.functions.first()
         Assert.assertEquals(first.visibility, KModifier.INTERNAL)
         Assert.assertEquals(first.returnType.toString(), "kotlin.String")
-        Assert.assertEquals(
-            first.body,
-            CodeBlock.of(
-                """println("hi")
-return "hi""""
-            )
-        )
+        Assert.assertEquals(first.body, CodeBlock.of("""println("hi")
+return "hi""""))
     }
 
     @Test
@@ -39,7 +34,10 @@ return "hi""""
         Assert.assertTrue(next.kind == INTERFACE)
         val klass = file.getClass("KotlinSampleClass")!!
         Assert.assertTrue(klass.visibility == INTERNAL)
-        val generated = klass.annotationSpecs.firstOrNull { it.typeName == ClassName("javax.annotation", "Generated") }
+        val generated =
+            klass.annotationSpecs.firstOrNull {
+                it.typeName == ClassName("javax.annotation", "Generated")
+            }
         Assert.assertTrue(generated != null)
         generated?.let {
             val arguments = generated.arguments()
@@ -49,7 +47,11 @@ return "hi""""
             assertEquals(arguments["number"], "49152")
         }
         Assert.assertEquals(klass.propertySpecs.size, 7, klass.propertySpecs.toString())
-        Assert.assertEquals(klass.primaryConstructor?.parameters?.size, 2, klass.primaryConstructor?.parameters.toString())
+        Assert.assertEquals(
+            klass.primaryConstructor?.parameters?.size,
+            2,
+            klass.primaryConstructor?.parameters.toString()
+        )
 
         listOf("cost", "name", "age", "list", "map", "time", "random").forEach {
             Assert.assertNotNull(
@@ -74,15 +76,18 @@ return "hi""""
 
     @Test
     fun primaryConstructor() {
-        val file = Kibble.parseSource(
-            """
+        val file =
+            Kibble.parseSource(
+                """
             class Simple(val num: Int)
-            """.trimIndent()
-        )
+            """
+                    .trimIndent()
+            )
 
         Assert.assertTrue(file.classes.size == 1)
         Assert.assertEquals(
-            file.classes.first().primaryConstructor?.parameters?.size, 1,
+            file.classes.first().primaryConstructor?.parameters?.size,
+            1,
             file.classes.first().primaryConstructor?.parameters.toString()
         )
         val properties = file.classes.first().propertySpecs
@@ -92,19 +97,24 @@ return "hi""""
 
     @Test
     fun secondaryConstructors() {
-        val file = Kibble.parseSource(
-            """
+        val file =
+            Kibble.parseSource(
+                """
             class Simple(val num: Int) {
                 constructor(otherNum: Long): this(otherNum.toInt()) {
                     this.num = num
                 }
             }
-            """.trimIndent()
-        )
+            """
+                    .trimIndent()
+            )
         val secondaryConstructor = file.classes.first().secondaries[0]
         val parameters = secondaryConstructor.parameters
         Assert.assertEquals(parameters[0].name, "otherNum")
-        Assert.assertEquals(secondaryConstructor.delegateConstructorArguments, mutableListOf(CodeBlock.of("otherNum.toInt()")))
+        Assert.assertEquals(
+            secondaryConstructor.delegateConstructorArguments,
+            mutableListOf(CodeBlock.of("otherNum.toInt()"))
+        )
         Assert.assertEquals(secondaryConstructor.body, CodeBlock.of("this.num = num"))
     }
 }

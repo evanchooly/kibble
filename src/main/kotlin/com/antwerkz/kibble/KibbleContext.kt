@@ -1,8 +1,8 @@
 package com.antwerkz.kibble
 
 import com.squareup.kotlinpoet.FileSpec
-import org.slf4j.LoggerFactory
 import java.util.Stack
+import org.slf4j.LoggerFactory
 
 @Suppress("UNCHECKED_CAST")
 class KibbleContext {
@@ -17,16 +17,16 @@ class KibbleContext {
     var defaultPackageName = ""
     fun register(file: FileSpec) = files.add(file)
     fun push(value: Any) {
-/*
-        if (value !is Slab &&
-                value !is SuperCall &&
-                value !is CallBlock &&
-                value !is TypeProjection &&
-                value !is Pair<*, *> &&
-                !value::class.java.`package`.name.startsWith("com.square")) {
-            throw Exception("non-kotlinpoet type pushed to the stack: [${value::class.java}] $value")
-        }
-*/
+        /*
+                if (value !is Slab &&
+                        value !is SuperCall &&
+                        value !is CallBlock &&
+                        value !is TypeProjection &&
+                        value !is Pair<*, *> &&
+                        !value::class.java.`package`.name.startsWith("com.square")) {
+                    throw Exception("non-kotlinpoet type pushed to the stack: [${value::class.java}] $value")
+                }
+        */
         stack.push(value)
     }
 

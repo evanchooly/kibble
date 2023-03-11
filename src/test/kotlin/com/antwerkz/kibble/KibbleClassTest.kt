@@ -8,7 +8,8 @@ import org.testng.annotations.Test
 
 class KibbleClassTest {
     @Language("kotlin")
-    private val source = """
+    private val source =
+        """
         class Temp {
             companion object {
                 val prop: Int = 42
@@ -31,7 +32,8 @@ class KibbleClassTest {
             }
         }
 
-    """.trimIndent()
+    """
+            .trimIndent()
 
     @Test
     fun members() {
@@ -43,14 +45,22 @@ class KibbleClassTest {
         obj = kibbleClass.getObject("temp")
         Assert.assertNotNull(obj, "Should find an object named 'temp'")
         val kibble = kibbleClass.getClass("Nested")!!
-        Assert.assertNotNull(kibble.getProperty("property"), "Should find a property named 'property'")
-        Assert.assertEquals(kibble.getFunctions("something").size, 1, "Should find one function named 'something'")
+        Assert.assertNotNull(
+            kibble.getProperty("property"),
+            "Should find a property named 'property'"
+        )
+        Assert.assertEquals(
+            kibble.getFunctions("something").size,
+            1,
+            "Should find one function named 'something'"
+        )
     }
 
     @Test
     fun parent() {
-        val file = Kibble.parseSource(
-            """
+        val file =
+            Kibble.parseSource(
+                """
 package critter.test.source
 
 import org.bson.types.ObjectId
@@ -70,20 +80,21 @@ open class Person : AbstractKotlinPerson {
 
     var last: String? = null
 } """
-        )
+            )
         val classes = file.classes.iterator()
         var clazz = classes.next()
         Assert.assertEquals(clazz.superclass, ANY)
         Assert.assertTrue(clazz.superinterfaces.isEmpty())
         clazz = classes.next()
         Assert.assertEquals(clazz.superclass, ANY)
-        Assert.assertNotNull(clazz.superinterfaces.containsKey(ClassName("", "AbstractKotlinPerson")))
+        Assert.assertNotNull(
+            clazz.superinterfaces.containsKey(ClassName("", "AbstractKotlinPerson"))
+        )
     }
 
     @Test
     fun abstractClasses() {
-        @Language("kotlin")
-        val source = """abstract class Abstract"""
+        @Language("kotlin") val source = """abstract class Abstract"""
         val kibbleClass = Kibble.parseSource(source).classes.first()
         Assert.assertTrue(kibbleClass.isAbstract())
     }
@@ -96,7 +107,8 @@ open class Person : AbstractKotlinPerson {
             enum class Enum {
                 ENUM1
             }
-            """.trimIndent()
+            """
+                .trimIndent()
         val kibbleClass = Kibble.parseSource(source).classes.first()
         Assert.assertTrue(kibbleClass.isEnum)
     }

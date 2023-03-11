@@ -14,6 +14,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpec.Kind.CLASS
 import com.squareup.kotlinpoet.TypeSpec.Kind.INTERFACE
 import com.squareup.kotlinpoet.TypeSpec.Kind.OBJECT
+import java.io.File
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer.PLAIN_FULL_PATHS
@@ -24,11 +25,8 @@ import org.jetbrains.kotlin.com.intellij.openapi.Disposable
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import org.slf4j.LoggerFactory
-import java.io.File
 
-/**
- * This is the primary entry point for parsing existing Kotlin code
- */
+/** This is the primary entry point for parsing existing Kotlin code */
 object Kibble {
     private val LOG = LoggerFactory.getLogger(Kibble::class.java)
 
@@ -72,7 +70,8 @@ object Kibble {
     }
 
     /**
-     * Parses sources found at the given path. This String can represent a source file or a directory to scan for sources
+     * Parses sources found at the given path. This String can represent a source file or a
+     * directory to scan for sources
      *
      * @return the list of KibbleFiles from sources found at the given path
      */
@@ -82,10 +81,16 @@ object Kibble {
         val configuration = CompilerConfiguration()
         configuration.put(CompilerConfigurationKey.create<File>("output directory"), File(""))
         configuration.put(
-            CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false)
+            CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY,
+            PrintingMessageCollector(System.err, PLAIN_FULL_PATHS, false)
         )
         paths.forEach { configuration.addKotlinSourceRoot(it.absolutePath) }
-        val environment = KotlinCoreEnvironment.createForProduction(Disposable { }, configuration, JVM_CONFIG_FILES)
+        val environment =
+            KotlinCoreEnvironment.createForProduction(
+                Disposable {},
+                configuration,
+                JVM_CONFIG_FILES
+            )
         try {
             environment.getSourceFiles().forEach { it.accept(KibbleVisitor(context)) }
         } catch (e: NotImplementedError) {
@@ -111,7 +116,9 @@ val FunSpec.visibility: KModifier
     get() = modifiers.visibility
 
 fun FileSpec.getClass(name: String): TypeSpec? = classes.firstOrNull { it.name == name }
+
 fun FileSpec.getFunctions(name: String): List<FunSpec> = functions.filter { it.name == name }
+
 val Set<KModifier>.visibility: KModifier
     get() = firstOrNull { it in setOf(PUBLIC, PROTECTED, PRIVATE, INTERNAL) } ?: PUBLIC
 val TypeSpec.classes: List<TypeSpec>
@@ -126,27 +133,30 @@ val TypeSpec.objects: List<TypeSpec>
     get() = typeSpecs.filter { it.kind == OBJECT }
 
 fun TypeSpec.companion(): TypeSpec? {
-    return typeSpecs.firstOrNull {
-        it.isCompanion
-    }
+    return typeSpecs.firstOrNull { it.isCompanion }
 }
 
-fun TypeSpec.getClass(name: String): TypeSpec? = typeSpecs.filter { it.kind == CLASS }.firstOrNull { it.name == name }
-fun TypeSpec.getObject(name: String): TypeSpec? = typeSpecs.filter { it.kind == OBJECT }.firstOrNull { it.name == name }
+fun TypeSpec.getClass(name: String): TypeSpec? =
+    typeSpecs.filter { it.kind == CLASS }.firstOrNull { it.name == name }
+
+fun TypeSpec.getObject(name: String): TypeSpec? =
+    typeSpecs.filter { it.kind == OBJECT }.firstOrNull { it.name == name }
+
 fun TypeSpec.getFunctions(name: String): List<FunSpec> = funSpecs.filter { it.name == name }
-fun TypeSpec.getProperty(name: String): PropertySpec? = propertySpecs.firstOrNull { it.name == name }
+
+fun TypeSpec.getProperty(name: String): PropertySpec? =
+    propertySpecs.firstOrNull { it.name == name }
+
 fun TypeSpec.isAbstract() = KModifier.ABSTRACT in modifiers
+
 val TypeSpec.visibility: KModifier
     get() = modifiers.visibility
 val TypeSpec.secondaries: List<FunSpec>
-    get() = funSpecs.filter {
-        it.isConstructor
-    }
+    get() = funSpecs.filter { it.isConstructor }
 
 fun AnnotationSpec.arguments(): Map<String, Any> {
     return members.associate { argument ->
         val parts = argument.toString().split("=").map { it.trim() }
-        if (parts.size == 1) "" to parts[0]
-            else parts[0] to parts[1]
+        if (parts.size == 1) "" to parts[0] else parts[0] to parts[1]
     }
 }

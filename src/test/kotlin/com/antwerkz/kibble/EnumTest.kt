@@ -7,8 +7,9 @@ import org.testng.annotations.Test
 class EnumTest {
     @Test
     fun enums() {
-        val fileSpec = Kibble.parseSource(
-            """
+        val fileSpec =
+            Kibble.parseSource(
+                """
                 enum class Timezones(val timezone: String) {
                     Palmer("Antarctica/Palmer"),
                     Rothera("Antarctica/Rothera"),
@@ -19,8 +20,9 @@ class EnumTest {
                     Casey("Antarctica/Casey"),
                     Dumont_D_Urville("Antarctica/DumontDUrville")
                 }
-            """.trimIndent()
-        )
+            """
+                    .trimIndent()
+            )
         val typeSpec = fileSpec.classes[0]
         assertTrue(typeSpec.isEnum)
         assertNotNull(typeSpec.enumConstants["Davis"])

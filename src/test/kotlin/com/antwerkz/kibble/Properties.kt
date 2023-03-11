@@ -29,29 +29,31 @@ class Properties {
     """
             )
         )
-/*  no type inference support
-        validate(
-            parseSource(
-                """
-        var bar: Int = 42
-            set(value) {
-                field = value
-            }
-    """
-            )
-        )
-*/
+        /*  no type inference support
+                validate(
+                    parseSource(
+                        """
+                var bar: Int = 42
+                    set(value) {
+                        field = value
+                    }
+            """
+                    )
+                )
+        */
     }
 
     @Test
     fun initializers() {
-        val file = parseSource(
-            """
+        val file =
+            parseSource(
+                """
             class Item(var name: String, var price: Double = 0.0) {
                 constructor() : this("", 0.0)
             }
-            """.trimIndent()
-        )
+            """
+                    .trimIndent()
+            )
         val parameters = file.classes.first().primaryConstructor!!.parameters
 
         val first = parameters[0]
@@ -65,12 +67,10 @@ class Properties {
 
     @Test
     fun lateinit() {
-        val file = parseSource(
-            """
+        val file = parseSource("""
     lateinit var foo: Int = 42
     var bar: Int = 42
-"""
-        )
+""")
         val iterator = file.properties.iterator()
         var prop = iterator.next()
         Assert.assertEquals(prop.name, "foo")
@@ -83,8 +83,9 @@ class Properties {
 
     @Test
     fun importedTypes() {
-        val file = parseSource(
-            """
+        val file =
+            parseSource(
+                """
             package somepackage.name
             
             import com.what.the.What
@@ -92,8 +93,9 @@ class Properties {
             var bar: MutableList<Int> = mutableListOf() 
             var foo: Blargle
             var baz: What
-            """.trimIndent()
-        )
+            """
+                    .trimIndent()
+            )
         val iterator = file.properties.iterator()
         var prop = iterator.next()
         Assert.assertEquals(prop.name, "bar")
@@ -118,24 +120,21 @@ class Properties {
 
     @Test
     fun generics() {
-        @Language("kotlin")
-        val fqcn = """import com.foo.Bar
+        @Language("kotlin") val fqcn = """import com.foo.Bar
 val list: List<Bar>"""
         val file = parseSource(fqcn)
         val list = file.properties[0]
         Assert.assertEquals(list.type.toString(), "kotlin.collections.List<com.foo.Bar>")
-//        Assert.assertEquals(list.type.?.size, 1)
-//        val typeParameter: TypeParameter = list.type?.typeParameters!![0]
+        //        Assert.assertEquals(list.type.?.size, 1)
+        //        val typeParameter: TypeParameter = list.type?.typeParameters!![0]
     }
 
     @Test
     fun nullability() {
-        val file = parseSource(
-            """
+        val file = parseSource("""
     var foo: String? = null
     var bar: Int = 42
-"""
-        )
+""")
         val iterator = file.properties.iterator()
         var prop = iterator.next()
         Assert.assertEquals(prop.name, "foo")
@@ -154,7 +153,8 @@ val list: List<Bar>"""
                   public val path: String? = null,
                 ) {
 
-            """.trimIndent()
+            """
+                .trimIndent()
         )
     }
 }

@@ -17,7 +17,9 @@ class KibbleObjectTest {
         Assert.assertTrue(kibbleObject.modifiers.contains(PRIVATE))
         Assert.assertEquals(kibbleObject.superclass, ANY)
         Assert.assertTrue(kibbleObject.superclassConstructorParameters.isEmpty())
-        Assert.assertNotNull(kibbleObject.superinterfaces.containsKey(ClassName("java.lang", "Runnable")))
+        Assert.assertNotNull(
+            kibbleObject.superinterfaces.containsKey(ClassName("java.lang", "Runnable"))
+        )
         val functions = kibbleObject.funSpecs.iterator()
         var function = functions.next()
         Assert.assertEquals(function.name, "run")
@@ -29,14 +31,18 @@ class KibbleObjectTest {
 
     @Test
     fun functions() {
-        val obj = Kibble.parseSource(
-            """
+        val obj =
+            Kibble.parseSource(
+                    """
 object temp {
     fun something(): Junk {
         println("something")
     }
-}""".trim()
-        ).objects.first()
+}"""
+                        .trim()
+                )
+                .objects
+                .first()
 
         Assert.assertEquals(obj.name, "temp")
         val function = obj.funSpecs.first()

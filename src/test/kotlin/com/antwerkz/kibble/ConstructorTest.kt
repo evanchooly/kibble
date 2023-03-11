@@ -7,13 +7,16 @@ import org.testng.annotations.Test
 class ConstructorTest {
     @Test
     fun secondaries() {
-        val classes = Kibble.parseSource(
-            """
+        val classes =
+            Kibble.parseSource(
+                    """
 class Factory(private val type: String) {
     constructor(): this("car")
 }
         """
-        ).classes.iterator()
+                )
+                .classes
+                .iterator()
         val klass = classes.next()
         Assert.assertEquals(klass.primaryConstructor?.parameters?.size, 1)
         Assert.assertEquals("type", klass.propertySpecs[0].name)
@@ -25,11 +28,12 @@ class Factory(private val type: String) {
 
     @Test
     fun constructors() {
-        val fileSpec = Kibble.parseSource(
-            """
+        val fileSpec =
+            Kibble.parseSource(
+                """
 class Factory(private vararg val type: String = "red")
         """
-        )
+            )
         val classes = fileSpec.classes.iterator()
         val klass = classes.next()
         val primaryConstructor = klass.primaryConstructor!!
@@ -44,9 +48,11 @@ class Factory(private vararg val type: String = "red")
 
     @Test
     fun annotatedCtorParameters() {
-        val fileSpec = Kibble.parseSource(
-            "data class Address(@Property(\"c\") val city: String, val state: String, val zip: String)"
-        )
-        val klass = fileSpec.classes.iterator().next()
+        Kibble.parseSource(
+                "data class Address(@Property(\"c\") val city: String, val state: String, val zip: String)"
+            )
+            .classes
+            .iterator()
+            .next()
     }
 }
