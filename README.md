@@ -1,23 +1,5 @@
-[![Build Status](https://travis-ci.org/evanchooly/kibble.svg?branch=master)](https://travis-ci.org/evanchooly/kibble)
+# DECOMISSIONED
 
-# Kibble
+This project has been decommissioned in favor of [KSP](https://github.com/google/ksp).  This one is being kept around to debug 
+build/release issues on github/sonatype.
 
-Kibble is a Kotlin source parser and code generation library for generating Kotlin code.  It supports both parsing and generation from scratch.  Examples will be available once the API stabilizes.
-
-# Installation
-
-Kibble can be installed via maven using:
-
-```xml
-<dependency>
-    <groupId>com.antwerkz.kibble</groupId>
-    <artifactId>kibble</artifactId>
-    <version>0.22</version>
-</dependency>
-```
-
-or via Gradle using:
-
-```groovy
-compile 'com.antwerkz.kibble:kibble:0.22'
-```
