@@ -26,7 +26,7 @@
         <kotlin.version>1.9.21</kotlin.version>
         <logback.version>1.4.14</logback.version>
         <slf4j.version>2.0.9</slf4j.version>
-        <testng.version>7.7.1</testng.version>
+        <testng.version>7.8.0</testng.version>
         <dokka.version>1.9.10</dokka.version>
         <kotlinpoet.version>1.11.0</kotlinpoet.version>
 
