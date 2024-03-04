@@ -27,7 +27,7 @@
         <logback.version>1.5.1</logback.version>
         <slf4j.version>2.0.12</slf4j.version>
         <testng.version>7.9.0</testng.version>
-        <dokka.version>1.9.10</dokka.version>
+        <dokka.version>1.9.20</dokka.version>
         <kotlinpoet.version>1.11.0</kotlinpoet.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
