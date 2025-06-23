@@ -28,7 +28,7 @@
         <slf4j.version>2.0.17</slf4j.version>
         <testng.version>7.11.0</testng.version>
         <dokka.version>2.0.0</dokka.version>
-        <kotlinpoet.version>1.11.0</kotlinpoet.version>
+        <kotlinpoet.version>2.2.0</kotlinpoet.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <downloadSources>true</downloadSources>
