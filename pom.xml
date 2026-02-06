@@ -24,7 +24,7 @@
 
     <properties>
         <kotlin.version>2.3.10</kotlin.version>
-        <logback.version>1.5.27</logback.version>
+        <logback.version>1.5.28</logback.version>
         <slf4j.version>2.0.17</slf4j.version>
         <testng.version>7.12.0</testng.version>
         <dokka.version>2.1.0</dokka.version>
